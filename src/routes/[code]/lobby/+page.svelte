@@ -61,7 +61,7 @@
 							gameState.startGame();
 						}}
 					>
-						{m.start_game()}
+						{m.start_participation()}
 					</Button>
 				{/if}
 			</div>
