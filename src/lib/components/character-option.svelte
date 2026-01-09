@@ -68,7 +68,7 @@
 		if (!key) return ''; // Return an empty string if the key is undefined
 		const translation = m[key as keyof typeof m];
 		if (typeof translation === 'function') {
-			return translation();
+			return (translation as () => string)();
 		} else {
 			console.warn(`Translation for key "${key}" is missing or not a function.`);
 			return 'Translation missing';

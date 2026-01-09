@@ -68,8 +68,8 @@
 		</div>
 	</div>
 
-	<!-- Character selection (category selection hidden, defaulting to human) -->
-	<p class="text-dark-green text-lg font-bold my-2">{m.select_character()}</p>
+	<!-- Role selection (category selection hidden, defaulting to human) -->
+	<p class="text-dark-green text-lg font-bold my-2">{m.select_role()}</p>
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
 		{#each CHARACTER_CATEGORIES[selectedCategory] as character}
 			{@const player = gameState.players.find((player) => player.character === character)}

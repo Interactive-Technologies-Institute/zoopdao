@@ -39,23 +39,22 @@ export type Round = Database['public']['Tables']['rounds']['Row'];
 
 export type Character = Database['public']['Enums']['character_type'];
 
+// Roles for ZoopDAO (replacing characters)
+export type Role = 'administration' | 'research' | 'reception' | 'operations' | 'bar' | 'cleaning';
+
+export const ROLES: Role[] = [
+	'administration',
+	'research',
+	'reception',
+	'operations',
+	'bar',
+	'cleaning'
+];
+
+// Keep CHARACTER_CATEGORIES for backward compatibility, but only use human roles
 export const CHARACTER_CATEGORIES: Record<CharacterCategory, Character[]> = {
-	human: [
-		'child',
-		'different-needs',
-		'local-specialist',
-		'nature-lover',
-		'scientist',
-		'time-traveller'
-	],
-	'non-human': [
-		'trocaz-pigeon',
-		'monk-seal',
-		'vulcanic-rock',
-		'iberian-green-frog',
-		'zinos-petrel',
-		'water'
-	]
+	human: ROLES as unknown as Character[],
+	'non-human': []
 };
 
 export type Landmark = {
