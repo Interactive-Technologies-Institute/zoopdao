@@ -178,7 +178,7 @@ export async function getChatHistoryForAI(
 	});
 
 	return messages
-		.filter(msg => msg.round < currentRound) // Only previous rounds
+		.filter(msg => msg.round <= currentRound) // Include current round messages
 		.map(msg => ({
 			content: msg.content,
 			senderType: msg.participantType === 'human' ? 'human' : 'ai',

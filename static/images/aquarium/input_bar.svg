@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 140">
+  <defs>
+    <filter id="softShadow" x="-20%" y="-40%" width="140%" height="200%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity="0.22"></feDropShadow>
+    </filter>
+
+    <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a3a3a"></stop>
+      <stop offset="1" stop-color="#2f2f2f"></stop>
+    </linearGradient>
+
+    <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"></stop>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.06"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer bar -->
+  <g id="chat-input-bar" filter="url(#softShadow)">
+    <rect x="30" y="28" width="1140" height="84" rx="42" fill="url(#barGrad)"></rect>
+    <rect x="30" y="28" width="1140" height="84" rx="42" fill="none" stroke="url(#strokeGrad)" stroke-width="2"></rect>
+  </g>
+
+  <!-- PLUS BUTTON -->
+  <g id="btn-add" transform="translate(52,44)">
+    <circle cx="28" cy="28" r="28" fill="#3f3f3f"></circle>
+    <path d="M28 14 V42 M14 28 H42" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round"></path>
+  </g>
+
+  <!-- CHAT / HISTORY ICON (LEFT, INSIDE BAR) -->
+  <g id="btn-history" transform="translate(118,44)">
+    <circle cx="28" cy="28" r="28" fill="#3f3f3f"></circle>
+    <path d="M16 18 H40
+             C44 18 47 21 47 25
+             V36 C47 40 44 43 40 43
+             H28 L20 50 V43 H16
+             C12 43 9 40 9 36
+             V25 C9 21 12 18 16 18 Z" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linejoin="round"></path>
+    <path d="M18 30 H38" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" opacity="0.6"></path>
+  </g>
+
+  <!-- DIVIDER -->
+  <line x1="186" y1="46" x2="186" y2="94" stroke="#ffffff" stroke-opacity="0.12" stroke-width="2"></line>
+
+  <!-- TEXT PLACEHOLDER -->
+  <text x="210" y="82" font-family="system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="28" fill="#d8d8d8" opacity="0.65">
+    Ask anything
+  </text>
+
+  <!-- CARET (optional, toggle via JS) -->
+  <rect x="390" y="55" width="2.5" height="34" fill="#eaeaea" opacity="0.55"></rect>
+
+  <!-- MICROPHONE BUTTON -->
+  <g id="btn-mic" transform="translate(1010,44)">
+    <circle cx="28" cy="28" r="28" fill="#3f3f3f"></circle>
+    <path d="M28 36
+             C34 36 38 32 38 26
+             V20
+             C38 14 34 10 28 10
+             C22 10 18 14 18 20
+             V26
+             C18 32 22 36 28 36 Z" fill="none" stroke="#ffffff" stroke-width="2.6"></path>
+    <path d="M14 26
+             C14 36 20 44 28 44
+             C36 44 42 36 42 26" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"></path>
+    <path d="M28 44 V52" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"></path>
+  </g>
+
+  <!-- SEND BUTTON (RIGHT, WHITE CIRCLE) -->
+  <g id="btn-send" transform="translate(1076,38)">
+    <circle cx="34" cy="34" r="34" fill="#ffffff"></circle>
+
+    <!-- Arrow -->
+    <path d="M34 18 V44
+             M34 18 L22 30
+             M34 18 L46 30" fill="none" stroke="#1f1f1f" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path>
+  </g>
+</svg>

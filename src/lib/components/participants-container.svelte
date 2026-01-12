@@ -12,6 +12,7 @@
 		tourCompleted: boolean;
 		transitionState: 'starting' | 'transitioning' | 'ending' | 'ended';
 		currentPlayerId?: number;
+		typingAgents?: Set<string>;
 	}
 
 	let {
@@ -21,7 +22,8 @@
 		currentRound,
 		tourCompleted,
 		transitionState,
-		currentPlayerId
+		currentPlayerId,
+		typingAgents = new Set()
 	}: ParticipantsContainerProps = $props();
 
 	// Find index of current player in participants array
@@ -65,6 +67,7 @@
 						messages={agentMessages}
 						round={currentRound}
 						isActive={agentMessages.some(msg => msg.round === currentRound)}
+						isTyping={typingAgents.has(participant.agent.id)}
 					/>
 				{/if}
 			</div>

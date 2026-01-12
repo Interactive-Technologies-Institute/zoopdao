@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <!-- Colors tuned to the teal / aquarium moodboard -->
+    <linearGradient id="rimGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a8b3b3"></stop>
+      <stop offset="0.5" stop-color="#7f8a8a"></stop>
+      <stop offset="1" stop-color="#5b6464"></stop>
+    </linearGradient>
+
+    <radialGradient id="waterGrad" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#7fe3f2" stop-opacity="0.95"></stop>
+      <stop offset="0.45" stop-color="#23c1d2" stop-opacity="0.9"></stop>
+      <stop offset="1" stop-color="#0c6b78" stop-opacity="0.95"></stop>
+    </radialGradient>
+
+    <radialGradient id="depthGrad" cx="50%" cy="70%" r="70%">
+      <stop offset="0" stop-color="#05363d" stop-opacity="0.2"></stop>
+      <stop offset="1" stop-color="#021b1f" stop-opacity="0.65"></stop>
+    </radialGradient>
+
+    <linearGradient id="stoneWallGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2f3a3a" stop-opacity="0.55"></stop>
+      <stop offset="1" stop-color="#0f1717" stop-opacity="0.85"></stop>
+    </linearGradient>
+
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#000" flood-opacity="0.25"></feDropShadow>
+    </filter>
+
+    <filter id="innerGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="b"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="b"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+
+    <!-- Water shimmer pattern -->
+    <pattern id="shimmer" width="220" height="220" patternUnits="userSpaceOnUse">
+      <path d="M0,60 C60,30 120,90 220,40" fill="none" stroke="#c8fbff" stroke-opacity="0.28" stroke-width="6" stroke-linecap="round"></path>
+      <path d="M-20,140 C50,110 120,170 240,120" fill="none" stroke="#c8fbff" stroke-opacity="0.18" stroke-width="6" stroke-linecap="round"></path>
+      <path d="M20,200 C90,170 140,220 220,180" fill="none" stroke="#c8fbff" stroke-opacity="0.12" stroke-width="6" stroke-linecap="round"></path>
+    </pattern>
+
+    <!-- Clip for everything inside the water -->
+    <clipPath id="waterClip">
+      <ellipse cx="600" cy="420" rx="430" ry="250"></ellipse>
+    </clipPath>
+  </defs>
+
+  <!-- Ground shadow -->
+  <ellipse cx="600" cy="610" rx="520" ry="155" fill="#000" opacity="0.12"></ellipse>
+
+  <!-- Outer stone base -->
+  <g filter="url(#softShadow)">
+    <path d="M130,420
+             C130,260 320,135 600,135
+             C880,135 1070,260 1070,420
+             C1070,580 880,705 600,705
+             C320,705 130,580 130,420 Z" fill="url(#stoneWallGrad)"></path>
+  </g>
+
+  <!-- Rim (thick) -->
+  <g filter="url(#softShadow)">
+    <ellipse cx="600" cy="420" rx="505" ry="305" fill="url(#rimGrad)"></ellipse>
+    <ellipse cx="600" cy="420" rx="465" ry="275" fill="#0c2d31" opacity="0.25"></ellipse>
+  </g>
+
+  <!-- Inner lip -->
+  <ellipse cx="600" cy="420" rx="452" ry="262" fill="#1a3f43" opacity="0.65"></ellipse>
+
+  <!-- Water -->
+  <g clip-path="url(#waterClip)">
+    <rect x="0" y="0" width="1200" height="800" fill="url(#waterGrad)"></rect>
+    <rect x="0" y="0" width="1200" height="800" fill="url(#depthGrad)"></rect>
+
+    <!-- “Bottom” hints -->
+    <g opacity="0.22">
+      <path d="M180,520 C310,455 405,560 540,500 C670,442 780,550 960,470" fill="none" stroke="#0b2a2e" stroke-width="22" stroke-linecap="round"></path>
+      <circle cx="360" cy="560" r="18" fill="#10383d"></circle>
+      <circle cx="410" cy="585" r="10" fill="#10383d"></circle>
+      <circle cx="770" cy="560" r="16" fill="#10383d"></circle>
+      <circle cx="820" cy="590" r="9" fill="#10383d"></circle>
+    </g>
+
+    <!-- Shimmer -->
+    <rect x="0" y="0" width="1200" height="800" fill="url(#shimmer)" opacity="0.9"></rect>
+
+    <!-- Light reflection streak -->
+    <path d="M540,610 C520,540 535,480 565,415 C595,350 605,300 575,260
+             C650,300 700,340 720,420 C745,520 660,600 610,650" fill="#d8feff" opacity="0.14"></path>
+
+    <!-- Small central island -->
+    <g filter="url(#innerGlow)">
+      <path d="M550,280 C575,250 625,250 650,280
+               C682,318 690,355 660,380
+               C625,412 575,412 540,380
+               C510,355 518,318 550,280 Z" fill="#d7d2c3" opacity="0.85"></path>
+      <path d="M560,300 C590,270 610,270 640,300
+               C662,322 665,345 645,360
+               C610,384 590,384 555,360
+               C535,345 538,322 560,300 Z" fill="#b8b09c" opacity="0.65"></path>
+      <!-- plants -->
+      <path d="M600,250 C590,235 585,220 590,205 C602,215 612,232 610,248 Z" fill="#7fb56b"></path>
+      <path d="M622,258 C630,238 644,222 660,212 C655,235 642,253 628,265 Z" fill="#6aa85a"></path>
+      <path d="M582,262 C565,248 552,228 548,212 C568,220 582,238 590,255 Z" fill="#6aa85a"></path>
+    </g>
+  </g>
+
+  <!-- Water edge highlight (just inside rim) -->
+  <ellipse cx="600" cy="420" rx="440" ry="255" fill="none" stroke="#c7feff" stroke-opacity="0.18" stroke-width="6"></ellipse>
+
+  <!-- Inner border line -->
+  <ellipse cx="600" cy="420" rx="430" ry="250" fill="none" stroke="#0a1f22" stroke-opacity="0.45" stroke-width="3"></ellipse>
+
+  <!-- Optional “interaction ring” (useful for hover/active states) -->
+  <ellipse cx="600" cy="420" rx="560" ry="340" fill="none" stroke="#7fe3f2" stroke-opacity="0.08" stroke-width="10" stroke-dasharray="16 18"></ellipse>
+</svg>

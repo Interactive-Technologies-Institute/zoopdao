@@ -94,6 +94,7 @@
 	// AI Agents and Participants
 	let aiAgents = $state<AIAgent[]>([]);
 	let aiMessages = $state<AIMessage[]>([]);
+	let typingAgents = $state<Set<string>>(new Set()); // Track which agents are currently typing
 	
 	// Initialize AI agents based on human players count
 	$effect(() => {
@@ -246,67 +247,112 @@
 			};
 			discussionMessages = [...discussionMessages, newMessage];
 
-			// Get chat history for AI context
-			const chatHistory = await getChatHistoryForAI(supabase, gameId, currentRound);
+			// Get chat history for AI context (including current round)
+			const chatHistory = await getChatHistoryForAI(supabase, gameId, currentRound); // Includes current round messages
 
-			// Generate AI agent responses
+			// Generate AI agent responses sequentially with delays
 			if (aiAgents.length > 0) {
-				const aiResponses = await Promise.all(
-					aiAgents.map(async (agent) => {
-						try {
-							const response = await fetch('/api/ai/messages', {
-								method: 'POST',
-								headers: {
-									'Content-Type': 'application/json'
-								},
-								body: JSON.stringify({
-									gameId: gameId,
-									proposalId: proposalId,
-									round: currentRound,
-									agentRole: agent.role,
-									chatHistory: chatHistory
-								})
-							});
-
-							if (!response.ok) {
-								console.error(`Failed to generate message for ${agent.name}:`, await response.text());
-								return null;
-							}
-
-							const result = await response.json();
-							if (result.success && result.message) {
-								return {
-									agent,
-									message: result.message
-								};
-							}
-							return null;
-						} catch (error) {
-							console.error(`Error generating message for ${agent.name}:`, error);
-							return null;
-						}
-					})
-				);
-
-				// Add AI messages to local state
-				aiResponses.forEach((response) => {
-					if (response && response.message) {
-						// Split content if it contains multiple messages (separated by \n\n)
-						const messageContents = response.message.content.split('\n\n').filter(m => m.trim());
-						
-						messageContents.forEach((content, index) => {
-							const aiMessage: DiscussionMessage = {
-								id: `${response.message.id}-${index}`,
-								content: content.trim(),
-								senderType: 'ai',
-								senderName: response.agent.name,
-								round: response.message.round,
-								timestamp: new Date(response.message.createdAt)
-							};
-							discussionMessages = [...discussionMessages, aiMessage];
-						});
+				// Calculate delay: 1 minute (60000ms) divided by number of agents, minimum 10 seconds (10000ms)
+				const totalTime = 60000; // 1 minute in milliseconds
+				const minDelay = 10000; // 10 seconds minimum
+				const baseDelay = Math.max(minDelay, Math.floor(totalTime / aiAgents.length));
+				
+				// Shuffle agents for random order
+				const shuffledAgents = [...aiAgents].sort(() => Math.random() - 0.5);
+				
+				// Process each agent sequentially
+				for (let i = 0; i < shuffledAgents.length; i++) {
+					const agent = shuffledAgents[i];
+					
+					// Calculate random delay between minDelay and baseDelay * 1.5
+					const delay = Math.floor(minDelay + Math.random() * (baseDelay * 1.5 - minDelay));
+					
+					// Wait before processing next agent (except for first agent)
+					if (i > 0) {
+						await new Promise(resolve => setTimeout(resolve, delay));
 					}
-				});
+					
+					try {
+						// Generate message in backend first (respects rate limit)
+						const response = await fetch('/api/ai/messages', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json'
+							},
+							body: JSON.stringify({
+								gameId: gameId,
+								proposalId: proposalId,
+								round: currentRound,
+								agentRole: agent.role,
+								chatHistory: chatHistory,
+								latestUserMessage: message // Pass the most recent user message
+							})
+						});
+
+						if (!response.ok) {
+							const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+							const errorMessage = errorData.error || `Failed to generate message for ${agent.name}`;
+							const retryAfter = errorData.retryAfter;
+							console.error(`Failed to generate message for ${agent.name}:`, errorMessage);
+							
+							// Don't show typing indicator if rate limit or error
+							// Show user-friendly error message for 503/429 errors
+							if (response.status === 503 || response.status === 429) {
+								const message = retryAfter 
+									? `${errorMessage} (Wait ${retryAfter} seconds)`
+									: errorMessage;
+								alert(message);
+							}
+							continue;
+						}
+
+						const result = await response.json();
+						if (result.success && result.message) {
+							// Message was successfully generated - now show typing indicator
+							typingAgents = new Set([...typingAgents, agent.id]);
+							
+							// Wait a bit before showing the actual message (simulate typing)
+							await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000)); // 2-4 seconds
+							
+							// Remove typing indicator and show message
+							typingAgents.delete(agent.id);
+							typingAgents = new Set(typingAgents);
+							
+							// Split content if it contains multiple messages (separated by \n\n)
+							const messageContents = result.message.content.split('\n\n').filter(m => m.trim());
+							
+							messageContents.forEach((content, index) => {
+								// Add to discussionMessages for chat history
+								const discussionMessage: DiscussionMessage = {
+									id: `${result.message.id}-${index}`,
+									content: content.trim(),
+									senderType: 'ai',
+									senderName: agent.name,
+									round: result.message.round,
+									timestamp: new Date(result.message.createdAt)
+								};
+								discussionMessages = [...discussionMessages, discussionMessage];
+								
+								// Add to aiMessages for display in participants container
+								const aiMessage: AIMessage = {
+									id: `${result.message.id}-${index}`,
+									agent_id: agent.id,
+									round: result.message.round,
+									content: content.trim(),
+									created_at: result.message.createdAt
+								};
+								console.log('Adding AI message:', { agent: agent.name, message: aiMessage, currentRound });
+								aiMessages = [...aiMessages, aiMessage];
+							});
+						}
+					} catch (error) {
+						console.error(`Error generating message for ${agent.name}:`, error);
+						const errorMessage = error instanceof Error ? error.message : 'Failed to generate AI message';
+						
+						// Don't show typing indicator on error
+						alert(`Error: ${errorMessage}`);
+					}
+				}
 			}
 		} catch (error) {
 			console.error('Error sending message:', error);
@@ -383,7 +429,8 @@
 	<!-- Discussion History Dialog -->
 	<DiscussionHistoryDialog
 		bind:open={openHistoryDialog}
-		messages={discussionMessages}
+		gameId={data.game.id}
+		supabase={supabase}
 		onClose={() => (openHistoryDialog = false)}
 	/>
 	<Button
@@ -414,6 +461,7 @@
 		{tourCompleted}
 		{transitionState}
 		currentPlayerId={data.playerId}
+		{typingAgents}
 	/>
 	<div class="absolute left-4 bottom-4">
 		{#if dice}

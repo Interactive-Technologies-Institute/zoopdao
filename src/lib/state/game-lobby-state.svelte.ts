@@ -100,12 +100,12 @@ export class GameLobbyState {
 			}
 		} else {
 			// Use the old update_player_character function for legacy characters
-			const { error } = await supabase.rpc('update_player_character', {
-				game_code: this.code,
-				player_character: character
-			});
-			if (error) {
-				console.error(error);
+		const { error } = await supabase.rpc('update_player_character', {
+			game_code: this.code,
+			player_character: character
+		});
+		if (error) {
+			console.error(error);
 			}
 		}
 	}

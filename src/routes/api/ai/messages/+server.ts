@@ -4,8 +4,58 @@ import { GoogleGenAI } from '@google/genai';
 import { GEMINI_API_KEY } from '$env/static/private';
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '@/supabase';
+
+// #region agent log
+if (!GEMINI_API_KEY) {
+	console.error('GEMINI_API_KEY is not set');
+}
+// #endregion
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+// Rate limiting: 5 requests per minute
+const RATE_LIMIT_REQUESTS = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+
+// In-memory rate limit tracker
+// Stores timestamps of recent requests
+const rateLimitTracker: number[] = [];
+
+/**
+ * Check if rate limit is exceeded
+ * @returns true if rate limit is exceeded, false otherwise
+ */
+function checkRateLimit(): boolean {
+	const now = Date.now();
+	
+	// Remove timestamps older than 1 minute
+	while (rateLimitTracker.length > 0 && rateLimitTracker[0] < now - RATE_LIMIT_WINDOW_MS) {
+		rateLimitTracker.shift();
+	}
+	
+	// Check if we've exceeded the limit
+	if (rateLimitTracker.length >= RATE_LIMIT_REQUESTS) {
+		return true;
+	}
+	
+	// Add current request timestamp
+	rateLimitTracker.push(now);
+	return false;
+}
+
+/**
+ * Get time until next request is allowed (in seconds)
+ */
+function getTimeUntilNextRequest(): number {
+	if (rateLimitTracker.length === 0) return 0;
+	
+	const oldestRequest = rateLimitTracker[0];
+	const now = Date.now();
+	const timeUntilOldestExpires = (oldestRequest + RATE_LIMIT_WINDOW_MS) - now;
+	
+	return Math.ceil(timeUntilOldestExpires / 1000);
+}
 
 // System prompts for each AI agent role
 const roleSystemPrompts: Record<string, string> = {
@@ -76,7 +126,8 @@ const generateMessageSchema = z.object({
 		senderType: z.enum(['human', 'ai']),
 		senderName: z.string(),
 		round: z.number()
-	})).optional() // Previous messages for context
+	})).optional(), // Previous messages for context
+	latestUserMessage: z.string().nullable().optional() // Most recent user message to respond to
 });
 
 const messageResponseSchema = z.object({
@@ -87,11 +138,11 @@ const messageResponseSchema = z.object({
  * Get proposal point content for a specific round
  */
 async function getProposalPoint(
-	supabase: SupabaseClient,
+	supabaseClient: typeof supabase,
 	proposalId: number,
 	round: number
 ): Promise<string | null> {
-	const { data: proposal, error } = await supabase
+	const { data: proposal, error } = await supabaseClient
 		.from('proposals')
 		.select('title, objectives, functionalities, discussion')
 		.eq('id', proposalId)
@@ -102,13 +153,14 @@ async function getProposalPoint(
 	}
 
 	// Map rounds to proposal sections
+	const objectives = proposal.objectives as Array<any>;
+	
 	switch (round) {
 		case 0:
 			return `Proposal Title: ${proposal.title}`;
 		case 1:
 		case 2:
 			// Long-term objectives
-			const objectives = proposal.objectives as Array<{ objective: string }>;
 			if (round === 1 && objectives[0]) {
 				return `Long-term Objective 1: ${objectives[0].objective || 'N/A'}`;
 			}
@@ -167,24 +219,93 @@ async function getProposalPoint(
 }
 
 /**
- * Generate AI message using Gemini API
+ * Retry helper with exponential backoff for API calls
+ */
+async function retryWithBackoff<T>(
+	fn: () => Promise<T>,
+	maxRetries: number = 3,
+	initialDelay: number = 1000
+): Promise<T> {
+	let lastError: Error | unknown;
+	
+	for (let attempt = 0; attempt <= maxRetries; attempt++) {
+		try {
+			return await fn();
+		} catch (error: any) {
+			lastError = error;
+			
+			// Check if it's a 503 error (service unavailable) or rate limit error
+			const isRetryable = error?.status === 503 || 
+				error?.status === 429 || 
+				error?.message?.includes('overloaded') ||
+				error?.message?.includes('rate limit');
+			
+			if (!isRetryable || attempt === maxRetries) {
+				throw error;
+			}
+			
+			// Calculate delay with exponential backoff
+			const delay = initialDelay * Math.pow(2, attempt);
+			
+			// #region agent log
+			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:retry',message:'Retrying API call',data:{attempt:attempt+1,maxRetries,delay,errorStatus:error?.status,errorMessage:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'RETRY'})}).catch(()=>{});
+			// #endregion
+			
+			// Wait before retrying
+			await new Promise(resolve => setTimeout(resolve, delay));
+		}
+	}
+	
+	throw lastError;
+}
+
+/**
+ * Generate AI message using Gemini API with retry logic
  */
 async function generateAIMessage(
 	agentRole: string,
 	round: number,
 	proposalPoint: string | null,
-	chatHistory: Array<{ content: string; senderType: string; senderName: string; round: number }> = []
+	chatHistory: Array<{ content: string; senderType: string; senderName: string; round: number }> = [],
+	latestUserMessage: string | null = null
 ): Promise<string> {
 	const systemPrompt = roleSystemPrompts[agentRole] || roleSystemPrompts.administration;
 
-	// Build chat history context
+	// Separate recent user messages from the rest of the history
+	const recentUserMessages = chatHistory
+		.filter(msg => msg.senderType === 'human')
+		.slice(-3); // Last 3 user messages
+	
+	const otherMessages = chatHistory
+		.filter(msg => msg.senderType !== 'human' || !recentUserMessages.includes(msg))
+		.slice(-7); // Last 7 other messages for context
+
+	// Build chat history context with emphasis on user messages
 	let chatHistoryContext = '';
-	if (chatHistory.length > 0) {
-		chatHistoryContext = '\n\nPrevious Discussion Context:\n';
-		chatHistoryContext += chatHistory
-			.slice(-10) // Last 10 messages for context
-			.map(msg => `${msg.senderName} (Round ${msg.round}): ${msg.content}`)
-			.join('\n');
+	if (recentUserMessages.length > 0 || otherMessages.length > 0) {
+		chatHistoryContext = '\n\nDiscussion Context:\n';
+		
+		// Add other messages first for background
+		if (otherMessages.length > 0) {
+			chatHistoryContext += otherMessages
+				.map(msg => `${msg.senderName} (Round ${msg.round}): ${msg.content}`)
+				.join('\n');
+		}
+		
+		// Highlight recent user messages
+		if (recentUserMessages.length > 0) {
+			if (otherMessages.length > 0) chatHistoryContext += '\n\n';
+			chatHistoryContext += '=== RECENT USER INPUTS (RESPOND DIRECTLY TO THESE) ===\n';
+			chatHistoryContext += recentUserMessages
+				.map(msg => `👤 Participant (Round ${msg.round}): ${msg.content}`)
+				.join('\n');
+		}
+	}
+
+	// Include latest user message if provided separately
+	let latestUserContext = '';
+	if (latestUserMessage) {
+		latestUserContext = `\n\n=== MOST RECENT USER MESSAGE (RESPOND DIRECTLY TO THIS) ===\n👤 Participant: ${latestUserMessage}\n`;
 	}
 
 	// Build proposal point context
@@ -199,70 +320,148 @@ async function generateAIMessage(
 	const prompt = `You are participating in a governance assembly discussion at Aquário Vasco da Gama.
 
 Round: ${round}${round === 7 ? ' (Final Discussion Round - Full Debate)' : ''}
-${proposalContext}${chatHistoryContext}
+${proposalContext}${chatHistoryContext}${latestUserContext}
 
-Generate ${messageCount} ${messageCount === 1 ? 'message' : 'messages'} commenting on the current proposal point.
-${round === 7 ? 'This is the final discussion round. Provide comprehensive opinions and engage in full debate, considering all aspects discussed.' : 'Provide focused commentary on the specific proposal point.'}
+IMPORTANT: Your response MUST directly address and engage with the most recent user input(s) shown above. Do not just comment generically on the proposal point - respond specifically to what the participant(s) just said.
 
-Requirements:
-- Be concise and relevant (max 500 characters per message)
-- Reflect your role's perspective and expertise
-- Consider the proposal context and previous discussion
-- ${round === 7 ? 'Engage with other participants\' points and provide comprehensive analysis' : 'Focus on the specific proposal point'}
+Generate ${messageCount} ${messageCount === 1 ? 'message' : 'messages'} that:
+1. Directly responds to the most recent user input(s) - acknowledge what they said, agree/disagree with specific points, ask follow-up questions, or build on their ideas
+2. Relates your response to the current proposal point
+3. Reflects your role's perspective and expertise
+${round === 7 ? '4. Engages in full debate, considering all aspects discussed' : '4. Provides focused commentary'}
+
+CRITICAL REQUIREMENTS:
+- Each message MUST be EXACTLY ONE SENTENCE ONLY (maximum one sentence per message)
+- Be concise and relevant (max 200 characters per message)
+- Directly reference what the user said (e.g., "I agree with your point about...", "You mentioned X, and from my perspective...", "That's an interesting idea, but we should also consider...")
 - Use natural, conversational language
 - Be constructive and thoughtful
+- Show that you're actively listening and responding to the discussion
+- NO multiple sentences, NO compound sentences with "and" or "but" - just ONE simple, clear sentence
 
 Return ONLY a JSON object with this format:
 {
-  "content": "Your message here"
+  "content": "Your single sentence message here"
 }
 
-${messageCount > 1 ? `Generate ${messageCount} separate messages. Return a JSON array with ${messageCount} objects.` : ''}`;
+${messageCount > 1 ? `Generate ${messageCount} separate messages. Return a JSON array with ${messageCount} objects. Each message must be exactly one sentence.` : ''}`;
+
+	// #region agent log
+	fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:222',message:'generateAIMessage START',data:{agentRole,round,proposalPoint:proposalPoint?.substring(0,100),chatHistoryLength:chatHistory.length,messageCount,systemPromptLength:systemPrompt.length},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A,B,C'})}).catch(()=>{});
+	// #endregion
 
 	try {
-		const response = await ai.models.generateContent({
-			model: 'gemini-2.5-flash',
-			contents: prompt,
-			config: {
-				thinkingConfig: {
-					thinkingBudget: 0
-				},
-				responseMimeType: 'application/json',
-				responseJsonSchema: messageCount > 1 
-					? z.toJSONSchema(z.array(messageResponseSchema))
-					: z.toJSONSchema(messageResponseSchema),
-				systemInstruction: systemPrompt
-			}
-		});
+		// Use retry logic for the API call
+		const response = await retryWithBackoff(async () => {
+			// #region agent log
+			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:225',message:'Calling Gemini API',data:{model:'gemini-2.5-flash',promptLength:prompt.length,hasSystemPrompt:!!systemPrompt,messageCount},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
+			// #endregion
+
+			return await ai.models.generateContent({
+				model: 'gemini-2.5-flash',
+				contents: prompt,
+				config: {
+					thinkingConfig: {
+						thinkingBudget: 0
+					},
+					responseMimeType: 'application/json',
+					responseJsonSchema: messageCount > 1 
+						? z.toJSONSchema(z.array(messageResponseSchema))
+						: z.toJSONSchema(messageResponseSchema),
+					systemInstruction: systemPrompt
+				}
+			});
+		}, 3, 1000); // 3 retries with 1s initial delay
+
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:245',message:'Gemini API response received',data:{hasText:!!response.text,textLength:response.text?.length,textPreview:response.text?.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A,D'})}).catch(()=>{});
+		// #endregion
 
 		if (!response.text) {
+			// #region agent log
+			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:250',message:'Empty response from AI',data:{response:JSON.stringify(response)},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'D'})}).catch(()=>{});
+			// #endregion
 			throw new Error('Empty response from AI');
 		}
 
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:256',message:'Parsing JSON response',data:{textPreview:response.text.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'E'})}).catch(()=>{});
+		// #endregion
+
 		const parsed = JSON.parse(response.text);
 		
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:260',message:'JSON parsed successfully',data:{isArray:Array.isArray(parsed),parsedType:typeof parsed,parsedKeys:Object.keys(parsed)},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'E'})}).catch(()=>{});
+		// #endregion
+		
 		// Handle single message or array of messages
+		let result: string;
 		if (Array.isArray(parsed)) {
-			return parsed.map((msg: any) => msg.content).join('\n\n');
+			result = parsed.map((msg: any) => msg.content).join('\n\n');
+		} else {
+			result = parsed.content || parsed;
+		}
+
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:270',message:'generateAIMessage END',data:{resultLength:result.length,resultPreview:result.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
+		// #endregion
+
+		return result;
+	} catch (error: any) {
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:275',message:'AI message generation error',data:{errorMessage:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack:undefined,errorStatus:error?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A,B,C,D,E'})}).catch(()=>{});
+		// #endregion
+		console.error('AI message generation error:', error);
+		
+		// Provide more specific error messages
+		if (error?.status === 503 || error?.message?.includes('overloaded')) {
+			throw new Error('AI service is temporarily unavailable. Please try again in a moment.');
+		}
+		if (error?.status === 429 || error?.message?.includes('rate limit')) {
+			throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
 		}
 		
-		return parsed.content || parsed;
-	} catch (error) {
-		console.error('AI message generation error:', error);
-		throw new Error('Failed to generate AI message');
+		throw new Error(error?.message || 'Failed to generate AI message');
 	}
 }
 
-export const POST: RequestHandler = async ({ request, locals: { safeGetSession, supabase } }) => {
-	const { session } = await safeGetSession();
+export const POST: RequestHandler = async ({ request }) => {
+	// #region agent log
+	fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:296',message:'POST handler START',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
+	// #endregion
 
+	// Ensure anonymous session exists
+	let { data: { session } } = await supabase.auth.getSession();
+	
 	if (!session) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:303',message:'No session, signing in anonymously',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
+		// #endregion
+		
+		const { data: signInData, error: signInError } = await supabase.auth.signInAnonymously();
+		
+		if (signInError || !signInData.session) {
+			// #region agent log
+			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:308',message:'Failed to sign in anonymously',data:{error:signInError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
+			// #endregion
+			return json({ error: 'Failed to authenticate' }, { status: 401 });
+		}
+		
+		session = signInData.session;
 	}
 
 	try {
 		const body = await request.json();
+		
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:265',message:'Request body received',data:{bodyKeys:Object.keys(body),gameId:body.gameId,proposalId:body.proposalId,round:body.round,agentRole:body.agentRole},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
+		// #endregion
+
 		const validated = generateMessageSchema.parse(body);
+		
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:270',message:'Request validated',data:{validated},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
+		// #endregion
 
 		// Get proposal point content
 		let proposalPoint: string | null = null;
@@ -271,15 +470,69 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 		}
 
 		// Generate AI message
+		// Check if message already exists for this agent in this round
+		// Type assertion needed because discussion_messages table not in generated types yet
+		const supabaseAny = supabase as any;
+		const { data: existingMessage } = await supabaseAny
+			.from('discussion_messages')
+			.select('id, content, agent_role, round, created_at')
+			.eq('game_id', validated.gameId)
+			.eq('round', validated.round)
+			.eq('participant_type', 'ai_agent')
+			.eq('agent_role', validated.agentRole)
+			.single();
+
+		// If message already exists, return it instead of generating a new one
+		if (existingMessage) {
+			// #region agent log
+			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:340',message:'Message already exists for this agent/round, returning existing',data:{agentRole:validated.agentRole,round:validated.round,messageId:existingMessage.id},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
+			// #endregion
+
+			return json({
+				success: true,
+				message: {
+					id: existingMessage.id,
+					content: existingMessage.content,
+					agentRole: existingMessage.agent_role,
+					round: existingMessage.round,
+					createdAt: existingMessage.created_at
+				}
+			});
+		}
+
+		// Check rate limit before calling Gemini API
+		if (checkRateLimit()) {
+			const waitTime = getTimeUntilNextRequest();
+			// #region agent log
+			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:rateLimit',message:'Rate limit exceeded',data:{waitTime,currentRequests:rateLimitTracker.length},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'RATE_LIMIT'})}).catch(()=>{});
+			// #endregion
+			return json(
+				{ 
+					error: `Rate limit exceeded. Maximum ${RATE_LIMIT_REQUESTS} requests per minute. Please try again in ${waitTime} seconds.`,
+					retryAfter: waitTime
+				}, 
+				{ status: 429 }
+			);
+		}
+
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:273',message:'Calling generateAIMessage',data:{agentRole:validated.agentRole,round:validated.round,hasProposalPoint:!!proposalPoint,chatHistoryLength:validated.chatHistory?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
+		// #endregion
+
 		const messageContent = await generateAIMessage(
 			validated.agentRole,
 			validated.round,
 			proposalPoint || validated.proposalPoint || null,
-			validated.chatHistory || []
+			validated.chatHistory || [],
+			validated.latestUserMessage || null
 		);
 
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:282',message:'Message generated, storing in DB',data:{messageContentLength:messageContent.length,messageContentPreview:messageContent.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
+		// #endregion
+
 		// Store message in database
-		const { data: message, error: insertError } = await supabase
+		const { data: message, error: insertError } = await supabaseAny
 			.from('discussion_messages')
 			.insert({
 				game_id: validated.gameId,
@@ -297,6 +550,36 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 			.single();
 
 		if (insertError) {
+			// Check if error is due to unique constraint violation (message already exists)
+			if (insertError.code === '23505' || insertError.message?.includes('unique')) {
+				// #region agent log
+				fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:377',message:'Unique constraint violation, fetching existing message',data:{agentRole:validated.agentRole,round:validated.round},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
+				// #endregion
+
+				// Fetch the existing message
+				const { data: existingMsg } = await supabaseAny
+					.from('discussion_messages')
+					.select('id, content, agent_role, round, created_at')
+					.eq('game_id', validated.gameId)
+					.eq('round', validated.round)
+					.eq('participant_type', 'ai_agent')
+					.eq('agent_role', validated.agentRole)
+					.single();
+
+				if (existingMsg) {
+					return json({
+						success: true,
+						message: {
+							id: existingMsg.id,
+							content: existingMsg.content,
+							agentRole: existingMsg.agent_role,
+							round: existingMsg.round,
+							createdAt: existingMsg.created_at
+						}
+					});
+				}
+			}
+
 			console.error('Database insert error:', insertError);
 			return json({ error: 'Failed to store message' }, { status: 500 });
 		}
@@ -304,23 +587,46 @@ export const POST: RequestHandler = async ({ request, locals: { safeGetSession, 
 		return json({
 			success: true,
 			message: {
-				id: message.id,
-				content: message.content,
-				agentRole: message.agent_role,
-				round: message.round,
-				createdAt: message.created_at
+				id: (message as any).id,
+				content: (message as any).content,
+				agentRole: (message as any).agent_role,
+				round: (message as any).round,
+				createdAt: (message as any).created_at
 			}
 		});
-	} catch (error) {
+	} catch (error: any) {
+		// #region agent log
+		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:314',message:'API error caught',data:{errorMessage:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack:undefined,isZodError:error instanceof z.ZodError,errorStatus:error?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A,B,C,D,E,F'})}).catch(()=>{});
+		// #endregion
+
 		console.error('API error:', error);
 		
 		if (error instanceof z.ZodError) {
-			return json({ error: 'Invalid request data', details: error.errors }, { status: 400 });
+			return json({ error: 'Invalid request data', details: error.issues }, { status: 400 });
+		}
+
+		// Provide user-friendly error messages
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		let statusCode = 500;
+		let userMessage = 'Failed to generate message';
+
+		if (errorMessage.includes('temporarily unavailable') || errorMessage.includes('overloaded')) {
+			statusCode = 503;
+			userMessage = 'AI service is temporarily unavailable. Please try again in a moment.';
+		} else if (errorMessage.includes('rate limit')) {
+			statusCode = 429;
+			userMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
+		} else if (error?.status === 503) {
+			statusCode = 503;
+			userMessage = 'AI service is temporarily unavailable. Please try again in a moment.';
+		} else if (error?.status === 429) {
+			statusCode = 429;
+			userMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
 		}
 
 		return json(
-			{ error: 'Failed to generate message' },
-			{ status: 500 }
+			{ error: userMessage, details: errorMessage },
+			{ status: statusCode }
 		);
 	}
 };

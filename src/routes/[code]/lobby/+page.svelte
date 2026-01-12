@@ -40,49 +40,49 @@
 		</div>
 
 		<div class="flex gap-3">
-			<div class="flex items-center justify-center">
-				{#if gameState.state === 'waiting' && currentPlayer.nickname === null}
+				<div class="flex items-center justify-center">
+					{#if gameState.state === 'waiting' && currentPlayer.nickname === null}
 					<!-- Back button removed as category selection is hidden -->
-				{:else if !currentPlayer.is_owner}
-					<p class="text-dark-green font-bold text-center px-2">
-						Waiting for host to start the game...
-					</p>
-				{/if}
-
-				{#if currentPlayer.is_owner}
-					{#if gameState.state === 'ready'}
-						<p class="text-dark-green font-bold text-center px-2">All players are ready!</p>
+					{:else if !currentPlayer.is_owner}
+						<p class="text-dark-green font-bold text-center px-2">
+							Waiting for host to start the game...
+						</p>
 					{/if}
-					<Button
-						size="default"
-						disabled={gameState.state !== 'ready'}
-						onclick={() => {
-							click.play();
-							gameState.startGame();
-						}}
-					>
+
+					{#if currentPlayer.is_owner}
+						{#if gameState.state === 'ready'}
+							<p class="text-dark-green font-bold text-center px-2">All players are ready!</p>
+						{/if}
+						<Button
+							size="default"
+							disabled={gameState.state !== 'ready'}
+							onclick={() => {
+								click.play();
+								gameState.startGame();
+							}}
+						>
 						{m.start_participation()}
-					</Button>
-				{/if}
-			</div>
+						</Button>
+					{/if}
+				</div>
 		</div>
 	</div>
 
 	<!-- Role selection (category selection hidden, defaulting to human) -->
 	<p class="text-dark-green text-lg font-bold my-2">{m.select_role()}</p>
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
 		{#each CHARACTER_CATEGORIES[selectedCategory] as character}
-			{@const player = gameState.players.find((player) => player.character === character)}
-			{@const isReady = currentPlayer.nickname !== null}
-			<CharacterOption
-				{character}
-				{player}
-				selected={currentPlayer.character === character}
-				disabled={isReady && currentPlayer.character !== character}
-				onSelect={() => gameState.updatePlayerCharacter(character)}
-				onReady={(nickname, description) =>
-					gameState.updatePlayerNicknameDescription(nickname, description)}
-			/>
-		{/each}
-	</div>
+				{@const player = gameState.players.find((player) => player.character === character)}
+				{@const isReady = currentPlayer.nickname !== null}
+				<CharacterOption
+					{character}
+					{player}
+					selected={currentPlayer.character === character}
+					disabled={isReady && currentPlayer.character !== character}
+					onSelect={() => gameState.updatePlayerCharacter(character)}
+					onReady={(nickname, description) =>
+						gameState.updatePlayerNicknameDescription(nickname, description)}
+				/>
+			{/each}
+		</div>
 </div>
