@@ -144,29 +144,6 @@ export function createGameTour() {
 			}
 		},
 		{
-			id: 'digital-clock',
-			title: m.dice(),
-			text: m.dice_description(),
-			attachTo: {
-				element: '.digital-clock',
-				on: 'top'
-			},
-			buttons: [
-				{
-					text: 'Skip',
-					action: tour.cancel,
-					secondary: true
-				},
-				{
-					text: m.continue(),
-					action: tour.next
-				}
-			],
-			floatingUIOptions: {
-				middleware: [offset({ mainAxis: 20 })]
-			}
-		},
-		{
 			id: 'images-button',
 			title: m.images_title(),
 			text: m.images_description(),

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import DigitalClock from '@/components/digital-clock.svelte';
 	import HelpDialog from '@/components/help-dialog.svelte';
 	import Map from '@/components/map.svelte';
 	import ParticipantsContainer from '@/components/participants-container.svelte';
@@ -36,6 +35,22 @@
 
 	let tourCompleted = $state(false);
 
+	// Ensure overlay is removed when tour completes
+	$effect(() => {
+		if (tourCompleted) {
+			// Use setTimeout to ensure DOM is updated
+			setTimeout(() => {
+				const overlay = document.querySelector('.shepherd-modal-overlay-container');
+				if (overlay) {
+					overlay.remove();
+				}
+				// Also remove any shepherd elements
+				const shepherdElements = document.querySelectorAll('.shepherd-element');
+				shepherdElements.forEach(el => el.remove());
+			}, 100);
+		}
+	});
+
 	onMount(() => {
 		fanfareAudio = new Audio(fanfare);
 		fanfareAudio.volume = 0.;
@@ -46,9 +61,19 @@
 			tour = createGameTour();
 			tour.on('complete', () => {
 				tourCompleted = true;
+				// Ensure overlay is removed
+				const overlay = document.querySelector('.shepherd-modal-overlay-container');
+				if (overlay) {
+					overlay.remove();
+				}
 			});
 			tour.on('cancel', () => {
 				tourCompleted = true;
+				// Ensure overlay is removed
+				const overlay = document.querySelector('.shepherd-modal-overlay-container');
+				if (overlay) {
+					overlay.remove();
+				}
 			});
 			tour.start();
 		} else {
@@ -58,6 +83,11 @@
 			}
 			tour = undefined;
 			tourCompleted = true;
+			// Ensure overlay is removed
+			const overlay = document.querySelector('.shepherd-modal-overlay-container');
+			if (overlay) {
+				overlay.remove();
+			}
 		}
 	});
 
@@ -66,10 +96,21 @@
 			tour.complete();
 			tour.cancel();
 		}
+		// Ensure overlay is removed
+		const overlay = document.querySelector('.shepherd-modal-overlay-container');
+		if (overlay) {
+			overlay.remove();
+		}
 		gameState.cleanup();
 	});
 
 	let { data }: { data: PageData } = $props();
+
+	// Debug: Check if rounds are loaded
+	$effect(() => {
+		console.log('Rounds data from page load:', data.rounds);
+		console.log('Rounds length:', data.rounds?.length || 0);
+	});
 
 	let gameState = new GameState(
 		data.stops,
@@ -149,6 +190,10 @@
 		return gameState.playersState[gameState.playerId].state;
 	});
 
+	let currentPlayerState = $derived.by(() => {
+		return gameState.playersState[gameState.playerId] || { state: 'done' };
+	});
+
 	let openStoryDialog = $state(false);
 	let openHelpDialog = $state(false);
 	let openEndDialog = $state(false);
@@ -167,25 +212,28 @@
 	let discussionMessages = $state<DiscussionMessage[]>([]);
 
 	// Load existing messages on mount
-	$effect(async () => {
+	$effect(() => {
 		if (gameState.state === 'playing' || gameState.state === 'finished') {
-			try {
-				const gameId = data.game.id;
-				const messages = await getDiscussionMessages(supabase, gameId);
-				
-				discussionMessages = messages.map((msg) => ({
-					id: msg.id.toString(),
-					content: msg.content,
-					senderType: msg.participantType === 'human' ? 'human' : 'ai',
-					senderName: msg.participantType === 'human' 
-						? 'You' 
-						: (msg.agentRole ? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1) : 'AI Agent'),
-					round: msg.round,
-					timestamp: new Date(msg.createdAt)
-				}));
-			} catch (error) {
-				console.error('Error loading messages:', error);
-			}
+			const loadMessages = async () => {
+				try {
+					const gameId = data.game.id;
+					const messages = await getDiscussionMessages(supabase, gameId);
+					
+					discussionMessages = messages.map((msg) => ({
+						id: msg.id.toString(),
+						content: msg.content,
+						senderType: msg.participantType === 'human' ? 'human' : 'ai',
+						senderName: msg.participantType === 'human' 
+							? 'You' 
+							: (msg.agentRole ? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1) : 'AI Agent'),
+						round: msg.round,
+						timestamp: new Date(msg.createdAt)
+					}));
+				} catch (error) {
+					console.error('Error loading messages:', error);
+				}
+			};
+			loadMessages();
 		}
 	});
 
@@ -370,6 +418,7 @@
 			}
 		}
 	}
+	$inspect(playerState);
 </script>
 
 <!-- <svelte:window
@@ -388,12 +437,12 @@
 	<Map {gameState} position={mapPosition} {tourCompleted} />
 	<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
 	<StatusPill
-		playerState={gameState.playersState[gameState.playerId]}
+		playerState={currentPlayerState}
 		currentRound={gameState.currentRound}
 	/>
 	<Button
 		size="icon-lg"
-		class="absolute right-4 -translate-y-1/2 top-1/2 images"
+		class="absolute right-4 -translate-y-1/2 top-1/2 images z-50 pointer-events-auto"
 		disabled={!tourCompleted}
 		onclick={() => (openIslandDialog = true)}
 	>
@@ -401,24 +450,60 @@
 	</Button>
 	<IslandDialog bind:open={openIslandDialog} />
 	
-	<!-- Story Sheet Button (Right Side) -->
-	<Button
-		size="lg"
-		onclick={() => (openStoryDialog = true)}
-		class="absolute bottom-4 right-4 story-button rounded-full px-4"
-		disabled={!tourCompleted}
-	>
-		<ScrollText />
-		{m.story_sheet()}
-	</Button>
+		<Button
+			size="lg"
+			onclick={async () => {
+				// For round 0, playerStart requires stop_id (handled by map click)
+				// For round 7, call playerStart without stop_id
+				openStoryDialog = true;
+				if (gameState.state === 'starting') {
+					gameState.playerStart();
+				} else if (gameState.state === 'playing') {
+					gameState.playerMove();
+			}}}
+			class="absolute bottom-4 left-1/2 -translate-x-1/2 story-button rounded-full px-4 z-50 pointer-events-auto"
+			disabled={!tourCompleted}
+		>
+			<ScrollText />
+			{m.story_sheet()}
+		</Button>
 	<StoryDialog bind:open={openStoryDialog} {gameState} />
 	
-	<!-- Discussion Input Bar -->
-	<DiscussionInputBar
-		onSend={handleSendMessage}
-		onOpenHistory={handleOpenHistory}
-		disabled={!tourCompleted}
-	/>
+	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
+	{#if gameState.currentRound === 7}
+		<!-- Discussion Input Bar (Round 7 only) -->
+		<DiscussionInputBar
+			onSend={handleSendMessage}
+			onOpenHistory={handleOpenHistory}
+			disabled={!tourCompleted}
+		/>
+	{:else if gameState.currentRound > 0 && gameState.currentRound < 7}
+		<!-- Discussion Input Button (Rounds 1-6) - Centered at bottom -->
+		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(900px,calc(100vw-2rem))] z-50 pointer-events-auto">
+			<div class="relative">
+				<!-- Background bar with shadow matching input bar style -->
+				<div class="bg-gradient-to-b from-[#3a3a3a] to-[#2f2f2f] rounded-full px-6 py-5 shadow-2xl border border-white/10">
+					<Button
+						size="lg"
+						onclick={async () => {
+							// Call playerStart first to set state to 'writing' (like clicking on map)
+							await gameState.playerMove();
+							// Wait a bit for state to update, then open dialog
+							await new Promise(resolve => setTimeout(resolve, 100));
+							openStoryDialog = true;
+							
+							// Timer will be started automatically by StoryDialog when it opens
+						}}
+						class="w-full rounded-full px-6 py-3 bg-dark-green hover:bg-dark-green/90 text-white font-semibold pointer-events-auto"
+						disabled={!tourCompleted}
+					>
+						<ScrollText />
+						{m.story_sheet()}
+					</Button>
+				</div>
+			</div>
+		</div>
+	{/if}
 	
 	<!-- Discussion History Dialog -->
 	<DiscussionHistoryDialog
@@ -430,7 +515,7 @@
 	<Button
 		size="default"
 		onclick={() => (openHelpDialog = true)}
-		class="absolute top-4 left-4 help-button"
+		class="absolute top-4 left-4 help-button z-50 pointer-events-auto"
 		disabled={!tourCompleted}
 	>
 		{m.help()}
@@ -440,7 +525,7 @@
 	<Button
 		variant="default"
 		size="default"
-		class="absolute top-4 right-4 exit-button"
+		class="absolute top-4 right-4 exit-button z-50 pointer-events-auto"
 		onclick={handleLeaveGame}
 		disabled={!tourCompleted}
 	>
@@ -457,9 +542,6 @@
 		currentPlayerId={data.playerId}
 		{typingAgents}
 	/>
-	<div class="absolute left-4 bottom-4">
-		<DigitalClock currentRound={gameState.currentRound} />
-	</div>
 
 	{#if showRoundTransition}
 		<RoundTransition
