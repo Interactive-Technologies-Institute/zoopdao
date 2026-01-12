@@ -2,8 +2,7 @@
 	import Dice from '@/components/dice.svelte';
 	import HelpDialog from '@/components/help-dialog.svelte';
 	import Map from '@/components/map.svelte';
-	import MiniMap from '@/components/mini-map.svelte';
-	import PlayerBadge from '@/components/player-badge.svelte';
+	import ParticipantsContainer from '@/components/participants-container.svelte';
 	import RoundIndicator from '@/components/round-indicator.svelte';
 	import StoryDialog from '@/components/story-dialog.svelte';
 	import Button from '@/components/ui/button/button.svelte';
@@ -14,7 +13,7 @@
 	import EndDialog from '@/components/end-dialog.svelte';
 	import { m } from '@src/paraglide/messages';
 	import fanfare from '@/sounds/fanfare.mp3';
-	import seagulls from '@/sounds/seagull-sound-effect.mp3';
+	import bubbles from '@/sounds/bubbles-sound-effect.mp3';
 	import { onMount, onDestroy } from 'svelte';
 	import { createGameTour } from '@/components/ui/shepherd/game-tour.svelte.js';
 	import type { Tour } from 'shepherd.js';
@@ -22,6 +21,9 @@
 	import { goto } from '$app/navigation';
 	import StatusPill from '@/components/status-pill.svelte';
 	import IslandDialog from '@/components/island-dialog.svelte';
+	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
+	import { generateAIMessages } from '@/utils/ai-messages';
+	import type { AIAgent, AIMessage, Participant } from '@/types';
 
 	let tour: Tour | undefined;
 
@@ -33,7 +35,7 @@
 	onMount(() => {
 		fanfareAudio = new Audio(fanfare);
 		fanfareAudio.volume = 0.5;
-		startupAudio = new Audio(seagulls);
+		startupAudio = new Audio(bubbles);
 		startupAudio.volume = 0.5;
 
 		if (gameState.state === 'starting') {
@@ -84,6 +86,43 @@
 	type TransitionState = 'starting' | 'transitioning' | 'ending' | 'ended';
 	let transitionState: TransitionState = $state('starting');
 	let previousRound = $state(0);
+	
+	// AI Agents and Participants
+	let aiAgents = $state<AIAgent[]>([]);
+	let aiMessages = $state<AIMessage[]>([]);
+	
+	// Initialize AI agents based on human players count
+	$effect(() => {
+		const humanPlayers = gameState.players.filter(p => p.is_active !== false);
+		if (humanPlayers.length > 0 && aiAgents.length === 0) {
+			try {
+				const aiCount = calculateAIAgentsCount(humanPlayers.length);
+				const humanRoles = humanPlayers.map(p => p.role).filter((r): r is string => r !== null) as any[];
+				aiAgents = generateAIAgents(aiCount, humanRoles);
+			} catch (error) {
+				console.error('Error initializing AI agents:', error);
+			}
+		}
+	});
+	
+	// Create participants list (humans + AI)
+	const participants = $derived.by(() => {
+		const humanPlayers = gameState.players.filter(p => p.is_active !== false);
+		return createParticipants(humanPlayers, aiAgents);
+	});
+	
+	// Generate AI messages after each round completion
+	$effect(() => {
+		if (gameState.currentRound > 0 && gameState.currentRound <= 7 && aiAgents.length > 0) {
+			// Check if messages for this round already exist
+			const existingMessagesForRound = aiMessages.filter(msg => msg.round === gameState.currentRound);
+			if (existingMessagesForRound.length === 0) {
+				// Generate messages for current round
+				const newMessages = generateAIMessages(aiAgents, gameState.currentRound);
+				aiMessages = [...aiMessages, ...newMessages];
+			}
+		}
+	});
 
 	$effect(() => {
 		if (
@@ -163,7 +202,6 @@
 
 <div class="w-screen h-[100dvh] relative">
 	<Map {gameState} position={mapPosition} {tourCompleted} />
-	<MiniMap position={mapPosition} />
 	<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
 	<StatusPill
 		playerState={gameState.playersState[gameState.playerId]}
@@ -207,21 +245,16 @@
 	>
 		Exit <LogOut size={16} />
 	</Button>
-	<div
-		class="absolute left-4 top-36 flex flex-col items-center justify-center gap-5 pointer-events-none"
-	>
-		{#each Object.values(gameState.players).filter((p) => p.is_active !== false) as player (player.id)}
-			<PlayerBadge
-				{tourCompleted}
-				{player}
-				playerState={gameState.playersState[player.id]}
-				round={gameState.currentRound}
-				currentRound={gameState.currentRound}
-				{transitionState}
-				isCurrentPlayer={player.id === data.playerId}
-			/>
-		{/each}
-	</div>
+	<!-- Participants (Humans + AI Agents) positioned around aquarium -->
+	<ParticipantsContainer
+		participants={participants}
+		playersState={gameState.playersState}
+		{aiMessages}
+		currentRound={gameState.currentRound}
+		{tourCompleted}
+		{transitionState}
+		currentPlayerId={data.playerId}
+	/>
 	<div class="absolute left-4 bottom-4">
 		{#if dice}
 			<Dice value={dice} round={gameState.currentRound} {transitionState} />
