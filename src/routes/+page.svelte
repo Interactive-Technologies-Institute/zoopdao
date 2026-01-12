@@ -8,7 +8,7 @@
 	import { onMount } from 'svelte';
 	import { getVotingPeriods, getExceptionalVotingPeriods, getProposalStatus } from '$lib/data/voting-periods';
 	import { Circle, CheckCircle2 } from 'lucide-svelte';
-	
+
 	let { data } = $props();
 
 	let click_sound: HTMLAudioElement;
@@ -56,7 +56,7 @@
 		// TODO: Implement actual translation logic using translation API or service
 		// This could translate: title, objectives, functionalities, discussion
 		return proposal;
-	}
+		}
 	
 	function handleProposalClick(proposalId: number) {
 		click_sound.play();
@@ -139,7 +139,7 @@
 									</div>
 								</div>
 							</button>
-						{/each}
+							{/each}
 					</div>
 				{/if}
 			</div>

@@ -139,3 +139,25 @@ export type SavedStory = {
 	card_types: string[];
 	full_story: string;
 };
+
+// AI Agent types for ZoopDAO
+export type AIAgentId = string;
+
+export type AIAgent = {
+	id: AIAgentId;
+	name: string;
+	role: Role;
+	avatar?: string; // URL to avatar image
+};
+
+export type AIMessage = {
+	id: string;
+	agent_id: AIAgentId;
+	round: number;
+	content: string;
+	created_at: string;
+};
+
+export type Participant = 
+	| { type: 'human'; player: Player }
+	| { type: 'ai'; agent: AIAgent };

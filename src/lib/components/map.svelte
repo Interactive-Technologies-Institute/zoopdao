@@ -42,7 +42,7 @@
 		<img
 			src="/images/aquarium/assembly_table.svg"
 			alt="Assembly Aquarium Table"
-			class="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
+			class="absolute inset-0 w-[75%] h-[75%] m-auto object-contain pointer-events-none select-none"
 			draggable="false"
 		/>
 	</div>

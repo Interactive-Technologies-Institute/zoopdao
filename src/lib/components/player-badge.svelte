@@ -25,16 +25,16 @@
 	}: PlayerBadgeProps = $props();
 </script>
 
-<div class="flex relative {isCurrentPlayer ? 'player-badges' : ''}">
+<div class="relative inline-block {isCurrentPlayer ? 'player-badges' : ''}">
 	<img
 		src={`/images/characters/badges/${player.character}.svg`}
 		alt={player.nickname}
-		class="h-12 w-12 md:h-14 md:w-14 relative rounded-full z-20 {isCurrentPlayer
+		class="h-12 w-12 md:h-14 md:w-14 relative rounded-full z-20 block {isCurrentPlayer
 			? 'border-4 border-dark-green'
 			: ''}"
 	/>
 	<div
-		class="absolute origin-right -top-2 right-6 translate-x-full rounded-full bg-dark-green text-dark-green z-30 flex items-center py-2 px-3 max-w-xs"
+		class="absolute origin-right -top-2 left-full ml-2 rounded-full bg-dark-green text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-nowrap"
 	>
 		{#if playerState.state === 'starting'}
 			<div class="flex items-center gap-2">
