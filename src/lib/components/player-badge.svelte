@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Player, PlayerState } from '@/types';
 	import { onMount } from 'svelte';
-	import { Check, Flag, Route, SquarePen } from 'lucide-svelte';
+	import { Check, Flag, Route, SquarePen, User } from 'lucide-svelte';
 	import { m } from '@src/paraglide/messages';
 
 	interface PlayerBadgeProps {
@@ -26,13 +26,13 @@
 </script>
 
 <div class="relative inline-block {isCurrentPlayer ? 'player-badges' : ''}">
-	<img
-		src={`/images/characters/badges/${player.character}.svg`}
-		alt={player.nickname}
-		class="h-12 w-12 md:h-14 md:w-14 relative rounded-full z-20 block {isCurrentPlayer
+	<div
+		class="h-12 w-12 md:h-14 md:w-14 relative rounded-full z-20 flex items-center justify-center bg-gray-200 {isCurrentPlayer
 			? 'border-4 border-dark-green'
 			: ''}"
-	/>
+	>
+		<User class="h-6 w-6 md:h-7 md:w-7 text-gray-600" />
+	</div>
 	<div
 		class="absolute origin-right -top-2 left-full ml-2 rounded-full bg-dark-green text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-nowrap"
 	>
