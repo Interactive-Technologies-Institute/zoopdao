@@ -26,6 +26,8 @@
 	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
 	import { generateAIMessages } from '@/utils/ai-messages';
 	import type { AIAgent, AIMessage, Participant } from '@/types';
+	import { supabase } from '@/supabase';
+	import { storeHumanMessage, getDiscussionMessages, getChatHistoryForAI } from '@/utils/discussion-messages';
 
 	let tour: Tour | undefined;
 
@@ -169,6 +171,29 @@
 	}
 	let discussionMessages = $state<DiscussionMessage[]>([]);
 
+	// Load existing messages on mount
+	$effect(async () => {
+		if (gameState.state === 'playing' || gameState.state === 'finished') {
+			try {
+				const gameId = data.game.id;
+				const messages = await getDiscussionMessages(supabase, gameId);
+				
+				discussionMessages = messages.map((msg) => ({
+					id: msg.id.toString(),
+					content: msg.content,
+					senderType: msg.participantType === 'human' ? 'human' : 'ai',
+					senderName: msg.participantType === 'human' 
+						? 'You' 
+						: (msg.agentRole ? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1) : 'AI Agent'),
+					round: msg.round,
+					timestamp: new Date(msg.createdAt)
+				}));
+			} catch (error) {
+				console.error('Error loading messages:', error);
+			}
+		}
+	});
+
 	$effect(() => {
 		if (playerState === 'writing') {
 			openStoryDialog = true;
@@ -188,20 +213,105 @@
 		}
 	});
 
-	function handleSendMessage(message: string) {
-		// Add human message to discussion
-		const newMessage: DiscussionMessage = {
-			id: crypto.randomUUID(),
-			content: message,
-			senderType: 'human',
-			senderName: 'You',
-			round: gameState.currentRound,
-			timestamp: new Date()
-		};
-		discussionMessages = [...discussionMessages, newMessage];
-		
-		// TODO: Save to database
-		console.log('Message sent:', message);
+	async function handleSendMessage(message: string) {
+		try {
+			const gameId = data.game.id;
+			const proposalId = (data.game as any).proposal_id || null; // Get proposal_id if exists
+			const currentRound = gameState.currentRound;
+			const playerId = data.playerId;
+
+			// Save human message to database
+			const savedMessage = await storeHumanMessage(
+				supabase,
+				gameId,
+				proposalId,
+				currentRound,
+				playerId,
+				message
+			);
+
+			if (!savedMessage) {
+				console.error('Failed to save message');
+				return;
+			}
+
+			// Add human message to local state
+			const newMessage: DiscussionMessage = {
+				id: savedMessage.id.toString(),
+				content: savedMessage.content,
+				senderType: 'human',
+				senderName: 'You',
+				round: savedMessage.round,
+				timestamp: new Date(savedMessage.createdAt)
+			};
+			discussionMessages = [...discussionMessages, newMessage];
+
+			// Get chat history for AI context
+			const chatHistory = await getChatHistoryForAI(supabase, gameId, currentRound);
+
+			// Generate AI agent responses
+			if (aiAgents.length > 0) {
+				const aiResponses = await Promise.all(
+					aiAgents.map(async (agent) => {
+						try {
+							const response = await fetch('/api/ai/messages', {
+								method: 'POST',
+								headers: {
+									'Content-Type': 'application/json'
+								},
+								body: JSON.stringify({
+									gameId: gameId,
+									proposalId: proposalId,
+									round: currentRound,
+									agentRole: agent.role,
+									chatHistory: chatHistory
+								})
+							});
+
+							if (!response.ok) {
+								console.error(`Failed to generate message for ${agent.name}:`, await response.text());
+								return null;
+							}
+
+							const result = await response.json();
+							if (result.success && result.message) {
+								return {
+									agent,
+									message: result.message
+								};
+							}
+							return null;
+						} catch (error) {
+							console.error(`Error generating message for ${agent.name}:`, error);
+							return null;
+						}
+					})
+				);
+
+				// Add AI messages to local state
+				aiResponses.forEach((response) => {
+					if (response && response.message) {
+						// Split content if it contains multiple messages (separated by \n\n)
+						const messageContents = response.message.content.split('\n\n').filter(m => m.trim());
+						
+						messageContents.forEach((content, index) => {
+							const aiMessage: DiscussionMessage = {
+								id: `${response.message.id}-${index}`,
+								content: content.trim(),
+								senderType: 'ai',
+								senderName: response.agent.name,
+								round: response.message.round,
+								timestamp: new Date(response.message.createdAt)
+							};
+							discussionMessages = [...discussionMessages, aiMessage];
+						});
+					}
+				});
+			}
+		} catch (error) {
+			console.error('Error sending message:', error);
+			alert('Failed to send message. Please try again.');
+		}
 	}
 
 	function handleOpenHistory() {
