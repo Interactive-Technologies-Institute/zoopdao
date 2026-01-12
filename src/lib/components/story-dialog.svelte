@@ -39,7 +39,13 @@
 	});
 
 	let sortedRounds = $derived.by(() => {
-		return gameState.rounds.sort((a, b) => a.index - b.index);
+		if (!gameState.rounds || gameState.rounds.length === 0) {
+			console.warn('No rounds found in gameState.rounds:', gameState.rounds);
+			return [];
+		}
+		const sorted = [...gameState.rounds].sort((a, b) => a.index - b.index);
+		console.log('Sorted rounds:', sorted);
+		return sorted;
 	});
 
 	let player = $derived.by(() => {
@@ -81,7 +87,7 @@
 			if (currentAnswer.trim() === '') {
 				gameState.submitAnswer('(Empty submission)');
 				alert(
-					"You didn't write anything for this round! You can edit your story at the end of the game."
+					"You didn't write anything for this round! You can edit your discussion at the end of the participation."
 				);
 			} else {
 				gameState.submitAnswer(currentAnswer);
@@ -128,9 +134,15 @@
 	<Dialog.Content
 		interactOutsideBehavior="ignore"
 		class="overflow-y-auto flex flex-col gap-y-10 max-h-[95vh] w-[95vw] md:w-[60dvw] bg-white rounded-2xl shadow-lg pb-80 md:pb-5"
-		style="transform-origin: center center;"
+		style="transform-origin: center center; z-index: 100;"
 	>
-		{#each sortedRounds as round (round.index)}
+		{#if sortedRounds.length === 0}
+			<div class="p-8 text-center">
+				<p class="text-gray-500">No rounds available. Please check if rounds are loaded in the database.</p>
+				<p class="text-xs text-gray-400 mt-2">gameState.rounds length: {gameState.rounds.length}</p>
+			</div>
+		{:else}
+			{#each sortedRounds as round (round.index)}
 			{@const card_id = playerCardIds.find((card) => card.round === round.index)?.card_id}
 			{@const card = playerCards.find((card) => card.id === card_id)}
 			{@const answer = playerAnswers.find((answer) => answer.round === round.index)}
@@ -229,5 +241,6 @@
 				<div class="h-0.5 border-t-2 border-gray-200"></div>
 			{/if}
 		{/each}
+		{/if}
 	</Dialog.Content>
 </Dialog.Root>
