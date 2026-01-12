@@ -35,12 +35,27 @@
 		isCreatingGame = true;
 		
 		try {
+			// Ensure we have a session (anonymous or authenticated)
+			const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+			
+			if (!session) {
+				// Create anonymous session if none exists
+				const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+				
+				if (authError || !authData.session) {
+					console.error('Error creating anonymous session:', authError);
+					alert('Failed to create session. Please try again.');
+					isCreatingGame = false;
+					return;
+				}
+			}
+			
 			// Create a new game
 			const { data: gameData, error: gameError } = await supabase.rpc('create_game');
 			
 			if (gameError) {
 				console.error('Error creating game:', gameError);
-				alert('Failed to create discussion. Please try again.');
+				alert(`Failed to create discussion: ${gameError.message}. Please try again.`);
 				isCreatingGame = false;
 				return;
 			}
@@ -49,7 +64,7 @@
 			goto(`/${gameData.game_code}/lobby`);
 		} catch (error) {
 			console.error('Error starting discussion:', error);
-			alert('Failed to start discussion. Please try again.');
+			alert(`Failed to start discussion: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
 			isCreatingGame = false;
 		}
 	}

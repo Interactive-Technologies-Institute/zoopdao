@@ -83,12 +83,30 @@ export class GameLobbyState {
 			return;
 		}
 		player.character = character;
-		const { error } = await supabase.rpc('update_player_character', {
-			game_code: this.code,
-			player_character: character
-		});
-		if (error) {
-			console.error(error);
+		
+		// Check if character is actually a role (new system)
+		// Roles: 'administration', 'research', 'reception', 'operations', 'bar', 'cleaning'
+		const roles = ['administration', 'research', 'reception', 'operations', 'bar', 'cleaning'];
+		const isRole = roles.includes(character as string);
+		
+		if (isRole) {
+			// Use the new update_player_role function for roles
+			const { error } = await supabase.rpc('update_player_role', {
+				game_code: this.code,
+				player_role: character as any // Cast to role_type
+			});
+			if (error) {
+				console.error(error);
+			}
+		} else {
+			// Use the old update_player_character function for legacy characters
+			const { error } = await supabase.rpc('update_player_character', {
+				game_code: this.code,
+				player_character: character
+			});
+			if (error) {
+				console.error(error);
+			}
 		}
 	}
 

@@ -204,7 +204,7 @@ export function createGameTour() {
 					secondary: true
 				},
 				{
-					text: m.start_playing(),
+					text: m.start_participating(),
 					action: tour.complete
 				}
 			],

@@ -33,34 +33,38 @@ BEGIN
     END IF;
 END $$;
 
--- Step 4: Migrate existing data (map old characters to new roles)
--- Since we're changing the system completely, set a default role for existing players
--- All existing players will get 'administration' as default role
-UPDATE public.players SET role = 'administration' WHERE role IS NULL;
-
--- Step 5: Make role NOT NULL after migration (only if it's currently nullable)
+-- Step 4: Migrate existing data (only for players that already have a character)
+-- Only migrate players that existed before this migration
+-- New players will have NULL role until they select one in the lobby
+-- Note: This migration only runs once, so existing players with characters get a default role
 DO $$ 
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'public' 
-        AND table_name = 'players' 
-        AND column_name = 'role'
-        AND is_nullable = 'YES'
-    ) THEN
-        ALTER TABLE public.players ALTER COLUMN role SET NOT NULL;
-    END IF;
+    -- Only update players that have a character but no role (existing data migration)
+    -- Skip this if there are no such players (fresh database)
+    UPDATE public.players 
+    SET role = 'administration'::role_type 
+    WHERE role IS NULL 
+    AND character IS NOT NULL
+    AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'players' AND column_name = 'role');
 END $$;
 
+-- Step 5: Keep role nullable initially (players select role in lobby)
+-- Role will be set when player selects their role in the lobby
+-- We don't set NOT NULL constraint here - role can be NULL until selected
+
 -- Step 6: Add new UNIQUE constraint on (role, game_id) to maintain the same logic
--- This ensures only one player can have each role per game (only if it doesn't exist)
+-- This ensures only one player can have each role per game
+-- Note: NULL values are allowed (multiple players can have NULL role until they select)
+-- We use a partial unique index to allow multiple NULLs but enforce uniqueness for non-NULL values
 DO $$ 
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint 
-        WHERE conname = 'players_role_game_id_key'
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'players_role_game_id_unique_idx'
     ) THEN
-        ALTER TABLE public.players ADD CONSTRAINT players_role_game_id_key UNIQUE (role, game_id);
+        CREATE UNIQUE INDEX players_role_game_id_unique_idx 
+        ON public.players (role, game_id) 
+        WHERE role IS NOT NULL;
     END IF;
 END $$;
 
