@@ -35,7 +35,9 @@
 	let { open = $bindable(false), gameState }: StoryDialogProps = $props();
 
 	let currentRound = $derived.by(() => {
-		return gameState.gameRounds.find((round) => round.round === gameState.currentRound)?.round;
+		// Use gameState.currentRound directly, but ensure it's a number
+		const round = gameState.currentRound;
+		return typeof round === 'number' ? round : 0;
 	});
 
 	let sortedRounds = $derived.by(() => {
@@ -53,10 +55,23 @@
 	});
 	$effect(() => {
 		if (open && playerState === 'writing') {
-			const currentGameRound = gameState.gameRounds.find((r) => r.round === currentRound);
-			if (currentGameRound && !currentGameRound.timer_duration) {
-				gameState.startRoundTimer();
-			}
+			// Start timer only when dialog is actually open
+			// Use setTimeout to ensure dialog is fully rendered before starting timer
+			setTimeout(() => {
+				const currentGameRound = gameState.gameRounds.find((r) => r.round === currentRound);
+				// For discussion rounds (1-7), always start timer when dialog opens
+				// For round 0, only start if timer_duration doesn't exist
+				if (currentGameRound) {
+					if (currentRound >= 1 && currentRound <= 7) {
+						// Always start timer for discussion rounds
+						gameState.startRoundTimer();
+					} else if (!currentGameRound.timer_duration) {
+						// For round 0, only start if timer doesn't exist
+						gameState.startRoundTimer();
+					}
+				}
+			}, 100);
+			
 			audio.play();
 			setTimeout(() => {
 				const round = document.getElementById(`round-${currentRound}`);
@@ -82,16 +97,48 @@
 	});
 	let currentAnswer = $state('');
 
-	function submitAnswer() {
+	async function submitAnswer() {
 		if (playerState === 'writing') {
+			// Check if there's only one human player
+			const humanPlayers = gameState.players.filter(p => p.is_active !== false);
+			const isSinglePlayer = humanPlayers.length === 1;
+			const currentRoundBefore = gameState.currentRound;
+			
 			if (currentAnswer.trim() === '') {
-				gameState.submitAnswer('(Empty submission)');
+				await gameState.submitAnswer('(Empty submission)');
 				alert(
 					"You didn't write anything for this round! You can edit your discussion at the end of the participation."
 				);
 			} else {
-				gameState.submitAnswer(currentAnswer);
+				await gameState.submitAnswer(currentAnswer);
 			}
+			
+			// If single player, wait for the round to advance
+			if (isSinglePlayer) {
+				// Wait for the database to process the answer and check round completion
+				// check_round_completion will call roll_dice which creates a new game_round
+				// The subscription will pick up the new round automatically
+				let attempts = 0;
+				const maxAttempts = 10; // Wait up to 2 seconds (10 * 200ms)
+				
+				while (attempts < maxAttempts) {
+					await new Promise(resolve => setTimeout(resolve, 200));
+					
+					// Check if the round has advanced
+					if (gameState.currentRound > currentRoundBefore) {
+						console.log('Round advanced from', currentRoundBefore, 'to', gameState.currentRound);
+						break;
+					}
+					
+					attempts++;
+				}
+				
+				// If round didn't advance, log for debugging
+				if (gameState.currentRound === currentRoundBefore) {
+					console.warn('Round did not advance after submit. Current round:', gameState.currentRound);
+				}
+			}
+			
 			open = false;
 			currentAnswer = '';
 		}
@@ -106,7 +153,17 @@
 		if (!key) return ''; // Return an empty string if the key is undefined
 		const translation = m[key as keyof typeof m];
 		if (typeof translation === 'function') {
-			return translation();
+			try {
+				// Try calling without arguments first (for simple translations)
+				return (translation as () => string)();
+			} catch {
+				// If that fails, try with empty object (for translations with parameters)
+				try {
+					return (translation as (params: { nickname: string }) => string)({ nickname: '' });
+				} catch {
+					return 'Translation missing';
+				}
+			}
 		} else {
 			console.warn(`Translation for key "${key}" is missing or not a function.`);
 			return 'Translation missing';
@@ -118,7 +175,8 @@
 	}
 
 	let playerState = $derived.by(() => {
-		return gameState.playersState[gameState.playerId].state;
+		const state = gameState.playersState[gameState.playerId];
+		return state?.state || 'starting';
 	});
 
 	let showSpeciesDialog = $state(false);
@@ -142,7 +200,7 @@
 				<p class="text-xs text-gray-400 mt-2">gameState.rounds length: {gameState.rounds.length}</p>
 			</div>
 		{:else}
-			{#each sortedRounds as round (round.index)}
+		{#each sortedRounds as round (round.index)}
 			{@const card_id = playerCardIds.find((card) => card.round === round.index)?.card_id}
 			{@const card = playerCards.find((card) => card.id === card_id)}
 			{@const answer = playerAnswers.find((answer) => answer.round === round.index)}
@@ -228,7 +286,7 @@
 						</div>
 						<div class=" flex items-center justify-between gap-3 bg-white">
 							{#if open && playerState === 'writing'}
-								<Timer {gameState} onTimeUp={handleTimeUp} />
+								<Timer onTimeUp={handleTimeUp} />
 							{/if}
 							<Button onclick={onSubmit}>{m.submit()}</Button>
 						</div>

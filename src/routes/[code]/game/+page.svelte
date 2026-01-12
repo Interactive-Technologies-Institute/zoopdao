@@ -237,11 +237,7 @@
 		}
 	});
 
-	$effect(() => {
-		if (playerState === 'writing') {
-			openStoryDialog = true;
-		}
-	});
+	
 
 	$effect(() => {
 		if (gameState.state === 'starting') {
@@ -418,6 +414,7 @@
 			}
 		}
 	}
+	$inspect(gameState.currentRound);
 	$inspect(playerState);
 </script>
 

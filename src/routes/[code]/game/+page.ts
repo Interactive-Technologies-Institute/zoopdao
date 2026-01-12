@@ -47,13 +47,15 @@ export const load = async ({ params, parent }) => {
 	}
 
 	async function getRounds(): Promise<Round[]> {
-		const { data: roundsData, error: roundsError } = await supabase.from('rounds').select('*');
+		const { data: roundsData, error: roundsError } = await supabase.from('rounds').select('*').order('index', { ascending: true });
 
 		if (roundsError) {
+			console.error('Error fetching rounds:', roundsError);
 			return error(500, { message: 'Error fetching rounds' });
 		}
 
-		return roundsData;
+		console.log('Rounds loaded from database:', roundsData);
+		return roundsData || [];
 	}
 
 	async function getStops(): Promise<Stop[]> {
@@ -77,7 +79,11 @@ export const load = async ({ params, parent }) => {
 		}
 
 		const cards = cardsData.map((card) => ({
-			...card,
+			id: card.id,
+			type: card.type,
+			title: card.title,
+			hero_steps: card.hero_steps,
+			character_category: card.character_category as Card['character_category'],
 			text: card.prompt_text[0].text ?? ''
 		}));
 

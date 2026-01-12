@@ -28,7 +28,7 @@
 </script>
 
 <!-- Discussion Input Bar -->
-<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(900px,calc(100vw-2rem))] z-30">
+<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(900px,calc(100vw-2rem))] z-50 pointer-events-auto">
 	<div class="relative">
 		<!-- Background bar with shadow -->
 		<div class="bg-gradient-to-b from-[#3a3a3a] to-[#2f2f2f] rounded-full px-6 py-5 shadow-2xl border border-white/10">

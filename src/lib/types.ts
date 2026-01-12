@@ -100,19 +100,15 @@ export type PlayerAnswer = Database['public']['Tables']['player_answers']['Row']
 export type PlayerState =
 	| {
 			state: 'starting';
-			stop_id: undefined;
 	  }
 	| {
 			state: 'moving';
-			stop_id: StopId;
 	  }
 	| {
 			state: 'writing';
-			stop_id: StopId;
 	  }
 	| {
 			state: 'done';
-			stop_id: StopId;
 	  };
 
 export type StoryCharacter = {

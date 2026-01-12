@@ -88,18 +88,12 @@
 	>
 		<!-- Front of card -->
 		<button
-			class={`absolute inset-0 w-full h-full transform transition-transform rounded-lg overflow-hidden [backface-visibility:hidden] ${
+			class={`absolute bg-blue-50 inset-0 w-full h-full transform transition-transform rounded-lg overflow-hidden [backface-visibility:hidden] ${
 				taken || disabled ? 'cursor-not-allowed' : 'hover:rotate-2 focus:rotate-2'
 			}`}
 			onclick={!taken && !disabled ? onSelect : undefined}
 			{disabled}
 		>
-			<img
-				src={`/images/characters/cards/${character}.svg`}
-				alt={character}
-				class="w-full h-full object-cover"
-				class:grayscale={taken}
-			/>
 			<div
 				class="absolute inset-0 translate-y-20 px-3 flex flex-col items-center justify-center text-center gap-2"
 			>
@@ -124,19 +118,11 @@
 			<Button onclick={onReady} disabled={ready}>{m.ready()}</Button>
 		</div>
 	</div>
-	{#if taken || selected}
-		<img
-			src={`/images/characters/badges/${character}.svg`}
-			alt={character}
-			class="rounded-full w-16 h-16 absolute -top-5 -right-5 z-10"
-		/>
-
-		{#if ready}
-			<div
-				class="absolute -top-5 -right-5 w-16 h-16 rounded-full bg-dark-green/50 z-20 flex items-center justify-center"
-			>
-				<Check class="text-white w-8 h-8" />
-			</div>
-		{/if}
+	{#if taken || selected && ready}
+		<div
+			class="absolute -top-5 -right-5 w-16 h-16 rounded-full bg-dark-green/50 z-20 flex items-center justify-center"
+		>
+			<Check class="text-white w-8 h-8" />
+		</div>
 	{/if}
 </div>

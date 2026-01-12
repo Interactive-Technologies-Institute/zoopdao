@@ -361,49 +361,41 @@ export class GameState {
 		const currentCard = cards.find((card) => card.round === this.currentRound);
 		const currentAnswer = answers.find((answer) => answer.round === this.currentRound);
 
-		const stopId = currentMove?.stop_id ?? previousMove?.stop_id;
-
 		// Round 0 - Introduction
 		if (this.currentRound === 0) {
-			if (!stopId) {
-				return { state: 'starting', stop_id: undefined };
+			if (!currentMove) {
+				return { state: 'starting' };
 			}
 			return !currentAnswer
-				? { state: 'writing', stop_id: stopId }
-				: { state: 'done', stop_id: stopId };
+				? { state: 'writing' }
+				: { state: 'done' };
 		}
 
-		// Round 7 - Reflection
-		if (this.currentRound === 7) {
-			const lastStopId = moves.find((move) => move.round === 6)?.stop_id || 1;
-			return !currentAnswer
-				? { state: 'writing', stop_id: lastStopId }
-				: { state: 'done', stop_id: lastStopId };
+		// Rounds 1-7: Discussion rounds
+		if (this.currentRound >= 1 && this.currentRound <= 7) {
+			if (!currentAnswer) {
+				return { state: 'writing' };
+			} else {
+				return { state: 'done' };
+			}
 		}
 
-		// Normal rounds (1-6)
-		if (!stopId) {
-			return { state: 'starting', stop_id: undefined };
-		} else if (!currentMove && !currentCard && !currentAnswer) {
-			return { state: 'moving', stop_id: stopId };
-		} else if (currentMove && currentCard && !currentAnswer) {
-			return { state: 'writing', stop_id: stopId };
-		} else {
-			return { state: 'done', stop_id: stopId };
-		}
+		// Fallback (should not reach here for valid rounds)
+		return { state: 'starting' };
 	}
 
-	async playerStart(stopId: StopId) {
-		const { error } = await supabase.rpc('player_start', {
-			game_code: this.code,
-			stop_id: stopId
+	async playerStart() {
+		// For discussion rounds (rounds 1-7), use player_start_discussion
+		// This function marks that the player has started the discussion round
+		const { error } = await (supabase.rpc as any)('player_start_discussion', {
+			game_code: this.code
 		});
 		if (error) {
 			console.error(error);
 		}
 	}
 
-	async playerMove(stopId: StopId) {
+	async playerMove() {
 		const currentPlayer = this.players.find(p => p.id === this.playerId);
 		if (!currentPlayer) {
 			console.error('Current player not found');
@@ -415,10 +407,9 @@ export class GameState {
 		console.log("Hero step:", this.currentRound);
 		console.log("Character category:", characterCategory);
 
-		const { error } = await supabase.rpc('player_move', {
+		const { error } = await (supabase.rpc as any)('player_next_discussion', {
 			game_code: this.code,
 			game_round: this.currentRound,
-			stop_id: stopId,
 			p_hero_step: this.currentRound,
 			p_character_category: characterCategory
 		});

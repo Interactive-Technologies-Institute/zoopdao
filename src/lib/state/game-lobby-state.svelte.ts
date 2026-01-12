@@ -43,12 +43,14 @@ export class GameLobbyState {
 				(payload) => {
 					const game = payload.new as Game;
 					const state = game.state;
+					console.log('Game state changed:', state);
 					if (state === 'starting' || state === 'playing' || state === 'finished') {
 						supabase.channel('game').unsubscribe();
 						goto(localizeUrl(`/${this.code}/game`));
 						return;
 					}
 					this.state = game.state as GameLobbyStateEnum;
+					console.log('Updated gameState.state to:', this.state);
 				}
 			)
 			.subscribe();
@@ -91,7 +93,7 @@ export class GameLobbyState {
 		
 		if (isRole) {
 			// Use the new update_player_role function for roles
-			const { error } = await supabase.rpc('update_player_role', {
+			const { error } = await (supabase.rpc as any)('update_player_role', {
 				game_code: this.code,
 				player_role: character as any // Cast to role_type
 			});
@@ -124,6 +126,18 @@ export class GameLobbyState {
 		});
 		if (error) {
 			console.error(error);
+		} else {
+			// Force a refresh of the game state after updating nickname/description
+			// The check_all_players_ready function should have been called by the RPC
+			// but we'll also manually refresh to ensure the state is up to date
+			const { data: gameData } = await supabase
+				.from('games')
+				.select('state')
+				.eq('code', this.code)
+				.single();
+			if (gameData) {
+				this.state = gameData.state as GameLobbyStateEnum;
+			}
 		}
 	}
 

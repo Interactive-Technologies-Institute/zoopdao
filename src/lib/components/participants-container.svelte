@@ -53,7 +53,7 @@
 				{#if participant.type === 'human'}
 					<PlayerBadge
 						player={participant.player}
-						playerState={playersState[participant.player.id] || { state: 'done', stop_id: undefined }}
+						playerState={playersState[participant.player.id] || { state: 'done' }}
 						round={currentRound}
 						currentRound={currentRound}
 						{tourCompleted}
