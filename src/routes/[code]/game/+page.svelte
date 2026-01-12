@@ -5,6 +5,8 @@
 	import ParticipantsContainer from '@/components/participants-container.svelte';
 	import RoundIndicator from '@/components/round-indicator.svelte';
 	import StoryDialog from '@/components/story-dialog.svelte';
+	import DiscussionInputBar from '@/components/discussion-input-bar.svelte';
+	import DiscussionHistoryDialog from '@/components/discussion-history-dialog.svelte';
 	import Button from '@/components/ui/button/button.svelte';
 	import { GameState } from '@/state/game-state.svelte';
 	import { MapPosition } from '@/state/map-position.svelte';
@@ -34,9 +36,9 @@
 
 	onMount(() => {
 		fanfareAudio = new Audio(fanfare);
-		fanfareAudio.volume = 0.5;
+		fanfareAudio.volume = 0.;
 		startupAudio = new Audio(bubbles);
-		startupAudio.volume = 0.5;
+		startupAudio.volume = 0.0;
 
 		if (gameState.state === 'starting') {
 			tour = createGameTour();
@@ -154,6 +156,18 @@
 	let openHelpDialog = $state(false);
 	let openEndDialog = $state(false);
 	let openIslandDialog = $state(false);
+	let openHistoryDialog = $state(false);
+	
+	// Discussion messages state
+	interface DiscussionMessage {
+		id: string;
+		content: string;
+		senderType: 'human' | 'ai';
+		senderName: string;
+		round: number;
+		timestamp: Date;
+	}
+	let discussionMessages = $state<DiscussionMessage[]>([]);
 
 	$effect(() => {
 		if (playerState === 'writing') {
@@ -173,6 +187,26 @@
 			openEndDialog = true;
 		}
 	});
+
+	function handleSendMessage(message: string) {
+		// Add human message to discussion
+		const newMessage: DiscussionMessage = {
+			id: crypto.randomUUID(),
+			content: message,
+			senderType: 'human',
+			senderName: 'You',
+			round: gameState.currentRound,
+			timestamp: new Date()
+		};
+		discussionMessages = [...discussionMessages, newMessage];
+		
+		// TODO: Save to database
+		console.log('Message sent:', message);
+	}
+
+	function handleOpenHistory() {
+		openHistoryDialog = true;
+	}
 
 	async function handleLeaveGame() {
 		const confirmed = confirm('Are you sure you want to leave the game?');
@@ -216,16 +250,32 @@
 		<Image />
 	</Button>
 	<IslandDialog bind:open={openIslandDialog} />
+	
+	<!-- Story Sheet Button (Right Side) -->
 	<Button
 		size="lg"
 		onclick={() => (openStoryDialog = true)}
-		class="absolute bottom-4 left-1/2 -translate-x-1/2 story-button rounded-full px-4"
+		class="absolute bottom-4 right-4 story-button rounded-full px-4"
 		disabled={!tourCompleted}
 	>
 		<ScrollText />
 		{m.story_sheet()}
 	</Button>
 	<StoryDialog bind:open={openStoryDialog} {gameState} />
+	
+	<!-- Discussion Input Bar -->
+	<DiscussionInputBar
+		onSend={handleSendMessage}
+		onOpenHistory={handleOpenHistory}
+		disabled={!tourCompleted}
+	/>
+	
+	<!-- Discussion History Dialog -->
+	<DiscussionHistoryDialog
+		bind:open={openHistoryDialog}
+		messages={discussionMessages}
+		onClose={() => (openHistoryDialog = false)}
+	/>
 	<Button
 		size="default"
 		onclick={() => (openHelpDialog = true)}

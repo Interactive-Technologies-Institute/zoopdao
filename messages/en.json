@@ -264,5 +264,12 @@
 	"role_bar_secondary": "How long are you at the organization? How do you describe your responsibilities?",
 	"role_cleaning_title": "Cleaning",
 	"role_cleaning_description": "Maintain cleanliness and hygiene standards throughout the facility",
-	"role_cleaning_secondary": "How long are you at the organization? How do you describe your responsibilities?"
+	"role_cleaning_secondary": "How long are you at the organization? How do you describe your responsibilities?",
+	"open_story_dialog": "Open story telling",
+	"open_message_history": "Open message history",
+	"discussion_input_placeholder": "Share your thoughts on this proposal...",
+	"send_message": "Send message",
+	"message_history": "Message history",
+	"close": "Close",
+	"no_messages_yet": "No messages yet. Start the discussion!"
 }

@@ -264,5 +264,12 @@
 	"role_bar_secondary": "Há quanto tempo estás na organização? Como descreves as tuas responsabilidades?",
 	"role_cleaning_title": "Limpeza",
 	"role_cleaning_description": "Manter padrões de limpeza e higiene em toda a instalação",
-	"role_cleaning_secondary": "Há quanto tempo estás na organização? Como descreves as tuas responsabilidades?"
+	"role_cleaning_secondary": "Há quanto tempo estás na organização? Como descreves as tuas responsabilidades?",
+	"open_story_dialog": "Abrir narrativa",
+	"open_message_history": "Abrir histórico de mensagens",
+	"discussion_input_placeholder": "Partilha os teus pensamentos sobre esta proposta...",
+	"send_message": "Enviar mensagem",
+	"message_history": "Histórico de mensagens",
+	"close": "Fechar",
+	"no_messages_yet": "Ainda não há mensagens. Inicia a discussão!"
 }
