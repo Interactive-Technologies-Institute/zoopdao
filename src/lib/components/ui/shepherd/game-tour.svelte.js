@@ -144,11 +144,11 @@ export function createGameTour() {
 			}
 		},
 		{
-			id: 'dice',
+			id: 'digital-clock',
 			title: m.dice(),
 			text: m.dice_description(),
 			attachTo: {
-				element: '.dice',
+				element: '.digital-clock',
 				on: 'top'
 			},
 			buttons: [

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Dice from '@/components/dice.svelte';
+	import DigitalClock from '@/components/digital-clock.svelte';
 	import HelpDialog from '@/components/help-dialog.svelte';
 	import Map from '@/components/map.svelte';
 	import ParticipantsContainer from '@/components/participants-container.svelte';
@@ -145,12 +145,6 @@
 		showRoundTransition = false;
 	}
 
-	let dice = $derived.by(() => {
-		const currentRound = gameState.gameRounds.find(
-			(round) => round.round === gameState.currentRound
-		);
-		return currentRound?.dice_roll || 5;
-	});
 	let playerState = $derived.by(() => {
 		return gameState.playersState[gameState.playerId].state;
 	});
@@ -464,9 +458,7 @@
 		{typingAgents}
 	/>
 	<div class="absolute left-4 bottom-4">
-		{#if dice}
-			<Dice value={dice} round={gameState.currentRound} {transitionState} />
-		{/if}
+		<DigitalClock currentRound={gameState.currentRound} />
 	</div>
 
 	{#if showRoundTransition}
