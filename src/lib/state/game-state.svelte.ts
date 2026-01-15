@@ -40,7 +40,7 @@ export class GameState {
 	private beforeUnloadHandler: (() => void) | null = null;
 	private unloadTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	private getGameId(): number {
+	getGameId(): number {
 		// Find a player's game_id (they all share the same game_id)
 		const gameId = this.players?.[0]?.game_id;
 		if (!gameId) {
@@ -393,9 +393,42 @@ export class GameState {
 		await this.refreshGameRounds();
 	}
 
-	async saveStory(name: string, title: string) {
+	async saveStory(name: string, title: string, discussionRound7Text?: string) {
 		const character = this.players.find((player) => player.id === this.playerId);
 		if (!character) return;
+
+		// For round 7, get discussion messages instead of player answer
+		let round7Answer = '';
+		const round7PlayerAnswer = this.playersAnswers.find(
+			(pa) => pa.player_id === this.playerId && pa.round === 7
+		);
+
+		if (discussionRound7Text && discussionRound7Text.trim().length > 0) {
+			round7Answer = discussionRound7Text;
+		} else if (!round7PlayerAnswer || round7PlayerAnswer.answer.trim() === '') {
+			// If there's no player answer for round 7, try to get discussion messages
+			try {
+				const { getDiscussionMessages } = await import('@/utils/discussion-messages');
+				const gameId = this.getGameId();
+				if (gameId > 0) {
+					const messages = await getDiscussionMessages(supabase, gameId, { round: 7 });
+					if (messages.length > 0) {
+						round7Answer = messages
+							.map(msg => {
+								const senderName = msg.participantType === 'human' 
+									? 'You' 
+									: (msg.agentRole ? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1) : 'AI Agent');
+								return `${senderName}: ${msg.content}`;
+							})
+							.join('\n\n');
+					}
+				}
+			} catch (error) {
+				console.error('Error loading round 7 discussion messages:', error);
+			}
+		} else {
+			round7Answer = round7PlayerAnswer.answer;
+		}
 
 		// Build rounds data with card types and answers
 		const roundsData = Array.from({ length: 8 }, (_, i) => {
@@ -405,11 +438,14 @@ export class GameState {
 				(pa) => pa.player_id === this.playerId && pa.round === i
 			);
 
+			// For round 7, use discussion messages if available
+			const answerText = i === 7 ? round7Answer : (answer?.answer || '');
+
 			return {
 				round: i,
 				card_id: card?.card_id || null,
 				type: cardDetails?.type || null,
-				answer: answer?.answer || '',
+				answer: answerText,
 				public_story: true
 			};
 		}).reduce<Record<number, { card_id: number | null; type: string | null; answer: string }>>(

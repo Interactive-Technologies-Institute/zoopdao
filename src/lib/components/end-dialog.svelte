@@ -12,6 +12,8 @@
 	import { Label, Switch } from 'bits-ui';
 	import { goto } from '$app/navigation';
 	import { Textarea } from './ui/textarea';
+	import { supabase } from '@/supabase';
+	import { getDiscussionMessages } from '@/utils/discussion-messages';
 
 	let audio: HTMLAudioElement;
 	onMount(() => {
@@ -22,10 +24,61 @@
 	interface EndDialogProps {
 		open: boolean;
 		gameState: GameState;
+		discussionMessages?: Array<{
+			id: string;
+			content: string;
+			senderType: 'human' | 'ai';
+			senderName: string;
+			round: number;
+			timestamp: Date;
+		}>;
 	}
 
-	let { open = $bindable(false), gameState }: EndDialogProps = $props();
+	let { open = $bindable(false), gameState, discussionMessages = [] }: EndDialogProps = $props();
 	let currentPlayerId = $state(gameState?.playerId || -1);
+	let discussionMessagesRound7 = $state<Array<{ senderName: string; content: string; timestamp: Date }>>([]);
+
+	// Load discussion messages for round 7 when dialog opens
+	$effect(() => {
+		if (open && gameState) {
+			const loadRound7Messages = async () => {
+				try {
+					const localRound7Messages = discussionMessages.filter(msg => msg.round === 7);
+					if (localRound7Messages.length > 0) {
+						discussionMessagesRound7 = localRound7Messages.map(msg => ({
+							senderName: msg.senderType === 'human' ? 'You' : msg.senderName,
+							content: msg.content,
+							timestamp: msg.timestamp
+						}));
+						return;
+					}
+
+					const gameId = gameState.getGameId();
+					if (gameId > 0) {
+						const messages = await getDiscussionMessages(supabase, gameId, { round: 7 });
+						discussionMessagesRound7 = messages.map(msg => ({
+							senderName: msg.participantType === 'human' 
+								? 'You' 
+								: (msg.agentRole ? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1) : 'AI Agent'),
+							content: msg.content,
+							timestamp: new Date(msg.createdAt)
+						}));
+					}
+				} catch (error) {
+					console.error('Error loading round 7 discussion messages:', error);
+				}
+			};
+			loadRound7Messages();
+		}
+	});
+
+	// Format discussion messages for round 7 as a single text
+	function formatRound7Discussion(): string {
+		if (discussionMessagesRound7.length === 0) return '';
+		return discussionMessagesRound7
+			.map(msg => `${msg.senderName}: ${msg.content}`)
+			.join('\n\n');
+	}
 
 	let storiesByPlayer = $derived.by(() => {
 		const stories: Array<{ player: Player; answers: PlayerAnswer[]; isCurrent: boolean }> = [];
@@ -34,9 +87,38 @@
 		const currentPlayer = gameState.players.find((p) => p.id === currentPlayerId);
 
 		if (currentPlayer) {
-			const playerAnswers = gameState.playersAnswers
+			// Get all player answers and ensure we have entries for all 8 rounds (0-7)
+			const playerAnswersMap = new Map<number, PlayerAnswer>();
+			gameState.playersAnswers
 				.filter((answer) => answer.player_id === currentPlayerId)
-				.sort((a, b) => a.round - b.round);
+				.forEach((answer) => {
+					playerAnswersMap.set(answer.round, answer);
+				});
+
+			// Create answers array with all 8 rounds, using discussion messages for round 7
+			const playerAnswers: PlayerAnswer[] = Array.from({ length: 8 }, (_, i) => {
+				if (i === 7 && discussionMessagesRound7.length > 0) {
+					// For round 7, use discussion messages if available
+					const existingAnswer = playerAnswersMap.get(7);
+					return {
+						id: existingAnswer?.id || 0,
+						player_id: currentPlayerId,
+						game_id: gameState.getGameId(),
+						round: 7,
+						answer: formatRound7Discussion()
+					} as PlayerAnswer;
+				} else {
+					// For other rounds, use existing answer or create empty one
+					const existingAnswer = playerAnswersMap.get(i);
+					return existingAnswer || {
+						id: 0,
+						player_id: currentPlayerId,
+						game_id: gameState.getGameId(),
+						round: i,
+						answer: ''
+					} as PlayerAnswer;
+				}
+			});
 
 			// Add current player as the first element
 			stories.push({
@@ -49,9 +131,25 @@
 		gameState.players
 			.filter((player) => player.is_active !== false && player.id !== currentPlayerId)
 			.forEach((player) => {
-				const playerAnswers = gameState.playersAnswers
+				// Get all player answers and ensure we have entries for all 8 rounds (0-7)
+				const playerAnswersMap = new Map<number, PlayerAnswer>();
+				gameState.playersAnswers
 					.filter((answer) => answer.player_id === player.id)
-					.sort((a, b) => a.round - b.round);
+					.forEach((answer) => {
+						playerAnswersMap.set(answer.round, answer);
+					});
+
+				// Create answers array with all 8 rounds
+				const playerAnswers: PlayerAnswer[] = Array.from({ length: 8 }, (_, i) => {
+					const existingAnswer = playerAnswersMap.get(i);
+					return existingAnswer || {
+						id: 0,
+						player_id: player.id,
+						game_id: gameState.getGameId(),
+						round: i,
+						answer: ''
+					} as PlayerAnswer;
+				});
 
 				stories.push({
 					player,
@@ -134,7 +232,8 @@
 			goto(localizeHref('/stories'));
 		} else {
 			// Logic to save the story
-			const id = await gameState.saveStory(playerName, storyTitle);
+			const discussionText = formatRound7Discussion();
+			const id = await gameState.saveStory(playerName, storyTitle, discussionText);
 			goto(localizeHref(`/stories/${id}`));
 			// Reset the form
 			playerName = '';

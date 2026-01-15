@@ -23,9 +23,9 @@
 	import StatusPill from '@/components/status-pill.svelte';
 	import IslandDialog from '@/components/island-dialog.svelte';
 	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
-	import type { AIAgent, AIMessage, Participant } from '@/types';
+	import type { AIAgent, AIMessage, Participant, Role } from '@/types';
 	import { supabase } from '@/supabase';
-	import { storeHumanMessage, getDiscussionMessages, getChatHistoryForAI } from '@/utils/discussion-messages';
+	import { storeHumanMessage, getDiscussionMessages, getChatHistoryForAI, storeAIMessage } from '@/utils/discussion-messages';
 
 	let tour: Tour | undefined;
 
@@ -341,6 +341,7 @@
 			};
 			discussionMessages = [...discussionMessages, newMessage];
 
+
 			// Get chat history for AI context (including current round)
 			const chatHistory = await getChatHistoryForAI(supabase, gameId, currentRound); // Includes current round messages
 
@@ -351,6 +352,59 @@
 						typingAgents.delete(agentId);
 						typingAgents = new Set(typingAgents);
 					}
+				};
+
+				// Helper function to use fallback message (UI-first, persistence best-effort)
+				const useFallbackMessage = async (agent: AIAgent) => {
+					const fallbackContent = generateFallbackMessage(agent, message).trim();
+					if (!fallbackContent) {
+						clearTyping(agent.id);
+						return false;
+					}
+
+					await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000)); // 2-4 seconds
+
+					const localId = `fallback-${agent.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+					const now = new Date();
+
+					// UI-first: add to local state immediately
+					const discussionMessage: DiscussionMessage = {
+						id: localId,
+						content: fallbackContent,
+						senderType: 'ai',
+						senderName: agent.name,
+						round: currentRound,
+						timestamp: now
+					};
+					discussionMessages = [...discussionMessages, discussionMessage];
+
+					const aiMessage: AIMessage = {
+						id: localId,
+						agent_id: agent.id,
+						round: currentRound,
+						content: fallbackContent,
+						created_at: now.toISOString()
+					};
+					aiMessages = [...aiMessages, aiMessage];
+
+					clearTyping(agent.id);
+
+					// Best-effort persistence after UI update
+					try {
+						await storeAIMessage(
+							supabase,
+							gameId,
+							proposalId,
+							currentRound,
+							agent.id,
+							agent.role,
+							fallbackContent
+						);
+					} catch (fallbackError) {
+						console.error(`Failed to store fallback message for ${agent.name}:`, fallbackError);
+					}
+
+					return true;
 				};
 
 				// Calculate delay: 1 minute (60000ms) divided by number of agents, minimum 10 seconds (10000ms)
@@ -365,6 +419,9 @@
 				for (let i = 0; i < shuffledAgents.length; i++) {
 					const agent = shuffledAgents[i];
 					
+					// Only show the current agent typing
+					typingAgents = new Set([agent.id]);
+
 					// Calculate random delay between minDelay and baseDelay * 1.5
 					const delay = Math.floor(minDelay + Math.random() * (baseDelay * 1.5 - minDelay));
 					
@@ -391,27 +448,17 @@
 						});
 
 						if (!response.ok) {
-							const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-							const errorMessage = errorData.error || `Failed to generate message for ${agent.name}`;
-							const retryAfter = errorData.retryAfter;
-							console.error(`Failed to generate message for ${agent.name}:`, errorMessage);
-							
-							// Don't show typing indicator if rate limit or error
-							// Show user-friendly error message for 503/429 errors
-							if (response.status === 503 || response.status === 429) {
-								const message = retryAfter 
-									? `${errorMessage} (Wait ${retryAfter} seconds)`
-									: errorMessage;
-								alert(message);
+							if (response.status === 429 || response.status === 500) {
+								await useFallbackMessage(agent);
+							} else {
+								clearTyping(agent.id);
 							}
 							continue;
 						}
 
 						const result = await response.json();
 						if (result.success && result.message) {
-							// Message was successfully generated - now show typing indicator
-							typingAgents = new Set([...typingAgents, agent.id]);
-
+							// Message was successfully generated - typing indicator already shown
 							try {
 								// Wait a bit before showing the actual message (simulate typing)
 								await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000)); // 2-4 seconds
@@ -451,23 +498,69 @@
 							clearTyping(agent.id);
 						}
 					} catch (error) {
-						clearTyping(agent.id);
-						console.error(`Error generating message for ${agent.name}:`, error);
-						const errorMessage = error instanceof Error ? error.message : 'Failed to generate AI message';
-						
-						// Don't show typing indicator on error
-						alert(`Error: ${errorMessage}`);
+						// On unexpected errors, attempt fallback to keep UI responsive
+						console.error(`AI message generation failed for ${agent.name}:`, error);
+						await useFallbackMessage(agent);
 					}
 				}
 			}
 		} catch (error) {
 			console.error('Error sending message:', error);
-			alert('Failed to send message. Please try again.');
 		}
 	}
 
 	function handleOpenHistory() {
 		openHistoryDialog = true;
+	}
+
+	// Generate fallback message when API rate limit is reached
+	function generateFallbackMessage(agent: AIAgent, userMessage: string): string {
+		const roleMessages: Record<Role, string[]> = {
+			administration: [
+				'From an administrative perspective, we need to consider the practical implementation of this proposal.',
+				'We should evaluate the organizational impact and resource requirements carefully.',
+				'Administrative efficiency is crucial for successful implementation.'
+			],
+			research: [
+				'Research indicates that this approach has potential benefits worth exploring.',
+				'We need more data to fully understand the long-term implications.',
+				'From a research standpoint, this requires further investigation and validation.'
+			],
+			reception: [
+				'This would impact how we interact with visitors and stakeholders.',
+				'We should consider the user experience implications carefully.',
+				'Reception services would need to adapt to ensure smooth visitor experience.'
+			],
+			operations: [
+				'Operational feasibility is a key concern that needs careful assessment.',
+				'We need to evaluate the day-to-day implementation challenges.',
+				'Operations would need to be restructured to accommodate this change effectively.'
+			],
+			bar: [
+				'This could affect our service delivery model and customer satisfaction.',
+				'We should consider the customer-facing aspects of this proposal.',
+				'Service quality must be maintained throughout any transition.'
+			],
+			cleaning: [
+				'Maintenance and sustainability are important factors to consider.',
+				'We need to ensure this doesn\'t create additional workload or complexity.',
+				'From a maintenance perspective, this requires careful planning and resource allocation.'
+			]
+		};
+
+		const messages = roleMessages[agent.role] || roleMessages.administration;
+		const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+		
+		// Add context about the user's message if available
+		if (userMessage && userMessage.trim().length > 0) {
+			const fallbackMsg = `${randomMessage} Regarding your point about "${userMessage.substring(0, 50)}${userMessage.length > 50 ? '...' : ''}", ${agent.name} agrees this is worth discussing.`;
+			console.log(`Generated fallback message for ${agent.name} with user context:`, fallbackMsg);
+			return fallbackMsg;
+		}
+		
+		const fallbackMsg = `${randomMessage} ${agent.name} believes this is an important topic for discussion.`;
+		console.log(`Generated fallback message for ${agent.name} without user context:`, fallbackMsg);
+		return fallbackMsg;
 	}
 
 	async function handleLeaveGame() {
@@ -589,5 +682,5 @@
 		/>
 	{/if}
 
-	<EndDialog bind:open={openEndDialog} {gameState} />
+	<EndDialog bind:open={openEndDialog} {gameState} {discussionMessages} />
 </div>

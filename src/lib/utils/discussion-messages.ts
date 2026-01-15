@@ -164,6 +164,52 @@ export async function storeHumanMessage(
 }
 
 /**
+ * Store an AI agent message
+ */
+export async function storeAIMessage(
+	supabase: SupabaseClient,
+	gameId: number,
+	proposalId: number | null,
+	round: number,
+	agentId: string,
+	agentRole: 'administration' | 'research' | 'reception' | 'operations' | 'bar' | 'cleaning',
+	content: string
+): Promise<DiscussionMessage | null> {
+	const { data, error } = await supabase
+		.from('discussion_messages')
+		.insert({
+			game_id: gameId,
+			proposal_id: proposalId,
+			round: round,
+			participant_type: 'ai_agent',
+			participant_id: null,
+			agent_role: agentRole,
+			content: content,
+			metadata: { agent_id: agentId }
+		})
+		.select()
+		.single();
+
+	if (error) {
+		console.error('Error storing AI message:', error);
+		return null;
+	}
+
+	return {
+		id: data.id,
+		gameId: data.game_id,
+		proposalId: data.proposal_id,
+		round: data.round,
+		participantType: data.participant_type,
+		participantId: data.participant_id,
+		agentRole: data.agent_role,
+		content: data.content,
+		createdAt: data.created_at,
+		metadata: data.metadata || {}
+	};
+}
+
+/**
  * Get chat history formatted for AI context
  */
 export async function getChatHistoryForAI(
