@@ -298,8 +298,8 @@
 				
 				// If we've reached the configured number of discussion rounds, show save dialog
 				if (discussionRoundCount >= DISCUSSION_ROUNDS_COUNT) {
-					fanfareAudio?.play();
-					openEndDialog = true;
+			fanfareAudio?.play();
+			openEndDialog = true;
 				}
 			}
 		}
@@ -613,8 +613,8 @@
 	</Button>
 	<IslandDialog bind:open={openIslandDialog} />
 	
-		<Button
-			size="lg"
+	<Button
+		size="lg"
 			onclick={async () => {
 				openStoryDialog = true;
 				if (gameState.currentRound > 0) {
@@ -622,11 +622,11 @@
 				}
 			}}
 			class="absolute bottom-4 left-1/2 -translate-x-1/2 story-button rounded-full px-4 z-50 pointer-events-auto"
-			disabled={!tourCompleted}
-		>
-			<ScrollText />
-			{m.story_sheet()}
-		</Button>
+		disabled={!tourCompleted}
+	>
+		<ScrollText />
+		{m.story_sheet()}
+	</Button>
 	<StoryDialog bind:open={openStoryDialog} {gameState} />
 	
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
@@ -673,8 +673,8 @@
 		playersState={gameState.playersState}
 		aiMessages={chatRound && hasUserChattedThisRound ? aiMessages : []}
 		currentRound={gameState.currentRound}
-		{tourCompleted}
-		{transitionState}
+				{tourCompleted}
+				{transitionState}
 		currentPlayerId={data.playerId}
 		typingAgents={chatRound && hasUserChattedThisRound ? typingAgents : new Set()}
 	/>
@@ -687,5 +687,10 @@
 		/>
 	{/if}
 
-	<EndDialog bind:open={openEndDialog} {gameState} {discussionMessages} />
+	<EndDialog
+		bind:open={openEndDialog}
+		{gameState}
+		{discussionMessages}
+		proposalId={(data.game as any)?.proposal_id ?? null}
+	/>
 </div>

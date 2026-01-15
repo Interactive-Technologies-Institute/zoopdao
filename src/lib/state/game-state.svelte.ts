@@ -397,7 +397,8 @@ export class GameState {
 		name: string,
 		title: string,
 		discussionRound7Text?: string,
-		vote?: 'yes' | 'no' | 'abstain' | null
+		vote?: 'yes' | 'no' | 'abstain' | null,
+		proposalId?: number | null
 	) {
 		const character = this.players.find((player) => player.id === this.playerId);
 		if (!character) return;
@@ -476,9 +477,9 @@ export class GameState {
 			.filter((answer) => answer.trim().length > 0)
 			.join('\n\n');
 
-		const { data, error } = await supabase.rpc('save_story', {
+		const { data, error } = await (supabase.rpc as any)('save_discussion', {
 			p_player_name: name,
-			p_story_title: title,
+			p_discussion_title: title,
 			p_character: {
 				type: character.character,
 				nickname: character.nickname,
@@ -486,8 +487,9 @@ export class GameState {
 			},
 			p_rounds: roundsData,
 			p_card_types: cardTypes,
-			p_full_story: fullStory,
-			p_vote: vote ?? null
+			p_full_discussion: fullStory,
+			p_vote: vote ?? null,
+			p_proposal_id: proposalId ?? null
 		});
 
 		if (error) {
@@ -514,7 +516,7 @@ export class GameState {
 
 		if (data) {
 			this.gameRounds = data as GameRound[];
-		}
+					}
 	}
 
 	async startRoundTimer() {

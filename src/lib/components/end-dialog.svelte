@@ -31,9 +31,10 @@
 			round: number;
 			timestamp: Date;
 		}>;
+		proposalId?: number | null;
 	}
 
-	let { open = $bindable(false), gameState, discussionMessages = [] }: EndDialogProps = $props();
+	let { open = $bindable(false), gameState, discussionMessages = [], proposalId = null }: EndDialogProps = $props();
 	let currentPlayerId = $state(gameState?.playerId || -1);
 	let discussionMessagesRound7 = $state<Array<{ senderName: string; content: string; timestamp: Date }>>([]);
 	let vote = $state<'yes' | 'no' | 'abstain' | null>(null);
@@ -235,7 +236,11 @@
 		if (!vote) return;
 		// Logic to save the story
 		const discussionText = formatRound7Discussion();
-		const id = await gameState.saveStory(playerName, storyTitle, discussionText, vote);
+		const id = await gameState.saveStory(playerName, storyTitle, discussionText, vote, proposalId);
+		if (!id || id === false) {
+			console.error('Failed to save discussion; no id returned.');
+			return;
+		}
 		goto(localizeHref(`/stories/${id}`));
 		// Reset the form
 		playerName = '';
