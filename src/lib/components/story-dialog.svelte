@@ -58,7 +58,7 @@
 			// Start timer only when dialog is actually open
 			// Use setTimeout to ensure dialog is fully rendered before starting timer
 			setTimeout(() => {
-				const currentGameRound = gameState.gameRounds.find((r) => r.round === currentRound);
+			const currentGameRound = gameState.gameRounds.find((r) => r.round === currentRound);
 				// For discussion rounds (1-7), always start timer when dialog opens
 				// For round 0, only start if timer_duration doesn't exist
 				if (currentGameRound) {
@@ -67,8 +67,8 @@
 						gameState.startRoundTimer();
 					} else if (!currentGameRound.timer_duration) {
 						// For round 0, only start if timer doesn't exist
-						gameState.startRoundTimer();
-					}
+				gameState.startRoundTimer();
+			}
 				}
 			}, 100);
 			
