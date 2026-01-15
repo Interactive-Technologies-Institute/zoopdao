@@ -10,26 +10,22 @@ import type {
 	PlayerAnswer,
 	PlayerCard,
 	PlayerId,
-	PlayerMove,
 	PlayerState,
-	Round,
-	Stop,
-	StopId
+	Round
 } from '../types';
 
 export class GameState {
-	stops: Stop[];
 	cards: Card[];
 	rounds: Round[];
 	code: string = $state('');
 	state: GameStateEnum = $state('starting');
 	gameRounds: GameRound[] = $state([]);
 	currentRound: number = $derived.by(() => {
-		return this.gameRounds.length > 0 ? this.gameRounds[this.gameRounds.length - 1].round : 0;
+		if (this.gameRounds.length === 0) return 0;
+		return Math.max(...this.gameRounds.map((round) => round.round));
 	});
 	playerId: PlayerId = $state(0);
 	players: Player[] = $state([]);
-	playersMoves: PlayerMove[] = $state([]);
 	playersCards: PlayerCard[] = $state([]);
 	playersAnswers: PlayerAnswer[] = $state([]);
 	playersState: Record<PlayerId, PlayerState> = $derived.by(() => {
@@ -55,18 +51,15 @@ export class GameState {
 	}
 
 	constructor(
-		stops: Stop[],
 		cards: Card[],
 		rounds: Round[],
 		game: Game,
 		gameRounds: GameRound[],
 		playerId: PlayerId,
 		players: Player[],
-		playerMoves: PlayerMove[],
 		playerCards: PlayerCard[],
 		playerAnswers: PlayerAnswer[]
 	) {
-		this.stops = stops;
 		this.cards = cards;
 		this.rounds = rounds;
 		this.code = game.code;
@@ -74,7 +67,6 @@ export class GameState {
 		this.gameRounds = gameRounds;
 		this.playerId = playerId;
 		this.players = players;
-		this.playersMoves = playerMoves;
 		this.playersCards = playerCards;
 		this.playersAnswers = playerAnswers;
 
@@ -90,7 +82,6 @@ export class GameState {
 		this.subscribeGame();
 		this.subscribeGameRounds();
 		this.subscribePlayers();
-		this.subscribePlayerMoves();
 		this.subscribePlayerCards();
 		this.subscribePlayerAnswers();
 		this.subscribeGameRounds();
@@ -193,14 +184,12 @@ export class GameState {
 		supabase.channel('game').unsubscribe();
 		supabase.channel('game_rounds').unsubscribe();
 		supabase.channel('players').unsubscribe();
-		supabase.channel('player_moves').unsubscribe();
 		supabase.channel('player_cards').unsubscribe();
 		supabase.channel('player_answers').unsubscribe();
 		supabase.channel('round_timers').unsubscribe();
 
 		// Optional: Clear all reactive state arrays to prevent memory leaks
 		this.players = [];
-		this.playersMoves = [];
 		this.playersCards = [];
 		this.playersAnswers = [];
 		this.gameRounds = [];
@@ -286,24 +275,6 @@ export class GameState {
 			.subscribe();
 	}
 
-	async subscribePlayerMoves() {
-		supabase
-			.channel('player_moves')
-			.on(
-				'postgres_changes',
-				{
-					event: 'INSERT',
-					schema: 'public',
-					table: 'player_moves',
-					filter: `game_id=eq.${this.getGameId()}`
-				},
-				(payload) => {
-					this.playersMoves.push(payload.new as PlayerMove);
-				}
-			)
-			.subscribe();
-	}
-
 	async subscribePlayerCards() {
 		supabase
 			.channel('player_cards')
@@ -352,23 +323,14 @@ export class GameState {
 	}
 
 	buildPlayerState(playerId: PlayerId): PlayerState {
-		const moves = this.playersMoves.filter((move) => move.player_id === playerId);
 		const cards = this.playersCards.filter((card) => card.player_id === playerId);
 		const answers = this.playersAnswers.filter((answer) => answer.player_id === playerId);
 
-		const previousMove = moves.find((move) => move.round === this.currentRound - 1);
-		const currentMove = moves.find((move) => move.round === this.currentRound);
-		const currentCard = cards.find((card) => card.round === this.currentRound);
 		const currentAnswer = answers.find((answer) => answer.round === this.currentRound);
 
 		// Round 0 - Introduction
 		if (this.currentRound === 0) {
-			if (!currentMove) {
-				return { state: 'starting' };
-			}
-			return !currentAnswer
-				? { state: 'writing' }
-				: { state: 'done' };
+			return !currentAnswer ? { state: 'writing' } : { state: 'done' };
 		}
 
 		// Rounds 1-7: Discussion rounds
@@ -426,7 +388,9 @@ export class GameState {
 		});
 		if (error) {
 			console.error(error);
+			return;
 		}
+		await this.refreshGameRounds();
 	}
 
 	async saveStory(name: string, title: string) {
@@ -491,39 +455,24 @@ export class GameState {
 
 		return data;
 	}
-	getInitialStops(): StopId[] {
-		return this.stops.filter((stop) => stop.initial).map((stop) => stop.id);
-	}
+	private async refreshGameRounds() {
+		const gameId = this.getGameId();
+		if (gameId === -1) return;
 
-	getPossibleStops(stopId: StopId, moves: number): StopId[] {
-		const stop = this.stops.find((stop) => stop.id === stopId);
-		if (!stop) return [];
+		const { data, error } = await supabase
+			.from('game_rounds')
+			.select('*')
+			.eq('game_id', gameId)
+			.order('round', { ascending: true });
 
-		const reachableStops = new Set<StopId>();
-		const queue: [StopId, number, Set<StopId>][] = [[stop.id, moves, new Set([stop.id])]];
-
-		while (queue.length > 0) {
-			const [currentStopId, remainingMoves, visited] = queue.shift()!;
-			const currentStop = this.stops.find((s) => s.id === currentStopId);
-
-			if (!currentStop) continue;
-
-			if (remainingMoves === 0 && currentStopId !== stop.id) {
-				reachableStops.add(currentStopId);
-			}
-
-			if (remainingMoves > 0) {
-				for (const path of currentStop.paths) {
-					if (!visited.has(path)) {
-						const newVisited = new Set(visited);
-						newVisited.add(path);
-						queue.push([path, remainingMoves - 1, newVisited]);
-					}
-				}
-			}
+		if (error) {
+			console.error('Failed to refresh game rounds:', error);
+			return;
 		}
 
-		return Array.from(reachableStops);
+		if (data) {
+			this.gameRounds = data as GameRound[];
+		}
 	}
 
 	async startRoundTimer() {

@@ -8,12 +8,6 @@ export type GameLobbyStateEnum = 'waiting' | 'ready';
 
 export type GameStateEnum = 'starting' | 'playing' | 'finished';
 
-export type StopId = Database['public']['Tables']['stops']['Row']['id'];
-
-export type StopType = Database['public']['Enums']['stop_type'];
-
-export type Stop = Database['public']['Tables']['stops']['Row'];
-
 export type CardId = Database['public']['Tables']['cards']['Row']['id'];
 
 export type CardType = Database['public']['Enums']['stop_type'];
@@ -90,8 +84,6 @@ export type Player = Database['public']['Tables']['players']['Row'];
 export type GameRound = Database['public']['Tables']['game_rounds']['Row'] & {
 	timer_duration?: number;
 };
-
-export type PlayerMove = Database['public']['Tables']['player_moves']['Row'];
 
 export type PlayerCard = Database['public']['Tables']['player_cards']['Row'];
 

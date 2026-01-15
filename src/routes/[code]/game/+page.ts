@@ -9,9 +9,7 @@ import type {
 	Player,
 	PlayerAnswer,
 	PlayerCard,
-	PlayerMove,
-	Round,
-	Stop
+	Round
 } from '@/types';
 import { error, redirect } from '@sveltejs/kit';
 
@@ -58,16 +56,6 @@ export const load = async ({ params, parent }) => {
 		return roundsData || [];
 	}
 
-	async function getStops(): Promise<Stop[]> {
-		const { data: stopsData, error: stopsError } = await supabase.from('stops').select('*');
-
-		if (stopsError) {
-			return error(500, { message: 'Error fetching stops' });
-		}
-
-		return stopsData;
-	}
-
 	async function getCards(): Promise<Card[]> {
 		const { data: cardsData, error: cardsError } = await supabase
 			.from('cards')
@@ -101,20 +89,6 @@ export const load = async ({ params, parent }) => {
 		}
 
 		return gameRoundsData;
-	}
-
-	async function getPlayerMoves(gameId: GameId): Promise<PlayerMove[]> {
-		const { data: playerMovesData, error: playerMovesError } = await supabase
-			.from('player_moves')
-			.select('*')
-			.eq('game_id', gameId);
-
-		if (playerMovesError) {
-			console.error(playerMovesError);
-			return error(500, { message: 'Error fetching player moves' });
-		}
-
-		return playerMovesData;
 	}
 
 	async function getPlayerCards(gameId: GameId): Promise<PlayerCard[]> {
@@ -158,11 +132,9 @@ export const load = async ({ params, parent }) => {
 	}
 
 	const rounds = await getRounds();
-	const stops = await getStops();
 	const cards = await getCards();
 
 	const gameRounds = await getGameRounds(game.id);
-	const playerMoves = await getPlayerMoves(game.id);
 	const playerCards = await getPlayerCards(game.id);
 	const playerAnswers = await getPlayerAnswers(game.id);
 
@@ -170,7 +142,7 @@ export const load = async ({ params, parent }) => {
 	if (player.is_active === false) {
 		const currentRound = gameRounds.length > 0 ? gameRounds[gameRounds.length - 1].round : 0;
 		const playerLastRound = Math.max(
-			...playerMoves.filter((m) => m.player_id === player.id).map((m) => m.round),
+			...playerCards.filter((c) => c.player_id === player.id).map((c) => c.round),
 			...playerAnswers.filter((a) => a.player_id === player.id).map((a) => a.round),
 			0
 		);
@@ -191,14 +163,12 @@ export const load = async ({ params, parent }) => {
 	}
 
 	return {
-		stops,
 		cards,
 		rounds,
 		game,
 		players,
 		playerId: player.id,
 		gameRounds,
-		playerMoves,
 		playerCards,
 		playerAnswers
 	};

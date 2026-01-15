@@ -23,7 +23,6 @@
 	import StatusPill from '@/components/status-pill.svelte';
 	import IslandDialog from '@/components/island-dialog.svelte';
 	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
-	import { generateAIMessages } from '@/utils/ai-messages';
 	import type { AIAgent, AIMessage, Participant } from '@/types';
 	import { supabase } from '@/supabase';
 	import { storeHumanMessage, getDiscussionMessages, getChatHistoryForAI } from '@/utils/discussion-messages';
@@ -113,14 +112,12 @@
 	});
 
 	let gameState = new GameState(
-		data.stops,
 		data.cards,
 		data.rounds,
 		data.game,
 		data.gameRounds,
 		data.playerId,
 		data.players,
-		data.playerMoves,
 		data.playerCards,
 		data.playerAnswers
 	);
@@ -132,6 +129,11 @@
 	let transitionState: TransitionState = $state('starting');
 	let previousRound = $state(0);
 	
+	const enableDiscussionChat = true;
+	const chatRound = $derived.by(() => gameState.currentRound === 7);
+	let hasUserChattedThisRound = $state(false);
+	let lastChatRound = $state(-1);
+
 	// AI Agents and Participants
 	let aiAgents = $state<AIAgent[]>([]);
 	let aiMessages = $state<AIMessage[]>([]);
@@ -139,12 +141,17 @@
 	
 	// Initialize AI agents based on human players count
 	$effect(() => {
+		if (!enableDiscussionChat) {
+			aiAgents = [];
+			aiMessages = [];
+			typingAgents = new Set();
+			return;
+		}
 		const humanPlayers = gameState.players.filter(p => p.is_active !== false);
 		if (humanPlayers.length > 0 && aiAgents.length === 0) {
 			try {
 				const aiCount = calculateAIAgentsCount(humanPlayers.length);
-				const humanRoles = humanPlayers.map(p => p.role).filter((r): r is string => r !== null) as any[];
-				aiAgents = generateAIAgents(aiCount, humanRoles);
+				aiAgents = generateAIAgents(aiCount);
 			} catch (error) {
 				console.error('Error initializing AI agents:', error);
 			}
@@ -154,19 +161,22 @@
 	// Create participants list (humans + AI)
 	const participants = $derived.by(() => {
 		const humanPlayers = gameState.players.filter(p => p.is_active !== false);
-		return createParticipants(humanPlayers, aiAgents);
+		const agents = enableDiscussionChat ? aiAgents : [];
+		return createParticipants(humanPlayers, agents);
 	});
 	
 	// Generate AI messages after each round completion
 	$effect(() => {
-		if (gameState.currentRound > 0 && gameState.currentRound <= 7 && aiAgents.length > 0) {
-			// Check if messages for this round already exist
-			const existingMessagesForRound = aiMessages.filter(msg => msg.round === gameState.currentRound);
-			if (existingMessagesForRound.length === 0) {
-				// Generate messages for current round
-				const newMessages = generateAIMessages(aiAgents, gameState.currentRound);
-				aiMessages = [...aiMessages, ...newMessages];
-			}
+		if (gameState.currentRound !== lastChatRound) {
+			lastChatRound = gameState.currentRound;
+			hasUserChattedThisRound = false;
+		}
+	});
+
+	$effect(() => {
+		if (!enableDiscussionChat || !chatRound || !hasUserChattedThisRound) {
+			aiMessages = [];
+			typingAgents = new Set();
 		}
 	});
 
@@ -213,6 +223,10 @@
 
 	// Load existing messages on mount
 	$effect(() => {
+		if (!enableDiscussionChat || !chatRound || !hasUserChattedThisRound) {
+			discussionMessages = [];
+			return;
+		}
 		if (gameState.state === 'playing' || gameState.state === 'finished') {
 			const loadMessages = async () => {
 				try {
@@ -254,6 +268,9 @@
 
 	async function handleSendMessage(message: string) {
 		try {
+			if (chatRound) {
+				hasUserChattedThisRound = true;
+			}
 			const gameId = data.game.id;
 			const proposalId = (data.game as any).proposal_id || null; // Get proposal_id if exists
 			const currentRound = gameState.currentRound;
@@ -290,6 +307,13 @@
 
 			// Generate AI agent responses sequentially with delays
 			if (aiAgents.length > 0) {
+				const clearTyping = (agentId: string) => {
+					if (typingAgents.has(agentId)) {
+						typingAgents.delete(agentId);
+						typingAgents = new Set(typingAgents);
+					}
+				};
+
 				// Calculate delay: 1 minute (60000ms) divided by number of agents, minimum 10 seconds (10000ms)
 				const totalTime = 60000; // 1 minute in milliseconds
 				const minDelay = 10000; // 10 seconds minimum
@@ -348,42 +372,47 @@
 						if (result.success && result.message) {
 							// Message was successfully generated - now show typing indicator
 							typingAgents = new Set([...typingAgents, agent.id]);
-							
-							// Wait a bit before showing the actual message (simulate typing)
-							await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000)); // 2-4 seconds
-							
-							// Remove typing indicator and show message
-							typingAgents.delete(agent.id);
-							typingAgents = new Set(typingAgents);
-							
-							// Split content if it contains multiple messages (separated by \n\n)
-							const messageContents = result.message.content.split('\n\n').filter(m => m.trim());
-							
-							messageContents.forEach((content, index) => {
-								// Add to discussionMessages for chat history
-								const discussionMessage: DiscussionMessage = {
-									id: `${result.message.id}-${index}`,
-									content: content.trim(),
-									senderType: 'ai',
-									senderName: agent.name,
-									round: result.message.round,
-									timestamp: new Date(result.message.createdAt)
-								};
-								discussionMessages = [...discussionMessages, discussionMessage];
+
+							try {
+								// Wait a bit before showing the actual message (simulate typing)
+								await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000)); // 2-4 seconds
 								
-								// Add to aiMessages for display in participants container
-								const aiMessage: AIMessage = {
-									id: `${result.message.id}-${index}`,
-									agent_id: agent.id,
-									round: result.message.round,
-									content: content.trim(),
-									created_at: result.message.createdAt
-								};
-								console.log('Adding AI message:', { agent: agent.name, message: aiMessage, currentRound });
-								aiMessages = [...aiMessages, aiMessage];
-							});
+								// Split content if it contains multiple messages (separated by \n\n)
+								const messageContents = result.message.content
+									.split('\n\n')
+									.filter((m: string) => m.trim());
+								
+								messageContents.forEach((content: string, index: number) => {
+									// Add to discussionMessages for chat history
+									const discussionMessage: DiscussionMessage = {
+										id: `${result.message.id}-${index}`,
+										content: content.trim(),
+										senderType: 'ai',
+										senderName: agent.name,
+										round: result.message.round,
+										timestamp: new Date(result.message.createdAt)
+									};
+									discussionMessages = [...discussionMessages, discussionMessage];
+									
+									// Add to aiMessages for display in participants container
+									const aiMessage: AIMessage = {
+										id: `${result.message.id}-${index}`,
+										agent_id: agent.id,
+										round: result.message.round,
+										content: content.trim(),
+										created_at: result.message.createdAt
+									};
+									console.log('Adding AI message:', { agent: agent.name, message: aiMessage, currentRound });
+									aiMessages = [...aiMessages, aiMessage];
+								});
+							} finally {
+								clearTyping(agent.id);
+							}
+						} else {
+							clearTyping(agent.id);
 						}
 					} catch (error) {
+						clearTyping(agent.id);
 						console.error(`Error generating message for ${agent.name}:`, error);
 						const errorMessage = error instanceof Error ? error.message : 'Failed to generate AI message';
 						
@@ -450,14 +479,11 @@
 		<Button
 			size="lg"
 			onclick={async () => {
-				// For round 0, playerStart requires stop_id (handled by map click)
-				// For round 7, call playerStart without stop_id
 				openStoryDialog = true;
-				if (gameState.state === 'starting') {
-					gameState.playerStart();
-				} else if (gameState.state === 'playing') {
+				if (gameState.currentRound > 0) {
 					gameState.playerMove();
-			}}}
+				}
+			}}
 			class="absolute bottom-4 left-1/2 -translate-x-1/2 story-button rounded-full px-4 z-50 pointer-events-auto"
 			disabled={!tourCompleted}
 		>
@@ -467,48 +493,24 @@
 	<StoryDialog bind:open={openStoryDialog} {gameState} />
 	
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
-	{#if gameState.currentRound === 7}
+	{#if enableDiscussionChat && chatRound}
 		<!-- Discussion Input Bar (Round 7 only) -->
 		<DiscussionInputBar
 			onSend={handleSendMessage}
 			onOpenHistory={handleOpenHistory}
 			disabled={!tourCompleted}
 		/>
-	{:else if gameState.currentRound > 0 && gameState.currentRound < 7}
-		<!-- Discussion Input Button (Rounds 1-6) - Centered at bottom -->
-		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[min(900px,calc(100vw-2rem))] z-50 pointer-events-auto">
-			<div class="relative">
-				<!-- Background bar with shadow matching input bar style -->
-				<div class="bg-gradient-to-b from-[#3a3a3a] to-[#2f2f2f] rounded-full px-6 py-5 shadow-2xl border border-white/10">
-					<Button
-						size="lg"
-						onclick={async () => {
-							// Call playerStart first to set state to 'writing' (like clicking on map)
-							await gameState.playerMove();
-							// Wait a bit for state to update, then open dialog
-							await new Promise(resolve => setTimeout(resolve, 100));
-							openStoryDialog = true;
-							
-							// Timer will be started automatically by StoryDialog when it opens
-						}}
-						class="w-full rounded-full px-6 py-3 bg-dark-green hover:bg-dark-green/90 text-white font-semibold pointer-events-auto"
-						disabled={!tourCompleted}
-					>
-						<ScrollText />
-						{m.story_sheet()}
-					</Button>
-				</div>
-			</div>
-		</div>
 	{/if}
 	
 	<!-- Discussion History Dialog -->
-	<DiscussionHistoryDialog
-		bind:open={openHistoryDialog}
-		gameId={data.game.id}
-		supabase={supabase}
-		onClose={() => (openHistoryDialog = false)}
-	/>
+	{#if enableDiscussionChat && chatRound}
+		<DiscussionHistoryDialog
+			bind:open={openHistoryDialog}
+			gameId={data.game.id}
+			supabase={supabase}
+			onClose={() => (openHistoryDialog = false)}
+		/>
+	{/if}
 	<Button
 		size="default"
 		onclick={() => (openHelpDialog = true)}
@@ -532,12 +534,12 @@
 	<ParticipantsContainer
 		participants={participants}
 		playersState={gameState.playersState}
-		{aiMessages}
+		aiMessages={chatRound && hasUserChattedThisRound ? aiMessages : []}
 		currentRound={gameState.currentRound}
 		{tourCompleted}
 		{transitionState}
 		currentPlayerId={data.playerId}
-		{typingAgents}
+		typingAgents={chatRound && hasUserChattedThisRound ? typingAgents : new Set()}
 	/>
 
 	{#if showRoundTransition}
