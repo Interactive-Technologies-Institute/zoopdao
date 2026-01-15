@@ -131,8 +131,15 @@
 	
 	const enableDiscussionChat = true;
 	const chatRound = $derived.by(() => gameState.currentRound === 7);
+	
+	// Configurable variable for number of discussion rounds with message exchanges
+	// This controls how many rounds of messages are exchanged between user and AIs
+	// before showing the save history popup
+	const DISCUSSION_ROUNDS_COUNT = 1; // Can be changed to allow more rounds of discussion
+	
 	let hasUserChattedThisRound = $state(false);
 	let lastChatRound = $state(-1);
+	let discussionRoundCount = $state(0); // Track how many discussion rounds have been completed
 
 	// AI Agents and Participants
 	let aiAgents = $state<AIAgent[]>([]);
@@ -170,6 +177,8 @@
 		if (gameState.currentRound !== lastChatRound) {
 			lastChatRound = gameState.currentRound;
 			hasUserChattedThisRound = false;
+			// Reset discussion round count when entering a new round
+			discussionRoundCount = 0;
 		}
 	});
 
@@ -259,10 +268,40 @@
 		}
 	});
 
+	// Original logic: Show end dialog when game state is 'finished'
+	// This is now commented but kept for reference - the new logic shows the dialog
+	// after discussion rounds complete instead
+	// $effect(() => {
+	// 	if (gameState.state === 'finished') {
+	// 		fanfareAudio?.play();
+	// 		openEndDialog = true;
+	// 	}
+	// });
+	
+	// New logic: Show end dialog after discussion rounds complete
+	// Check if discussion round is complete (user sent message + all AIs sent messages + no typing)
 	$effect(() => {
-		if (gameState.state === 'finished') {
-			fanfareAudio?.play();
-			openEndDialog = true;
+		if (chatRound && hasUserChattedThisRound && aiAgents.length > 0) {
+			// Check if all AI agents have sent their messages for this round
+			const currentRoundMessages = aiMessages.filter(msg => msg.round === gameState.currentRound);
+			
+			// Get unique agent IDs that have sent messages in this round
+			const agentsWhoResponded = new Set(currentRoundMessages.map(msg => msg.agent_id));
+			
+			// Check if all agents have responded (each agent should have at least one message)
+			const allAgentsResponded = aiAgents.every(agent => agentsWhoResponded.has(agent.id));
+			const noAgentsTyping = typingAgents.size === 0;
+			
+			// If all agents have responded and none are typing, discussion round is complete
+			if (allAgentsResponded && noAgentsTyping && discussionRoundCount < DISCUSSION_ROUNDS_COUNT) {
+				discussionRoundCount++;
+				
+				// If we've reached the configured number of discussion rounds, show save dialog
+				if (discussionRoundCount >= DISCUSSION_ROUNDS_COUNT) {
+					fanfareAudio?.play();
+					openEndDialog = true;
+				}
+			}
 		}
 	});
 
