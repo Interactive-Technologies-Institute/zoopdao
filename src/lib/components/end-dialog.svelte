@@ -314,8 +314,8 @@
 								<div class="bg-gray-50 p-4 flex items-center gap-3 border-b">
 									<div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
 										<img
-											src={`/images/characters/badges/${playerData.player.character}.svg`}
-											alt={playerData.player.character}
+											src={`/images/characters/badges/${playerData.player.character ?? 'custom'}.svg`}
+											alt={playerData.player.character ?? 'custom'}
 											class="w-full h-full object-cover"
 										/>
 									</div>

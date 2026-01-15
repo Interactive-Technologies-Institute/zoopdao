@@ -58,7 +58,7 @@
 >
 	<div class="flex flex-col items-center justify-center p-4">
 		<img
-			src={`/images/characters/badges/${data.character.type}.svg`}
+			src={`/images/characters/badges/${data.character?.type ?? 'custom'}.svg`}
 			alt={data.character.nickname}
 			class="h-32 w-32 border-2 border-gray-300 rounded-full"
 		/>
