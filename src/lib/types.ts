@@ -126,6 +126,7 @@ export type SavedStory = {
 	rounds: Record<string, StoryRound>;
 	card_types: string[];
 	full_story: string;
+	vote?: 'yes' | 'no' | 'abstain' | null;
 };
 
 // AI Agent types for ZoopDAO

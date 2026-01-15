@@ -393,7 +393,12 @@ export class GameState {
 		await this.refreshGameRounds();
 	}
 
-	async saveStory(name: string, title: string, discussionRound7Text?: string) {
+	async saveStory(
+		name: string,
+		title: string,
+		discussionRound7Text?: string,
+		vote?: 'yes' | 'no' | 'abstain' | null
+	) {
 		const character = this.players.find((player) => player.id === this.playerId);
 		if (!character) return;
 
@@ -481,7 +486,8 @@ export class GameState {
 			},
 			p_rounds: roundsData,
 			p_card_types: cardTypes,
-			p_full_story: fullStory
+			p_full_story: fullStory,
+			p_vote: vote ?? null
 		});
 
 		if (error) {

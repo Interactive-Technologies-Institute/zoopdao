@@ -418,6 +418,11 @@
 				// Process each agent sequentially
 				for (let i = 0; i < shuffledAgents.length; i++) {
 					const agent = shuffledAgents[i];
+
+					// Small gap before showing next typing bubble
+					if (i > 0) {
+						await new Promise(resolve => setTimeout(resolve, 200));
+					}
 					
 					// Only show the current agent typing
 					typingAgents = new Set([agent.id]);

@@ -9,7 +9,6 @@
 	import type { Player, PlayerAnswer } from '@/types';
 	import { CARDS } from '../data/cards';
 	import { CHARACTER } from '../data/characters';
-	import { Label, Switch } from 'bits-ui';
 	import { goto } from '$app/navigation';
 	import { Textarea } from './ui/textarea';
 	import { supabase } from '@/supabase';
@@ -37,6 +36,7 @@
 	let { open = $bindable(false), gameState, discussionMessages = [] }: EndDialogProps = $props();
 	let currentPlayerId = $state(gameState?.playerId || -1);
 	let discussionMessagesRound7 = $state<Array<{ senderName: string; content: string; timestamp: Date }>>([]);
+	let vote = $state<'yes' | 'no' | 'abstain' | null>(null);
 
 	// Load discussion messages for round 7 when dialog opens
 	$effect(() => {
@@ -218,27 +218,29 @@
 		return !!expandedAnswers[answerId];
 	}
 
-	let saveStory = $state(true);
 	let playerName = $state('');
 	let storyTitle = $state('');
-	let isFormValid = $derived(
-		saveStory ? playerName.trim() !== '' && storyTitle.trim() !== '' : true
-	);
+	let isFormValid = $derived(vote !== null);
+
+	$effect(() => {
+		if (open && gameState) {
+			const currentPlayer = gameState.players.find((p) => p.id === currentPlayerId);
+			playerName = currentPlayer?.nickname?.trim() || 'Participant';
+			storyTitle = m.round_7_title();
+		}
+	});
 
 	async function handleGameEnd() {
 		audio.play();
-		if (!saveStory) {
-			console.log('Story not saved. Returning to main menu.');
-			goto(localizeHref('/stories'));
-		} else {
-			// Logic to save the story
-			const discussionText = formatRound7Discussion();
-			const id = await gameState.saveStory(playerName, storyTitle, discussionText);
-			goto(localizeHref(`/stories/${id}`));
-			// Reset the form
-			playerName = '';
-			storyTitle = '';
-		}
+		if (!vote) return;
+		// Logic to save the story
+		const discussionText = formatRound7Discussion();
+		const id = await gameState.saveStory(playerName, storyTitle, discussionText, vote);
+		goto(localizeHref(`/stories/${id}`));
+		// Reset the form
+		playerName = '';
+		storyTitle = '';
+		vote = null;
 	}
 
 	let editMode = $state(false);
@@ -447,65 +449,39 @@
 				{/if}
 			</div>
 			<div class="flex flex-col shrink-1 gap-4 min-h-full">
-				<div class="flex flex-col gap-4">
-					<p>{m.do_you_want_to_save()}</p>
+				<div class="flex flex-col gap-2">
+					<p>{m.vote_prompt()}</p>
 					<div class="flex items-center gap-2">
-						<Label.Root for="dnd" class="text-base font-medium">{m.save_story()}</Label.Root>
-						<Switch.Root
-							id="save-story"
-							bind:checked={saveStory}
-							name="save-story"
-							class="focus-visible:ring-foreground focus-visible:ring-offset-background data-[state=checked]:bg-dark-green data-[state=unchecked]:bg-gray-300 data-[state=unchecked]:shadow-mini-inset focus-visible:outline-hidden peer inline-flex h-[36px] min-h-[36px] w-[60px] shrink-0 cursor-pointer items-center rounded-full px-[3px] transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+						<Button
+							variant={vote === 'yes' ? 'default' : 'outline'}
+							size="sm"
+							onclick={() => (vote = 'yes')}
 						>
-							<Switch.Thumb
-								class="bg-white data-[state=unchecked]:shadow-mini pointer-events-none block size-[30px] shrink-0 rounded-full transition-transform data-[state=checked]:translate-x-6 data-[state=unchecked]:translate-x-0"
-							/>
-						</Switch.Root>
+							{m.vote_yes()}
+						</Button>
+						<Button
+							variant={vote === 'no' ? 'default' : 'outline'}
+							size="sm"
+							onclick={() => (vote = 'no')}
+						>
+							{m.vote_no()}
+						</Button>
+						<Button
+							variant={vote === 'abstain' ? 'default' : 'outline'}
+							size="sm"
+							onclick={() => (vote = 'abstain')}
+						>
+							{m.vote_abstain()}
+						</Button>
 					</div>
 				</div>
-				{#if saveStory}
-					<div class="flex flex-col gap-4">
-						<span class="flex w-fit text-sm text-gray-500">
-							{m.save_form()}
-						</span>
-						<form class="flex flex-col min-h-full gap-4">
-							<div>
-								<label for="name" class="text-sm font-medium text-gray-700">{m.player_name()}</label
-								>
-								<input
-									required
-									bind:value={playerName}
-									type="text"
-									id="name"
-									class="mt-1 w-full border-gray-300 border-2 p-2 rounded-md focus:ring-dark-green focus:border-dark-green focus:outline-none"
-									placeholder={m.player_name_placeholder()}
-								/>
-							</div>
-							<div>
-								<label for="title" class="text-sm font-medium text-gray-700"
-									>{m.story_title()}</label
-								>
-								<input
-									required
-									bind:value={storyTitle}
-									type="text"
-									id="title"
-									class="mt-1 p-2 w-full border-gray-300 rounded-md border-2 focus:ring-dark-green focus:border-dark-green focus:outline-none"
-									placeholder={m.story_title_placeholder()}
-								/>
-							</div>
-						</form>
-					</div>
-				{:else}
-					<p class="text-sm text-red-500">{m.your_story_wont_saved()}</p>
-				{/if}
 				<Button
 					class="p-2 flex"
 					size="lg"
 					onclick={handleGameEnd}
-					disabled={saveStory && !isFormValid}
+					disabled={!isFormValid}
 				>
-					{saveStory ? m.save_story() : m.return_to_menu()}
+					{m.submit_discussion_and_vote()}
 				</Button>
 			</div>
 		</div>
