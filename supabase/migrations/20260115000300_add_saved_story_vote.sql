@@ -10,8 +10,8 @@ EXCEPTION
 	WHEN duplicate_object THEN null;
 END $$;
 
--- Update save_story functions to accept vote
-CREATE OR REPLACE FUNCTION public.save_story(
+-- Update save_discussion functions to accept vote (pre-rename)
+CREATE OR REPLACE FUNCTION public.save_discussion(
 	p_player_name TEXT,
 	p_story_title TEXT,
 	p_character JSONB,
@@ -28,14 +28,6 @@ DECLARE
 	v_story_id TEXT;
 BEGIN
 	-- Validate character structure
-	IF (p_character->>'type')::character_type IS NULL THEN
-		RAISE EXCEPTION 'Invalid character type';
-	END IF;
-
-	IF p_character->>'nickname' IS NULL THEN
-		RAISE EXCEPTION 'Character nickname is required';
-	END IF;
-
 	-- Generate story ID
 	SELECT generate_story_id() INTO v_story_id;
 
@@ -68,7 +60,7 @@ EXCEPTION
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.save_story(
+CREATE OR REPLACE FUNCTION public.save_discussion(
 	p_player_name TEXT,
 	p_story_title TEXT,
 	p_character JSONB,
@@ -85,14 +77,6 @@ DECLARE
 	v_full_story TEXT;
 BEGIN
 	-- Validate character structure
-	IF (p_character->>'type')::character_type IS NULL THEN
-		RAISE EXCEPTION 'Invalid character type';
-	END IF;
-
-	IF p_character->>'nickname' IS NULL THEN
-		RAISE EXCEPTION 'Character nickname is required';
-	END IF;
-
 	-- Generate story ID
 	v_story_id := generate_story_id();
 

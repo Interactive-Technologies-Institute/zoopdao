@@ -132,11 +132,9 @@ CREATE OR REPLACE FUNCTION "public"."check_all_players_ready"("p_game_id" bigint
         SELECT 1
         FROM public.players
         WHERE game_id = p_game_id
-            AND (
-                character IS NULL
-                OR nickname IS NULL
-                OR description IS NULL
-            )
+    AND (
+        character IS NULL
+    )
     ) THEN
 UPDATE public.games
 SET state = 'waiting'
@@ -730,121 +728,123 @@ $$;
 ALTER FUNCTION "public"."roll_dice"("p_game_id" bigint) OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb") RETURNS "text"
+CREATE OR REPLACE FUNCTION "public"."save_discussion"(
+    "p_player_name" "text",
+    "p_discussion_title" "text",
+    "p_character" "jsonb",
+    "p_rounds" "jsonb",
+    "p_card_types" "text"[],
+    "p_full_discussion" "text",
+    "p_vote" "text" DEFAULT NULL::"text",
+    "p_proposal_id" bigint DEFAULT NULL::bigint
+) RETURNS "text"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
 DECLARE
-    v_story_id TEXT;
-    v_card_types TEXT[];
-    v_full_story TEXT;
+    v_discussion_id TEXT;
 BEGIN
-    -- Validate character structure
-    IF (p_character->>'type')::character_type IS NULL THEN
-        RAISE EXCEPTION 'Invalid character type';
-    END IF;
-
     IF p_character->>'nickname' IS NULL THEN
         RAISE EXCEPTION 'Character nickname is required';
     END IF;
 
-    -- Generate story ID
-    v_story_id := generate_story_id();
+    SELECT generate_story_id() INTO v_discussion_id;
 
-    -- Extract unique card types
+    INSERT INTO public.saved_discussions (
+        discussion_id,
+        player_name,
+        discussion_title,
+        character,
+        rounds,
+        rounds,
+        card_types,
+        full_discussion,
+        vote,
+        proposal_id
+    )
+    VALUES (
+        v_discussion_id,
+        p_player_name,
+        p_discussion_title,
+        p_character,
+        p_rounds,
+        p_rounds,
+        p_card_types,
+        p_full_discussion,
+        p_vote,
+        p_proposal_id
+    );
+
+    RETURN v_discussion_id;
+EXCEPTION
+    WHEN others THEN
+        RAISE EXCEPTION 'Error saving discussion: %', SQLERRM;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION "public"."save_discussion"(
+    "p_player_name" "text",
+    "p_discussion_title" "text",
+    "p_character" "jsonb",
+    "p_rounds" "jsonb",
+    "p_vote" "text" DEFAULT NULL::"text",
+    "p_proposal_id" bigint DEFAULT NULL::bigint
+) RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+    v_discussion_id TEXT;
+    v_card_types TEXT[];
+    v_full_discussion TEXT;
+BEGIN
+    IF p_character->>'nickname' IS NULL THEN
+        RAISE EXCEPTION 'Character nickname is required';
+    END IF;
+
+    v_discussion_id := generate_story_id();
+
     SELECT ARRAY(
         SELECT DISTINCT value->>'type'
         FROM jsonb_array_elements(p_rounds) AS r(value)
         WHERE value->>'type' IS NOT NULL
     ) INTO v_card_types;
 
-    -- Combine all answers into one story
     SELECT string_agg(value->>'answer', E'\n\n')
     FROM (
-        SELECT value 
+        SELECT value
         FROM jsonb_each(p_rounds) AS r(key, value)
         ORDER BY (key::integer)
-    ) AS sorted_rounds 
-    INTO v_full_story;
+    ) AS sorted_rounds
+    INTO v_full_discussion;
 
-    -- Insert the story
-    INSERT INTO public.saved_stories (
-        story_id,
+    INSERT INTO public.saved_discussions (
+        discussion_id,
         player_name,
-        story_title,
+        discussion_title,
         character,
         rounds,
         card_types,
-        full_story
+        full_discussion,
+        vote,
+        proposal_id
     )
     VALUES (
-        v_story_id,
+        v_discussion_id,
         p_player_name,
-        p_story_title,
+        p_discussion_title,
         p_character,
         p_rounds,
         v_card_types,
-        v_full_story
+        v_full_discussion,
+        p_vote,
+        p_proposal_id
     );
 
-    RETURN v_story_id;
+    RETURN v_discussion_id;
 EXCEPTION
     WHEN others THEN
-        RAISE EXCEPTION 'Error saving story: %', SQLERRM;
+        RAISE EXCEPTION 'Error saving discussion: %', SQLERRM;
 END;
 $$;
-
-
-ALTER FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_card_types" "text"[], "p_full_story" "text") RETURNS "text"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-DECLARE
-    v_story_id TEXT;
-BEGIN
-    -- Validate character structure
-    IF (p_character->>'type')::character_type IS NULL THEN
-        RAISE EXCEPTION 'Invalid character type';
-    END IF;
-
-    IF p_character->>'nickname' IS NULL THEN
-        RAISE EXCEPTION 'Character nickname is required';
-    END IF;
-
-    -- Generate story ID
-    SELECT generate_story_id() INTO v_story_id;
-
-    -- Insert the story
-    INSERT INTO public.saved_stories (
-        story_id,
-        player_name,
-        story_title,
-        character,
-        rounds,
-        card_types,
-        full_story
-    )
-    VALUES (
-        v_story_id,
-        p_player_name,
-        p_story_title,
-        p_character,
-        p_rounds,
-        p_card_types,
-        p_full_story
-    );
-
-    RETURN v_story_id;
-EXCEPTION
-    WHEN others THEN
-        RAISE EXCEPTION 'Error saving story: %', SQLERRM;
-END;
-$$;
-
-
-ALTER FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_card_types" "text"[], "p_full_story" "text") OWNER TO "postgres";
-
 
 CREATE OR REPLACE FUNCTION "public"."start_game"("game_code" character varying) RETURNS "void"
     LANGUAGE "plpgsql"
@@ -1172,27 +1172,29 @@ ALTER TABLE "public"."rounds" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDEN
 
 
 
-CREATE TABLE IF NOT EXISTS "public"."saved_stories" (
+CREATE TABLE IF NOT EXISTS "public"."saved_discussions" (
     "id" bigint NOT NULL,
-    "story_id" "text" DEFAULT "public"."generate_story_id"() NOT NULL,
+    "discussion_id" "text" DEFAULT "public"."generate_story_id"() NOT NULL,
     "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "proposal_id" bigint,
     "player_name" "text" NOT NULL,
-    "story_title" "text" NOT NULL,
+    "discussion_title" "text" NOT NULL,
     "character" "jsonb" NOT NULL,
     "rounds" "jsonb" NOT NULL,
     "card_types" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
-    "full_story" "text" NOT NULL,
+    "full_discussion" "text" NOT NULL,
+    "vote" "text",
+    "public_discussion" boolean DEFAULT true,
     "character_search" "tsvector" GENERATED ALWAYS AS ("to_tsvector"('"english"'::"regconfig", ((COALESCE(("character" ->> 'nickname'::"text"), ''::"text") || ' '::"text") || COALESCE(("character" ->> 'description'::"text"), ''::"text")))) STORED,
-    "public_story" boolean,
-    CONSTRAINT "valid_character_type" CHECK (((("character" ->> 'type'::"text"))::"public"."character_type" IS NOT NULL))
+    CONSTRAINT "saved_discussions_discussion_id_key" UNIQUE ("discussion_id"),
+    CONSTRAINT "saved_discussions_vote_check" CHECK (("vote" = ANY (ARRAY['yes'::"text", 'no'::"text", 'abstain'::"text"])))
 );
 
 
-ALTER TABLE "public"."saved_stories" OWNER TO "postgres";
+ALTER TABLE "public"."saved_discussions" OWNER TO "postgres";
 
-
-ALTER TABLE "public"."saved_stories" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."saved_stories_id_seq"
+ALTER TABLE "public"."saved_discussions" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME "public"."saved_discussions_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1302,13 +1304,13 @@ ALTER TABLE ONLY "public"."rounds"
 
 
 
-ALTER TABLE ONLY "public"."saved_stories"
-    ADD CONSTRAINT "saved_stories_pkey" PRIMARY KEY ("id");
+ALTER TABLE ONLY "public"."saved_discussions"
+    ADD CONSTRAINT "saved_discussions_pkey" PRIMARY KEY ("id");
 
 
 
-ALTER TABLE ONLY "public"."saved_stories"
-    ADD CONSTRAINT "saved_stories_story_id_key" UNIQUE ("story_id");
+ALTER TABLE ONLY "public"."saved_discussions"
+    ADD CONSTRAINT "saved_discussions_discussion_id_key" UNIQUE ("discussion_id");
 
 
 
@@ -1317,20 +1319,23 @@ ALTER TABLE ONLY "public"."stops"
 
 
 
-CREATE INDEX "idx_character_search" ON "public"."saved_stories" USING "gin" ("character_search");
+CREATE INDEX "idx_saved_discussions_character_search" ON "public"."saved_discussions" USING "gin" ("character_search");
 
+CREATE INDEX "idx_saved_discussions_discussion_id" ON "public"."saved_discussions" USING "btree" ("discussion_id");
 
+CREATE INDEX "idx_saved_discussions_created_at" ON "public"."saved_discussions" USING "btree" ("created_at");
 
-CREATE INDEX "idx_saved_stories_story_id" ON "public"."saved_stories" USING "btree" ("story_id");
+CREATE INDEX "idx_saved_discussions_proposal_id" ON "public"."saved_discussions" USING "btree" ("proposal_id");
 
-
-
-CREATE INDEX "story_search_idx" ON "public"."saved_stories" USING "gin" ("to_tsvector"('"english"'::"regconfig", ((((((((COALESCE("player_name", ''::"text") || ' '::"text") || COALESCE("story_title", ''::"text")) || ' '::"text") || COALESCE(("character" ->> 'nickname'::"text"), ''::"text")) || ' '::"text") || COALESCE(("character" ->> 'description'::"text"), ''::"text")) || ' '::"text") || COALESCE("full_story", ''::"text"))));
+CREATE INDEX "discussion_search_idx" ON "public"."saved_discussions" USING "gin" ("to_tsvector"('"english"'::"regconfig", ((((((((COALESCE("player_name", ''::"text") || ' '::"text") || COALESCE("discussion_title", ''::"text")) || ' '::"text") || COALESCE(("character" ->> 'nickname'::"text"), ''::"text")) || ' '::"text") || COALESCE(("character" ->> 'description'::"text"), ''::"text")) || ' '::"text") || COALESCE("full_discussion", ''::"text"))));
 
 
 
 ALTER TABLE ONLY "public"."game_rounds"
     ADD CONSTRAINT "game_rounds_game_id_fkey" FOREIGN KEY ("game_id") REFERENCES "public"."games"("id") ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."saved_discussions"
+    ADD CONSTRAINT "saved_discussions_proposal_id_fkey" FOREIGN KEY ("proposal_id") REFERENCES "public"."proposals"("id") ON DELETE SET NULL;
 
 
 
@@ -1379,15 +1384,12 @@ ALTER TABLE ONLY "public"."prompt_text"
 
 
 
-CREATE POLICY "Anyone can insert stories" ON "public"."saved_stories" FOR INSERT WITH CHECK (true);
 
+CREATE POLICY "Anyone can insert discussions" ON "public"."saved_discussions" FOR INSERT WITH CHECK (true);
 
+CREATE POLICY "Anyone can read saved discussions" ON "public"."saved_discussions" FOR SELECT USING (true);
 
-CREATE POLICY "Anyone can read saved stories" ON "public"."saved_stories" FOR SELECT USING (true);
-
-
-
-ALTER TABLE "public"."saved_stories" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."saved_discussions" ENABLE ROW LEVEL SECURITY;
 
 
 
@@ -1679,15 +1681,13 @@ GRANT ALL ON FUNCTION "public"."roll_dice"("p_game_id" bigint) TO "service_role"
 
 
 
-GRANT ALL ON FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb") TO "anon";
-GRANT ALL ON FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb") TO "service_role";
+GRANT ALL ON FUNCTION "public"."save_discussion"("p_player_name" "text", "p_discussion_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_card_types" "text"[], "p_full_discussion" "text", "p_vote" "text", "p_proposal_id" bigint) TO "anon";
+GRANT ALL ON FUNCTION "public"."save_discussion"("p_player_name" "text", "p_discussion_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_card_types" "text"[], "p_full_discussion" "text", "p_vote" "text", "p_proposal_id" bigint) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."save_discussion"("p_player_name" "text", "p_discussion_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_card_types" "text"[], "p_full_discussion" "text", "p_vote" "text", "p_proposal_id" bigint) TO "service_role";
 
-
-
-GRANT ALL ON FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_card_types" "text"[], "p_full_story" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_card_types" "text"[], "p_full_story" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."save_story"("p_player_name" "text", "p_story_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_card_types" "text"[], "p_full_story" "text") TO "service_role";
+GRANT ALL ON FUNCTION "public"."save_discussion"("p_player_name" "text", "p_discussion_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_vote" "text", "p_proposal_id" bigint) TO "anon";
+GRANT ALL ON FUNCTION "public"."save_discussion"("p_player_name" "text", "p_discussion_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_vote" "text", "p_proposal_id" bigint) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."save_discussion"("p_player_name" "text", "p_discussion_title" "text", "p_character" "jsonb", "p_rounds" "jsonb", "p_vote" "text", "p_proposal_id" bigint) TO "service_role";
 
 
 
@@ -1853,15 +1853,15 @@ GRANT ALL ON SEQUENCE "public"."rounds_id_seq" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."saved_stories" TO "anon";
-GRANT ALL ON TABLE "public"."saved_stories" TO "authenticated";
-GRANT ALL ON TABLE "public"."saved_stories" TO "service_role";
+GRANT ALL ON TABLE "public"."saved_discussions" TO "anon";
+GRANT ALL ON TABLE "public"."saved_discussions" TO "authenticated";
+GRANT ALL ON TABLE "public"."saved_discussions" TO "service_role";
 
 
 
-GRANT ALL ON SEQUENCE "public"."saved_stories_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."saved_stories_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."saved_stories_id_seq" TO "service_role";
+GRANT ALL ON SEQUENCE "public"."saved_discussions_id_seq" TO "anon";
+GRANT ALL ON SEQUENCE "public"."saved_discussions_id_seq" TO "authenticated";
+GRANT ALL ON SEQUENCE "public"."saved_discussions_id_seq" TO "service_role";
 
 
 
