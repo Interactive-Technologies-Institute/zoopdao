@@ -599,43 +599,41 @@ Align application terminology with governance context by removing game narrative
 
 ---
 
-## ZD-166: Add Voting Buttons to Final Report
+## ZD-166: Final Discussion Voting + AI Fallback Flow
 
 **Overview:**
-Add voting functionality (Yes, No, Abstain buttons) to the final discussion report, and change "Save story" button to "Submit discussion and vote", making submission mandatory.
+Finalize the discussion end flow by adding mandatory voting, saving the full round-7 discussion (user + AI), and ensuring AI fallback messages always display sequentially when the API fails.
 
 **Goal:**
-Enable participants to vote on proposals after completing their discussion participation.
+Guarantee a complete, votable final discussion experience with reliable AI messaging and persisted vote data.
 
 **Description:**
-- Add three voting buttons to final report/dialog:
-  - Yes button
-  - No button
-  - Abstain button
-- Change "Save story" button text to "Submit discussion and vote"
-- Make submission mandatory (cannot proceed without voting)
-- Hide "player name" field in final report
-- Hide "story title" field in final report
-- Store vote with discussion data
-- Update final report UI to accommodate voting buttons
-- Ensure vote is submitted with discussion
+- Add vote selection (Yes/No/Abstain) to the final report and make submission mandatory.
+- Change the submit button text to "Submit discussion and vote".
+- Hide participant name/title fields; auto-fill values for save payload.
+- Persist vote with saved discussions (DB column + RPC update).
+- Save the full round-7 discussion using the message history (user + AI).
+- Ensure AI fallback messages render in the UI even when `/api/ai/messages` fails.
+- Show AI typing bubbles sequentially (one agent at a time) with a brief gap between agents.
+- Store AI messages without blocking UI; keep persistence best-effort.
 
 **Acceptance Criteria:**
-1. Three voting buttons (Yes, No, Abstain) are visible in final report
-2. "Save story" button changed to "Submit discussion and vote"
-3. Submission is mandatory (user must vote to submit)
-4. Player name field is hidden in final report
-5. Story title field is hidden in final report
-6. Vote is saved with discussion data
-7. Voting buttons are clearly labeled and functional
+1. Three voting buttons (Yes, No, Abstain) are visible in the final report.
+2. "Save story" button is replaced by "Submit discussion and vote".
+3. Submission is blocked until a vote is selected.
+4. Participant name/title inputs are hidden but still sent in the save payload.
+5. Vote is saved with the discussion record.
+6. Round 7 save includes all discussion messages (user + AI).
+7. AI fallback messages appear in bubbles on API errors.
+8. AI typing bubbles are sequential (only one at a time) with a short gap.
 
 **Completion Criteria:**
-1. Voting buttons added to final report component
-2. Button text updated
-3. Submission validation requires vote
-4. Hidden fields implemented
-5. Vote storage working
-6. UI updated correctly
+1. Final report UI updated with voting controls and mandatory submission.
+2. DB migration adds vote column and `save_discussion` handles vote.
+3. Round-7 discussion saved with message history (user + AI).
+4. AI fallback flow updates UI first and persists best-effort.
+5. Sequential AI typing bubbles with brief inter-message delay.
+6. Translations updated for new voting labels and prompts.
 
 ---
 
