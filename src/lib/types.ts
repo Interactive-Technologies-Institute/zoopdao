@@ -129,6 +129,21 @@ export type SavedStory = {
 	vote?: 'yes' | 'no' | 'abstain' | null;
 };
 
+export type SavedDiscussion = {
+	id: number;
+	discussion_id: string;
+	created_at: string;
+	proposal_id: number | null;
+	player_name: string;
+	discussion_title: string;
+	character: StoryCharacter;
+	rounds: Record<string, StoryRound>;
+	card_types: string[];
+	full_discussion: string;
+	vote?: 'yes' | 'no' | 'abstain' | null;
+	public_discussion?: boolean | null;
+};
+
 // AI Agent types for ZoopDAO
 export type AIAgentId = string;
 

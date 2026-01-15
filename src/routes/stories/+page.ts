@@ -1,8 +1,21 @@
 import { supabase } from '$lib/supabase';
 import type { PageLoad } from './$types';
-import type { SavedStory } from '$lib/types';
+import type { SavedDiscussion, SavedStory } from '$lib/types';
 
 const ITEMS_PER_PAGE = 5;
+
+const mapDiscussionToStory = (discussion: SavedDiscussion): SavedStory => ({
+	id: discussion.id,
+	story_id: discussion.discussion_id,
+	created_at: discussion.created_at,
+	player_name: discussion.player_name,
+	story_title: discussion.discussion_title,
+	character: discussion.character,
+	rounds: discussion.rounds,
+	card_types: discussion.card_types,
+	full_story: discussion.full_discussion,
+	vote: discussion.vote
+});
 
 export const load = (async ({ url }) => {
 	// Get all query parameters with explicit null checks
@@ -13,8 +26,8 @@ export const load = (async ({ url }) => {
 	const sort = url.searchParams.get('sort') ?? 'latest';
 
 	// Start building the query
-	let query = supabase.from('saved_stories').select('*', { count: 'exact' });
-	query = query.eq('public_story', true);
+	let query = supabase.from('saved_discussions').select('*', { count: 'exact' });
+	query = query.eq('public_discussion', true);
 
 	if (search.trim()) {
 		const searchTerms = search
@@ -25,9 +38,9 @@ export const load = (async ({ url }) => {
 		// Build search conditions using FTS for character_search and ILIKE for other fields
 		const searchConditions = [
 			...searchTerms.map((term) => `player_name.ilike.%${term}%`),
-			...searchTerms.map((term) => `story_title.ilike.%${term}%`),
+			...searchTerms.map((term) => `discussion_title.ilike.%${term}%`),
 			...searchTerms.map((term) => `character_search.fts.${term}`),
-			...searchTerms.map((term) => `full_story.ilike.%${term}%`)
+			...searchTerms.map((term) => `full_discussion.ilike.%${term}%`)
 		].join(',');
 
 		query = query.or(searchConditions);
@@ -48,7 +61,7 @@ export const load = (async ({ url }) => {
 
 	// Get paginated results
 	const {
-		data: stories,
+		data: discussions,
 		error,
 		count
 	} = await query.order('created_at', { ascending: sort === 'oldest' }).range(from, to);
@@ -70,7 +83,7 @@ export const load = (async ({ url }) => {
 	}
 
 	return {
-		stories: stories as SavedStory[],
+		stories: (discussions || []).map(mapDiscussionToStory),
 		totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
 		currentPage: page,
 		totalStories: count || 0,

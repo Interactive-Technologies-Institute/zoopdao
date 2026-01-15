@@ -63,6 +63,11 @@
 		goto(localizeUrl(`/proposals/${proposalId}/preview`).toString());
 	}
 
+	function handleBrowseDiscussions() {
+		click_sound.play();
+		goto(localizeUrl('/stories').toString());
+	}
+
 	let selectedLanguage = $state(getLocale()); // Default language
 
 	// List of available languages
@@ -152,7 +157,7 @@
 				<Button
 					variant="outline"
 					size="lg"
-					href={localizeUrl('/stories').toString()}
+					onclick={handleBrowseDiscussions}
 					class="text-dark-green hover:text-dark-green/90 mb-4 bg-white hover-bg-gray-200 transition-all duration-200 ease-in-out border-dark-green/20 hover:border-dark-green/90"
 				>
 					{m.browse_stories()}

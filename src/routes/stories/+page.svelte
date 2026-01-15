@@ -30,11 +30,23 @@
 		action: 'bg-action-beige'
 	} as const;
 
+	function formatCharacterLabel(type: string): string {
+		const key = `character_${type}_title` as keyof typeof m;
+		const translation = m[key];
+		if (typeof translation === 'function') {
+			return translation();
+		}
+		return type
+			.split('-')
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(' ');
+	}
+
 	let characterOptions = [
 		{ value: '', label: m.all_characters() },
 		...CHARACTER_OPTIONS.map((type) => ({
 			value: type,
-			label: m[`character_${type}_title`]()
+			label: formatCharacterLabel(type)
 		}))
 	];
 
