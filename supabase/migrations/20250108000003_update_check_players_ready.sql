@@ -6,7 +6,7 @@ RETURNS VOID
 LANGUAGE plpgsql 
 AS $$ 
 BEGIN 
-    -- Check if any player is missing role (or character for legacy), nickname, or description
+    -- Check if any player is missing role (or character for legacy)
     -- Priority: Check role first (new system), fallback to character (legacy system)
     IF EXISTS (
         SELECT 1
@@ -14,8 +14,6 @@ BEGIN
         WHERE game_id = p_game_id
             AND (
                 role IS NULL  -- New system: role must be selected
-                OR nickname IS NULL
-                OR description IS NULL
             )
     ) THEN
         -- Not all players are ready

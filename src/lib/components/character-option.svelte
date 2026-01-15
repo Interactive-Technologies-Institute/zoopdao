@@ -39,7 +39,7 @@
 	}: CharacterOptionProps = $props();
 
 	let taken = $derived(player?.character === character && !selected);
-	let ready = $derived(player?.nickname !== null && player?.description !== null);
+let ready = $derived(player?.character === character);
 
 	function onSelect() {
 		flip.play();
@@ -108,14 +108,13 @@
 		<div
 			class="absolute inset-0 w-full h-full rounded-lg p-4 bg-white border-2 border-dark-green [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col gap-y-2"
 		>
-			<Input placeholder={m.nickname()} bind:value={nickname} disabled={ready} />
+			<Input placeholder={m.nickname()} bind:value={nickname} />
 			<Textarea
 				placeholder={getTranslation(characterDetails?.secondary)}
 				class="flex-grow"
 				bind:value={description}
-				disabled={ready}
 			/>
-			<Button onclick={onReady} disabled={ready}>{m.ready()}</Button>
+			<Button onclick={onReady}>{m.ready()}</Button>
 		</div>
 	</div>
 	{#if taken || selected && ready}
