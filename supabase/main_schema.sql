@@ -110,6 +110,11 @@ CREATE TYPE "public"."game_state" AS ENUM (
     'finished'
 );
 
+CREATE TYPE "public"."game_mode" AS ENUM (
+    'pedagogic',
+    'decision_making'
+);
+
 
 ALTER TYPE "public"."game_state" OWNER TO "postgres";
 
@@ -232,7 +237,7 @@ END;$$;
 ALTER FUNCTION "public"."check_starting_round_completion"("p_game_id" bigint) OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."create_game"() RETURNS "public"."create_game_result"
+CREATE OR REPLACE FUNCTION "public"."create_game"("p_proposal_id" bigint DEFAULT NULL, "p_mode" "public"."game_mode" DEFAULT 'pedagogic'::"public"."game_mode") RETURNS "public"."create_game_result"
     LANGUAGE "plpgsql"
     AS $$
 DECLARE generated_code VARCHAR;
@@ -246,8 +251,8 @@ IF NOT EXISTS (
 ) THEN EXIT;
 END IF;
 END LOOP;
-INSERT INTO public.games (code, state)
-VALUES (generated_code, 'waiting')
+INSERT INTO public.games (code, state, proposal_id, mode)
+VALUES (generated_code, 'waiting', p_proposal_id, p_mode)
 RETURNING id,
     code INTO result.game_id,
     result.game_code;
@@ -1001,7 +1006,9 @@ CREATE TABLE IF NOT EXISTS "public"."games" (
     "id" bigint NOT NULL,
     "inserted_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
     "code" character varying(10) NOT NULL,
-    "state" "public"."game_state" DEFAULT 'waiting'::"public"."game_state" NOT NULL
+    "state" "public"."game_state" DEFAULT 'waiting'::"public"."game_state" NOT NULL,
+    "proposal_id" bigint,
+    "mode" "public"."game_mode" DEFAULT 'pedagogic'::"public"."game_mode"
 );
 
 
@@ -1246,6 +1253,15 @@ ALTER TABLE ONLY "public"."games"
 
 ALTER TABLE ONLY "public"."games"
     ADD CONSTRAINT "games_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."games"
+    ADD CONSTRAINT "games_proposal_id_fkey" FOREIGN KEY ("proposal_id") REFERENCES "public"."proposals"("id") ON DELETE SET NULL;
+
+
+
+CREATE INDEX IF NOT EXISTS "idx_games_proposal_id" ON "public"."games" USING btree ("proposal_id");
 
 
 

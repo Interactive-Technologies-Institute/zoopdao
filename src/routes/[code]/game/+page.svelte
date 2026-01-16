@@ -22,6 +22,7 @@
 	import { goto } from '$app/navigation';
 	import StatusPill from '@/components/status-pill.svelte';
 	import ProposalDialog from '@/components/proposal-dialog.svelte';
+	import Timer from '@/components/timer.svelte';
 	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
 	import type { AIAgent, AIMessage, Participant, Role } from '@/types';
 	import { supabase } from '@/supabase';
@@ -119,7 +120,8 @@
 		data.playerId,
 		data.players,
 		data.playerCards,
-		data.playerAnswers
+		data.playerAnswers,
+		data.gameMode
 	);
 
 	let mapPosition = new MapPosition();
@@ -198,6 +200,22 @@
 			showRoundTransition = true;
 			transitionState = 'starting';
 			previousRound = gameState.currentRound;
+		}
+	});
+
+	$effect(() => {
+		if (gameState.mode !== 'pedagogic') {
+			return;
+		}
+		if (gameState.currentRound < 1 || gameState.currentRound > 7) {
+			return;
+		}
+
+		const currentGameRound = gameState.gameRounds.find(
+			(round) => round.round === gameState.currentRound
+		);
+		if (currentGameRound && !currentGameRound.timer_duration) {
+			gameState.startRoundTimer();
 		}
 	});
 
@@ -573,11 +591,10 @@
 
 		if (confirmed) {
 			const success = await gameState.markPlayerInactive();
-			if (success) {
-				goto('/');
-			} else {
+			if (!success) {
 				alert('Failed to leave game. Please try again.');
 			}
+			goto('/');
 		}
 	}
 	$inspect(gameState.currentRound);
@@ -635,6 +652,13 @@
 	
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
 	{#if enableDiscussionChat && chatRound}
+		{#if gameState.mode === 'pedagogic'}
+			<div class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[560px] z-50 pointer-events-auto">
+				<div class="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg border border-black/5">
+					<Timer onTimeUp={() => {}} duration={gameState.getTimerDurationForRound(gameState.currentRound)} />
+				</div>
+			</div>
+		{/if}
 		<!-- Discussion Input Bar (Round 7 only) -->
 		<DiscussionInputBar
 			onSend={handleSendMessage}

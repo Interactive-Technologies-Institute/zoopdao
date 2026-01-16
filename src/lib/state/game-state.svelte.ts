@@ -36,6 +36,7 @@ export class GameState {
 	});
 
 	roundTimerDuration: number = $state(0);
+	mode: 'pedagogic' | 'decision_making' = $state('pedagogic');
 	private activityInterval: ReturnType<typeof setInterval> | null = null;
 	private beforeUnloadHandler: (() => void) | null = null;
 	private unloadTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -53,17 +54,19 @@ export class GameState {
 	constructor(
 		cards: Card[],
 		rounds: Round[],
-		game: Game,
+		game: Game & { mode?: 'pedagogic' | 'decision_making' | null },
 		gameRounds: GameRound[],
 		playerId: PlayerId,
 		players: Player[],
 		playerCards: PlayerCard[],
-		playerAnswers: PlayerAnswer[]
+		playerAnswers: PlayerAnswer[],
+		mode: 'pedagogic' | 'decision_making' = 'pedagogic'
 	) {
 		this.cards = cards;
 		this.rounds = rounds;
 		this.code = game.code;
 		this.state = game.state as GameStateEnum;
+		this.mode = mode;
 		this.gameRounds = gameRounds;
 		this.playerId = playerId;
 		this.players = players;
@@ -520,9 +523,15 @@ export class GameState {
 	}
 
 	async startRoundTimer() {
-		// Generate random timer between 2-4 minutes
-		const durationMinutes = Math.floor(Math.random() * 3) + 2;
-		const durationSeconds = durationMinutes * 60;
+		// Only start timer in pedagogic mode
+		if (this.mode !== 'pedagogic') {
+			return false;
+		}
+
+		// Determine duration based on round:
+		// Rounds 1-6: 1 minute (60 seconds)
+		// Round 7: 2 minutes (120 seconds)
+		const durationSeconds = this.currentRound === 7 ? 2 * 60 : 1 * 60;
 
 		const currentGameRound = this.gameRounds.find((r) => r.round === this.currentRound);
 		if (!currentGameRound) {
@@ -543,6 +552,15 @@ export class GameState {
 		}
 
 		return true;
+	}
+
+	getTimerDurationForRound(round: number): number {
+		// Only return duration in pedagogic mode
+		if (this.mode !== 'pedagogic') {
+			return 0;
+		}
+		// Rounds 1-6: 1 minute, Round 7: 2 minutes
+		return round === 7 ? 2 * 60 : 1 * 60;
 	}
 
 	async subscribeRoundTimer() {

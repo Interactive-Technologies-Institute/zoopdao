@@ -275,5 +275,10 @@
 	"send_message": "Send message",
 	"message_history": "Message history",
 	"close": "Close",
-	"no_messages_yet": "No messages yet. Start the discussion!"
+	"no_messages_yet": "No messages yet. Start the discussion!",
+	"select_mode": "Select Discussion Mode",
+	"pedagogic_mode": "Pedagogic Mode",
+	"pedagogic_mode_description": "Discussion with Timer - Educational and learning focused approach with time limits for each round",
+	"decision_making_mode": "Decision-Making Mode",
+	"decision_making_mode_description": "Discussion without Timer - Focused decision-making without time constraints"
 }

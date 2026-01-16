@@ -41,7 +41,7 @@
 
 		<div class="flex gap-3">
 				<div class="flex items-center justify-center">
-					{#if gameState.state === 'waiting' && currentPlayer.character === null}
+					{#if gameState.state === 'waiting' && currentPlayer.nickname === null}
 					<!-- Back button removed as category selection is hidden -->
 					{:else if !currentPlayer.is_owner}
 						<p class="text-dark-green font-bold text-center px-2">
@@ -73,7 +73,7 @@
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
 		{#each CHARACTER_CATEGORIES[selectedCategory] as character}
 				{@const player = gameState.players.find((player) => player.character === character)}
-				{@const isReady = currentPlayer.character !== null}
+				{@const isReady = currentPlayer.nickname !== null}
 				<CharacterOption
 					{character}
 					{player}

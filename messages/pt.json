@@ -275,5 +275,10 @@
 	"send_message": "Enviar mensagem",
 	"message_history": "Histórico de mensagens",
 	"close": "Fechar",
-	"no_messages_yet": "Ainda não há mensagens. Inicia a discussão!"
+	"no_messages_yet": "Ainda não há mensagens. Inicia a discussão!",
+	"select_mode": "Selecionar Modo de Discussão",
+	"pedagogic_mode": "Modo Pedagógico",
+	"pedagogic_mode_description": "Discussão com Temporizador - Abordagem educacional e de aprendizagem com limites de tempo para cada ronda",
+	"decision_making_mode": "Modo de Tomada de Decisão",
+	"decision_making_mode_description": "Discussão sem Temporizador - Tomada de decisão focada sem restrições de tempo"
 }

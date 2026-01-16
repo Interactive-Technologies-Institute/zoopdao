@@ -5,63 +5,59 @@
 
 	interface TimerProps {
 		onTimeUp: () => void;
+		duration?: number; // Duration in seconds, defaults to 2 minutes
 	}
 
-	let { onTimeUp }: TimerProps = $props();
+	let { onTimeUp, duration = 2 * 60 }: TimerProps = $props();
 
-	let tickSound: HTMLAudioElement;
-
-	let individualTimerStart = $state(0);
+	let tickSound: HTMLAudioElement | null = null;
 
 	onMount(() => {
 		tickSound = new Audio(tick_sound); // Use your tick sound file
 		tickSound.volume = 0.2;
 	});
 
-	// Fixed 2 minutes duration (120 seconds)
-	const TIMER_DURATION = 2 * 60; // 120 seconds
-	let timerDuration = $derived.by(() => TIMER_DURATION);
-	let timeLeft = $state(TIMER_DURATION);
+	// Use provided duration or default to 2 minutes
+	let timerDuration = $derived.by(() => duration);
+	let timeLeft = $state(duration);
 	let intervalId: ReturnType<typeof setInterval> | null = null;
 	let isUnderOneMinute = $derived.by(() => timeLeft < 60);
 
 	$effect(() => {
-		// Start timer when component mounts or when dialog opens
-			if (individualTimerStart === 0) {
-				individualTimerStart = Date.now();
+		// Reset timer when duration changes
+		timeLeft = timerDuration;
+
+		// Clear any existing interval
+		if (intervalId) {
+			clearInterval(intervalId);
+		}
+
+		if (!timerDuration) {
+			return;
+		}
+
+		const updateTimeLeft = () => {
+			timeLeft = Math.max(0, timeLeft - 1);
+
+			if (timeLeft <= 60 && timeLeft > 0 && tickSound) {
+				tickSound.play().catch((err) => console.error('Error playing warning sound:', err));
 			}
 
-			// Clear any existing interval
-			if (intervalId) {
-				clearInterval(intervalId);
-			}
-
-		// Calculate time left based on the fixed 2-minute timer
-			const updateTimeLeft = () => {
-				const now = Date.now();
-				const elapsedSeconds = Math.floor((now - individualTimerStart) / 1000);
-			timeLeft = Math.max(0, TIMER_DURATION - elapsedSeconds);
-
-			if (timeLeft <= 60 && timeLeft > 0) {
-					tickSound.play().catch((err) => console.error('Error playing warning sound:', err));
-				}
-
-				if (timeLeft <= 0) {
+			if (timeLeft <= 0) {
+				if (tickSound) {
 					tickSound.pause();
 					tickSound.currentTime = 0;
+				}
 				if (intervalId) {
 					clearInterval(intervalId);
 					intervalId = null;
 				}
-					onTimeUp();
-				}
-			};
+				onTimeUp();
+			}
+		};
 
-			// Initial update
-			updateTimeLeft();
-
-			// Set interval for updates
-			intervalId = setInterval(updateTimeLeft, 1000);
+		// Set interval for updates
+		intervalId = setInterval(updateTimeLeft, 1000);
 
 		// Cleanup on unmount
 		return () => {
@@ -87,6 +83,7 @@
 	});
 
 	let progressWidth = $derived.by(() => {
+		if (!timerDuration) return 0;
 		return (timeLeft / timerDuration) * 100;
 	});
 	$inspect(timerDuration);

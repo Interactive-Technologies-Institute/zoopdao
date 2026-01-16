@@ -50,8 +50,11 @@
 				}
 			}
 			
-			// Create a new game
-			const { data: gameData, error: gameError } = await supabase.rpc('create_game');
+			// Create a new game with proposal_id
+			const { data: gameData, error: gameError } = await supabase.rpc('create_game', {
+				p_proposal_id: proposal.id,
+				p_mode: 'pedagogic'
+			});
 			
 			if (gameError) {
 				console.error('Error creating game:', gameError);
@@ -60,8 +63,15 @@
 				return;
 			}
 			
-			// Navigate to lobby with the game code
-			goto(`/${gameData.game_code}/lobby`);
+			if (!gameData?.game_code) {
+				console.error('Error creating game: Missing game_code in response.', gameData);
+				alert('Failed to create discussion. Please try again.');
+				isCreatingGame = false;
+				return;
+			}
+
+			// Navigate to mode selection with the game code
+			goto(`/${gameData.game_code}/mode`);
 		} catch (error) {
 			console.error('Error starting discussion:', error);
 			alert(`Failed to start discussion: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
@@ -166,4 +176,3 @@
 		</div>
 	</div>
 </div>
-

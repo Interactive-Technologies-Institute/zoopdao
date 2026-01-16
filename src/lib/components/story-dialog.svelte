@@ -59,17 +59,9 @@
 			// Use setTimeout to ensure dialog is fully rendered before starting timer
 			setTimeout(() => {
 			const currentGameRound = gameState.gameRounds.find((r) => r.round === currentRound);
-				// For discussion rounds (1-7), always start timer when dialog opens
-				// For round 0, only start if timer_duration doesn't exist
-				if (currentGameRound) {
-					if (currentRound >= 1 && currentRound <= 7) {
-						// Always start timer for discussion rounds
-						gameState.startRoundTimer();
-					} else if (!currentGameRound.timer_duration) {
-						// For round 0, only start if timer doesn't exist
+			if (currentGameRound && !currentGameRound.timer_duration) {
 				gameState.startRoundTimer();
 			}
-				}
 			}, 100);
 			
 			audio.play();
@@ -285,8 +277,11 @@
 							<Textarea class="min-h-64 h-full mt-2" bind:value={currentAnswer} />
 						</div>
 						<div class=" flex items-center justify-between gap-3 bg-white">
-							{#if open && playerState === 'writing'}
-								<Timer onTimeUp={handleTimeUp} />
+							{#if open && playerState === 'writing' && gameState.mode === 'pedagogic'}
+								<Timer 
+									onTimeUp={handleTimeUp} 
+									duration={gameState.getTimerDurationForRound(currentRound)}
+								/>
 							{/if}
 							<Button onclick={onSubmit}>{m.submit()}</Button>
 						</div>
