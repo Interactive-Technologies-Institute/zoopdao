@@ -648,7 +648,7 @@
 		<ScrollText />
 		{m.story_sheet()}
 	</Button>
-	<StoryDialog bind:open={openStoryDialog} {gameState} />
+	<StoryDialog bind:open={openStoryDialog} {gameState} proposalId={data.proposalId ?? null} />
 	
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
 	{#if enableDiscussionChat && chatRound}

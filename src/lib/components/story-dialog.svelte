@@ -11,12 +11,13 @@
 	import { onMount } from 'svelte';
 	import paperSound from '@/sounds/rustling-paper.mp3';
 	import clickSound from '@/sounds/ui-click.mp3';
-	import { Flag } from 'lucide-svelte';
+	import { Flag, FileText } from 'lucide-svelte';
 	import Timer from './timer.svelte';
 	import PostStory from './post-story-icon.svelte';
-	import { getCharacterCategory, type Character } from '@src/lib/types';
+	import { getCharacterCategory, type Card as CardData, type Character } from '@src/lib/types';
 	import SpeciesInfoDialog from './species-info-dialog.svelte';
 	import LandmarkInfoDialog from './landmark-info-dialog.svelte';
+	import ProposalDialog from '@/components/proposal-dialog.svelte';
 
 	let audio: HTMLAudioElement;
 	let click_sound: HTMLAudioElement;
@@ -30,9 +31,46 @@
 	interface StoryDialogProps {
 		open: boolean;
 		gameState: GameState;
+		proposalId?: number | null;
 	}
 
-	let { open = $bindable(false), gameState }: StoryDialogProps = $props();
+	let { open = $bindable(false), gameState, proposalId = null }: StoryDialogProps = $props();
+	let openProposalDialog = $state(false);
+	let proposal = $state<any>(null);
+
+	async function fetchProposal() {
+		if (!proposalId) {
+			proposal = null;
+			return;
+		}
+
+		try {
+			const response = await fetch(`/api/proposals/${proposalId}`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch proposal');
+			}
+			const { proposal: proposalData } = await response.json();
+			if (proposalData?.objectives && typeof proposalData.objectives === 'string') {
+				try {
+					proposalData.objectives = JSON.parse(proposalData.objectives);
+				} catch (parseError) {
+					console.error('Error parsing objectives:', parseError);
+				}
+			}
+			proposal = proposalData;
+		} catch (error) {
+			console.error('Failed to load proposal:', error);
+			proposal = null;
+		}
+	}
+
+	$effect(() => {
+		if (open) {
+			fetchProposal();
+		} else {
+			proposal = null;
+		}
+	});
 
 	let currentRound = $derived.by(() => {
 		// Use gameState.currentRound directly, but ensure it's a number
@@ -53,6 +91,87 @@
 	let player = $derived.by(() => {
 		return gameState.players.find((player) => player.id === gameState.playerId);
 	});
+
+	function normalizeObjectives(objectives: unknown) {
+		if (!objectives) return [];
+		if (Array.isArray(objectives)) return objectives;
+		if (typeof objectives === 'string') {
+			try {
+				return JSON.parse(objectives);
+			} catch {
+				return [];
+			}
+		}
+		return [];
+	}
+
+	const objectives = $derived.by(() => normalizeObjectives(proposal?.objectives));
+	const objectiveValues = $derived.by(() =>
+		objectives
+			.map((objective: { value?: string }) => objective.value)
+			.filter((value: string | undefined): value is string => !!value)
+	);
+	const preconditions = $derived.by(() =>
+		objectives
+			.flatMap((objective: { preconditions?: { value?: string }[] }) => objective.preconditions ?? [])
+			.map((precondition) => precondition.value)
+			.filter((value: string | undefined): value is string => !!value)
+	);
+	const indicativeSteps = $derived.by(() =>
+		objectives
+			.flatMap(
+				(objective: { preconditions?: { indicativeSteps?: { value?: string }[] }[] }) =>
+					objective.preconditions ?? []
+			)
+			.flatMap((precondition) => precondition.indicativeSteps ?? [])
+			.map((step) => step.value)
+			.filter((value: string | undefined): value is string => !!value)
+	);
+	const keyIndicators = $derived.by(() =>
+		objectives
+			.flatMap(
+				(objective: { preconditions?: { keyIndicators?: { value?: string }[] }[] }) =>
+					objective.preconditions ?? []
+			)
+			.flatMap((precondition) => precondition.keyIndicators ?? [])
+			.map((indicator) => indicator.value)
+			.filter((value: string | undefined): value is string => !!value)
+	);
+
+	function getProposalPointsForRound(roundIndex: number): string[] {
+		if (!proposal) return [];
+		if (roundIndex === 0) return proposal.title ? [proposal.title] : [];
+		if (roundIndex === 1) return objectiveValues[0] ? [objectiveValues[0]] : [];
+		if (roundIndex === 2) return objectiveValues[1] ? [objectiveValues[1]] : [];
+		if (roundIndex === 3) return preconditions;
+		if (roundIndex === 4) return indicativeSteps;
+		if (roundIndex === 5) return keyIndicators;
+		if (roundIndex === 6) return proposal.functionalities ? [proposal.functionalities] : [];
+		if (roundIndex === 7) return proposal.discussion ? [proposal.discussion] : [];
+		return [];
+	}
+
+	function getProposalTextForRound(roundIndex: number): string {
+		const points = getProposalPointsForRound(roundIndex);
+		if (points.length === 0) return '';
+		return points.join('\n');
+	}
+
+	function getFallbackCardType(roundIndex: number): CardData['type'] {
+		const types: CardData['type'][] = ['nature', 'sense', 'history', 'action', 'landmark'];
+		return types[(roundIndex - 1) % types.length];
+	}
+
+	function buildProposalCard(roundIndex: number, text: string): CardData {
+		return {
+			id: -roundIndex,
+			type: getFallbackCardType(roundIndex),
+			title: getTranslation(ROUNDS[roundIndex]?.title),
+			text,
+			hero_steps: [],
+			character_category: ['human']
+		};
+	}
 	$effect(() => {
 		if (open && playerState === 'writing') {
 			// Start timer only when dialog is actually open
@@ -196,6 +315,13 @@
 			{@const card_id = playerCardIds.find((card) => card.round === round.index)?.card_id}
 			{@const card = playerCards.find((card) => card.id === card_id)}
 			{@const answer = playerAnswers.find((answer) => answer.round === round.index)}
+			{@const proposalText = getProposalTextForRound(round.index)}
+			{@const displayCard = card
+				? { ...card, text: proposalText || card.text }
+				: proposalText
+					? buildProposalCard(round.index, proposalText)
+					: null}
+			{@const isCurrentRound = round.index === currentRound}
 			<div
 				id={`round-${round.index}`}
 				class="flex flex-col items-center lg:flex-row lg:items-stretch gap-8 w-full {round.index >
@@ -203,8 +329,8 @@
 					? 'opacity-30 grayscale'
 					: ''}"
 			>
-				{#if round.index === 0}
-					<div class="shrink-0">
+				<div class="shrink-0 flex flex-col items-stretch">
+					{#if round.index === 0}
 						<CharacterCard character={player?.character ?? 'child'} />
 						{#if player && isNonHumanCharacter(player.character)}
 							<Button variant="outline" class="mt-2" onclick={() => (showSpeciesDialog = true)}
@@ -215,9 +341,7 @@
 								character={player?.character ?? 'child'}
 							/>
 						{/if}
-					</div>
-				{:else if round.index === 7}
-					<div class="shrink-0">
+					{:else if round.index === 7}
 						<div
 							class="w-64 h-96 bg-white rounded-xl bg-center border-2 border-gray-400/50 relative"
 							style="background-image: url('/images/cards/post-story.svg');"
@@ -227,24 +351,33 @@
 								<p class="text-xs font-medium">{m.write_post_story()}</p>
 							</div>
 						</div>
-					</div>
-				{:else if card}
-					<div class="shrink-0">
-						<Card {card} />
-						{#if card.type === 'landmark'}
+					{:else if displayCard}
+						<Card card={displayCard} />
+						{#if card?.type === 'landmark'}
 							<Button variant="outline" class="mt-2" onclick={() => (showLandmarkDialog = true)}
 								>Learn more about this landmark</Button
 							>
 							<LandmarkInfoDialog bind:open={showLandmarkDialog} {card} />
 						{/if}
-					</div>
-				{:else}
-					<div
-						class="w-64 h-96 rounded-lg shrink-0 border-black border-dashed border-2 flex items-center justify-center"
-					>
-						<p class="text-sm text-center">{m.card_not_selected()}</p>
-					</div>
-				{/if}
+					{:else}
+						<div
+							class="w-64 h-96 rounded-lg border-black border-dashed border-2 flex items-center justify-center"
+						>
+							<p class="text-sm text-center">{m.card_not_selected()}</p>
+						</div>
+					{/if}
+					{#if isCurrentRound}
+						<Button
+							variant="outline"
+							class="mt-2 w-full flex items-center justify-center gap-2"
+							onclick={() => (openProposalDialog = true)}
+							disabled={!proposalId}
+						>
+							<FileText class="h-4 w-4" />
+							{m.view_full_proposal()}
+						</Button>
+					{/if}
+				</div>
 				<div class="flex flex-col items-stretch w-full">
 					<div class="flex items-center gap-2">
 						{#if round.index === 0}
@@ -297,3 +430,5 @@
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>
+
+<ProposalDialog bind:open={openProposalDialog} proposalId={proposalId} />
