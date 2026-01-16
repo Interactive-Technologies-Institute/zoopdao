@@ -27,41 +27,41 @@
 
 	$effect(() => {
 		// Start timer when component mounts or when dialog opens
-		if (individualTimerStart === 0) {
-			individualTimerStart = Date.now();
-		}
+			if (individualTimerStart === 0) {
+				individualTimerStart = Date.now();
+			}
 
-		// Clear any existing interval
-		if (intervalId) {
-			clearInterval(intervalId);
-		}
+			// Clear any existing interval
+			if (intervalId) {
+				clearInterval(intervalId);
+			}
 
 		// Calculate time left based on the fixed 2-minute timer
-		const updateTimeLeft = () => {
-			const now = Date.now();
-			const elapsedSeconds = Math.floor((now - individualTimerStart) / 1000);
+			const updateTimeLeft = () => {
+				const now = Date.now();
+				const elapsedSeconds = Math.floor((now - individualTimerStart) / 1000);
 			timeLeft = Math.max(0, TIMER_DURATION - elapsedSeconds);
 
 			if (timeLeft <= 60 && timeLeft > 0) {
-				tickSound.play().catch((err) => console.error('Error playing warning sound:', err));
-			}
+					tickSound.play().catch((err) => console.error('Error playing warning sound:', err));
+				}
 
-			if (timeLeft <= 0) {
-				tickSound.pause();
-				tickSound.currentTime = 0;
+				if (timeLeft <= 0) {
+					tickSound.pause();
+					tickSound.currentTime = 0;
 				if (intervalId) {
 					clearInterval(intervalId);
 					intervalId = null;
 				}
-				onTimeUp();
-			}
-		};
+					onTimeUp();
+				}
+			};
 
-		// Initial update
-		updateTimeLeft();
+			// Initial update
+			updateTimeLeft();
 
-		// Set interval for updates
-		intervalId = setInterval(updateTimeLeft, 1000);
+			// Set interval for updates
+			intervalId = setInterval(updateTimeLeft, 1000);
 
 		// Cleanup on unmount
 		return () => {

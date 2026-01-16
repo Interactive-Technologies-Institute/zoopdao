@@ -57,7 +57,7 @@ Concurso p/manutenções
 Jogos interativos com a história da marinha',
     'Envolvimento das faculdades/universidades
 Diversificar público-alvo',
-    'january-2025-exceptional',
+    'january-2026-exceptional',
     'pt'
 );
 
@@ -125,7 +125,7 @@ Conselho de ecossistema
 Medir imposto de doações
 Gestão de stock',
     'N/A',
-    'january-2025-exceptional',
+    'january-2026-exceptional',
     'pt'
 );
 
@@ -201,6 +201,6 @@ INSERT INTO public.proposals (
    GNR, Associações independentes
 5. Exposição (novas espécies, conservação costa portuguesa)',
     'N/A',
-    'january-2025-exceptional',
+    'january-2026-exceptional',
     'pt'
 );

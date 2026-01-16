@@ -646,102 +646,179 @@ Transform the "Browse stories" page to "Browse discussions" page, adapting saved
 Enable users to browse and read discussions from past proposal participations instead of game stories.
 
 **Description:**
-- Update route/page from `/stories` to `/discussions` (or keep route, update content)
-- Change page title and headings from "Stories" to "Discussions"
-- Update story card component to discussion card
-- Adapt filtering and search to work with discussions
-- Update "read more" functionality for discussions
-- Change data fetching to retrieve discussions instead of stories
-- Update all related text in translation files
-- Maintain same functionality (filtering, sorting, searching) but for discussions
-- Update share functionality if applicable
+- Kept the `/stories` route but updated labels and copy to discussions context
+- Mapped `saved_discussions` records to the existing stories UI shape in loaders
+- Ensured browsing only shows public discussions and backfilled visibility defaults
+- Hardened character/role filter labels when translation keys are missing
+- Updated translations (EN/PT) for discussions terminology and browse labels
+- Adjusted browse navigation button to use client-side routing for reliability
 
 **Acceptance Criteria:**
-1. Browse page displays discussions instead of stories
-2. All page headings and text updated to "discussions"
-3. Discussion cards display correctly
-4. Filtering and search work with discussion data
-5. "Read more" shows full discussion content
-6. All text updated in both languages
-7. Functionality matches previous stories page but for discussions
+1. `/stories` shows saved discussions with discussion wording
+2. Saved discussions load from `saved_discussions` and map to UI shape
+3. Filters/search operate on discussion fields without crashes
+4. Public-only discussions are listed
+5. Labels/CTAs updated in EN/PT
+6. Browse button navigates reliably to the list
 
 **Completion Criteria:**
-1. Page updated to discussions context
-2. Component names and references updated
-3. Data fetching updated for discussions
-4. Translation files updated
-5. All functionality tested and working
+1. Loaders query `saved_discussions` and map fields
+2. UI copy updated to discussions in EN/PT
+3. Role filter labels are resilient to missing translations
+4. Public visibility defaults/backfill in migration
+5. Browse link uses client-side navigation
 
 ---
 
-## ZD-168: Update Image Gallery and Instructions Text
+## ZD-168: Replace Image Gallery with View Full Proposal Button
 
 **Overview:**
-Update text in image gallery and instructions dialogs to reflect ZoopDAO context, changing "back to game" buttons to "back to assembly".
+Deactivate the image gallery button and replace it with a "Full Proposal" button (text + icon) that displays the complete proposal details in a discussion view, similar to the proposal preview shown before entering the lobby.
 
 **Goal:**
-Align help and information dialogs with governance assembly context.
+Provide easy access to view the full proposal details during discussion participation, replacing the game-focused image gallery functionality.
 
 **Description:**
-- Update image gallery dialog text to reflect ZoopDAO/Aquário context
-- Change "Back to game" button to "Back to assembly" in image gallery
-- Update instructions dialog text for governance participation
-- Change "Back to game" button to "Back to assembly" in instructions
-- Update all related text in translation files (en.json and pt.json)
-- Ensure dialog content is relevant to governance context
+- Remove or deactivate the image gallery button (`IslandDialog`) from the game view
+- Create "Full Proposal" button component with text and icon
+- Position button in the same location where image gallery button was (right side, middle of screen)
+- Implement button click handler to open proposal view/dialog
+- Display full proposal details in a dialog or modal similar to proposal preview page (`/proposals/[id]/preview`)
+- Include all proposal sections: title, objectives, preconditions, indicative steps, key indicators, functionalities, discussion
+- Ensure proposal data is accessible from game state (proposal_id should be available)
+- Style button to match design system and be visually consistent with other game view buttons
+- Add appropriate translation keys for "View Full Proposal" button text in both English and Portuguese
+- Ensure button is disabled until tour is completed (same as other game view buttons)
 
 **Acceptance Criteria:**
-1. Image gallery text updated for ZoopDAO context
-2. "Back to game" changed to "Back to assembly" in image gallery
-3. Instructions dialog text updated for governance
-4. "Back to game" changed to "Back to assembly" in instructions
-5. All text updated in both languages
-6. Dialogs function correctly with new text
+1. Image gallery button is deactivated/removed from game view
+2. "View Full Proposal" button is visible in the same position as image gallery button
+3. Button displays text and icon appropriately
+4. Clicking button opens proposal details view
+5. Proposal view shows all proposal sections (title, objectives, preconditions, steps, indicators, functionalities, discussion)
+6. Proposal view matches the style of proposal preview page
+7. Button is disabled until tour is completed
+8. Translation keys added for button text in both languages
+9. Button styling matches design system
 
 **Completion Criteria:**
-1. Image gallery dialog updated
-2. Instructions dialog updated
-3. Button text changed in both dialogs
-4. Translation files updated
-5. Functionality verified
-
----
-
-## ZD-169: Map Game Rounds to Proposal Form Points
-
-**Overview:**
-Establish mapping between the 7 game rounds and the 7 mandatory proposal form points, ensuring each round corresponds to a specific proposal section.
-
-**Goal:**
-Align the round-based participation flow with the proposal structure created in the form.
-
-**Description:**
-- Map round 0 (Introduction) to Proposal Title
-- Map round 1 to Long-term Objective 1
-- Map round 2 to Long-term Objective 2 (or additional objectives)
-- Map round 3 to Preconditions and Goals
-- Map round 4 to Indicative Steps
-- Map round 5 to Key Indicators
-- Map round 6 to Functionalities
-- Map round 7 (Post-story) to Discussion
-- Update round indicators and descriptions to reflect proposal points
-- Ensure proposal data is accessible during each round
-- Update round transition logic to load correct proposal section
-
-**Acceptance Criteria:**
-1. Each of the 7 rounds maps to a specific proposal form point
-2. Round indicators show correct proposal section name
-3. Round descriptions reference proposal context
-4. Proposal data is loaded and displayed for each round
-5. Round 7 correctly maps to Discussion section
-6. Round flow progresses through proposal structure logically
-
-**Completion Criteria:**
-1. Round-to-proposal mapping defined and implemented
-2. Round indicators updated with proposal section names
-3. Round descriptions updated
+1. Image gallery button removed/deactivated
+2. View Full Proposal button component created
+3. Proposal view dialog/modal implemented
 4. Proposal data integration working
-5. Round flow tested and verified
+5. Translation files updated
+6. Button positioning and styling verified
+7. Functionality tested and working
+
+---
+
+## ZD-169: Translation Consistency Check and Save Discussion Dialog Updates
+
+**Overview:**
+Inspect and update translation files (en.json and pt.json) for syntax and context consistency, focusing on updating the save_discussion pop-up dialog to replace "game" terminology with "discussion" terminology throughout.
+
+**Goal:**
+Ensure all translation strings are consistent with ZoopDAO governance context and update save discussion dialog to use appropriate terminology.
+
+**Description:**
+- Review all translation keys in `messages/en.json` and `messages/pt.json` for:
+  - Syntax errors (missing commas, brackets, quotes)
+  - Context consistency (game vs discussion terminology)
+  - Missing translations or placeholder text
+- Focus on save_discussion dialog (`end-dialog.svelte`) related translations:
+  - Update "game" references to "discussion" or "participation"
+  - Update "player" references to "participant" where appropriate
+  - Update "story" references to "discussion" (if any remain)
+  - Ensure all dialog text reflects governance context
+- Check translation keys used in:
+  - `do_you_want_to_save`
+  - `save_story` / `submit_discussion_and_vote`
+  - `save_form`
+  - `your_story_wont_saved`
+  - `player_name` / `participant_name`
+  - `story_title` / `discussion_title`
+  - Any other save dialog related keys
+- Verify consistency between English and Portuguese versions
+- Update help dialog text if it still references "game" terminology
+- Ensure all new terminology is properly translated in both languages
+- Test save dialog to verify all text displays correctly
+
+**Acceptance Criteria:**
+1. All translation files have valid JSON syntax (no syntax errors)
+2. Save discussion dialog uses "discussion" terminology instead of "game"
+3. Save discussion dialog uses "participant" terminology instead of "player" where appropriate
+4. All translation keys are consistent between English and Portuguese
+5. No placeholder text or missing translations in critical paths
+6. Help dialog text updated to governance context
+7. All dialog text reflects ZoopDAO governance context
+8. Translation files pass JSON validation
+
+**Completion Criteria:**
+1. Translation files reviewed and syntax errors fixed
+2. Save discussion dialog translations updated
+3. All "game" references changed to appropriate governance terminology
+4. English and Portuguese translations are consistent
+5. Help dialog translations updated
+6. All changes tested in UI
+7. JSON files validated for syntax correctness
+
+---
+
+## ZD-170: Mode Selection Page and Timer Implementation
+
+**Overview:**
+Add a mode selection page before role selection in the lobby flow, allowing users to choose between Pedagogic Mode (with timer) and Decision-Making Mode (without timer), and implement timer functionality that shows only in the last round with appropriate durations.
+
+**Goal:**
+Enable users to select their preferred discussion mode and implement timer functionality that only appears in the final discussion round with mode-appropriate durations.
+
+**Description:**
+- Create new mode selection page/route before role selection in lobby flow
+- Design mode selection UI in the style of role lobby (similar visual design)
+- Implement two mode options:
+  - **Pedagogic Mode**: Discussion with Timer (educational/learning focus)
+  - **Decision-Making Mode**: Discussion without Timer (focused decision-making)
+- Store selected mode in game state or URL parameters
+- Update lobby flow to show mode selection before role selection
+- Replace digital clock component with timer component (reverse previous commit changes)
+- Implement timer visibility logic:
+  - Pedagogic Mode: Timer shown in all rounds (1-7)
+  - Decision-Making Mode: No timer displayed at all
+- Implement timer duration logic:
+  - Rounds 1-6: 1 minute timer (Pedagogic Mode only)
+  - Round 7 (discussion): 2 minute timer (Pedagogic Mode only)
+  - Decision-Making Mode: No timer displayed in any round
+- Update timer component to respect mode selection
+- Ensure timer starts automatically when round begins (if mode requires it)
+- Update game state to track mode selection
+- Add translation keys for mode selection page (mode names, descriptions) in both languages
+- Update lobby URL structure to include mode parameter if needed
+
+**Acceptance Criteria:**
+1. Mode selection page appears before role selection in lobby flow
+2. Two mode options are available: Pedagogic Mode and Decision-Making Mode
+3. Mode selection UI matches role lobby visual style
+4. Selected mode is stored and accessible throughout game flow
+5. Digital clock is replaced with timer component
+6. Timer displays in all rounds (1-7) in Pedagogic Mode
+7. Timer duration is 1 minute for rounds 1-6 (Pedagogic Mode only)
+8. Timer duration is 2 minutes for round 7 (Pedagogic Mode only)
+9. No timer displays in Decision-Making Mode (any round)
+10. Timer starts automatically when round begins (Pedagogic Mode only)
+11. Translation keys added for mode selection in both languages
+12. Mode selection persists through game flow
+
+**Completion Criteria:**
+1. Mode selection page created and integrated into lobby flow
+2. Mode selection UI styled to match role lobby
+3. Timer component implemented (replacing digital clock)
+4. Timer visibility logic working (all rounds in Pedagogic Mode, none in Decision-Making Mode)
+5. Timer duration logic working (1 min for rounds 1-6, 2 min for round 7 in Pedagogic Mode)
+6. Mode-based timer display logic working
+7. Game state updated to track mode selection
+8. Translation files updated with mode selection text
+9. All timer functionality tested in both modes
+10. Lobby flow tested with mode selection
 
 ---
 

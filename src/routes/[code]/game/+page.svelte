@@ -9,7 +9,7 @@
 	import Button from '@/components/ui/button/button.svelte';
 	import { GameState } from '@/state/game-state.svelte';
 	import { MapPosition } from '@/state/map-position.svelte';
-	import { CircleHelp, ScrollText, LogOut, Image } from 'lucide-svelte';
+	import { CircleHelp, ScrollText, LogOut, FileText } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	import EndDialog from '@/components/end-dialog.svelte';
 	import { m } from '@src/paraglide/messages';
@@ -21,7 +21,7 @@
 	import RoundTransition from '@/components/round-transition.svelte';
 	import { goto } from '$app/navigation';
 	import StatusPill from '@/components/status-pill.svelte';
-	import IslandDialog from '@/components/island-dialog.svelte';
+	import ProposalDialog from '@/components/proposal-dialog.svelte';
 	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
 	import type { AIAgent, AIMessage, Participant, Role } from '@/types';
 	import { supabase } from '@/supabase';
@@ -216,7 +216,7 @@
 	let openStoryDialog = $state(false);
 	let openHelpDialog = $state(false);
 	let openEndDialog = $state(false);
-	let openIslandDialog = $state(false);
+	let openProposalDialog = $state(false);
 	let openHistoryDialog = $state(false);
 	
 	// Discussion messages state
@@ -604,14 +604,18 @@
 		currentRound={gameState.currentRound}
 	/>
 	<Button
-		size="icon-lg"
+		size="lg"
 		class="absolute right-4 -translate-y-1/2 top-1/2 images z-50 pointer-events-auto"
-		disabled={!tourCompleted}
-		onclick={() => (openIslandDialog = true)}
+		disabled={!tourCompleted || !(data.game as any)?.proposal_id}
+		onclick={() => (openProposalDialog = true)}
 	>
-		<Image />
+		<FileText />
+		{m.view_full_proposal()}
 	</Button>
-	<IslandDialog bind:open={openIslandDialog} />
+	<ProposalDialog 
+		bind:open={openProposalDialog} 
+		proposalId={(data.game as any)?.proposal_id ?? null} 
+	/>
 	
 	<Button
 		size="lg"
