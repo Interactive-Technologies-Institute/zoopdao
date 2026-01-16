@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Button } from '@/components/ui/button';
 	import RelativeTime from './relative-time.svelte';
-	import { Share2, Check } from 'lucide-svelte';
+	import { Share2, Check, FileText } from 'lucide-svelte';
 	import { onDestroy } from 'svelte';
 	import { m } from '@src/paraglide/messages';
 	import { localizeHref } from '@src/paraglide/runtime';
 	import type { StoryRound } from '$lib/types';
+	import ProposalDialog from '@/components/proposal-dialog.svelte';
 
 	let { data } = $props();
 	const buttonColor = {
@@ -29,6 +30,8 @@
 
 	let isCopied = $state(false);
 	let copyTimeout: ReturnType<typeof setTimeout>;
+	let openProposalDialog = $state(false);
+	const hasProposal = $derived.by(() => data.proposal_id !== null && data.proposal_id !== undefined);
 
 	async function copyToClipboard() {
 		const baseUrl = window.location.origin;
@@ -106,5 +109,16 @@
 				<Button href={localizeHref(`/stories/${data.story_id}`)}>{m.read_more()}</Button>
 			</div>
 		</div>
+		<button
+			class="w-full mt-2 px-4 py-3 text-left rounded-lg border-2 border-dark-green/20 bg-white hover:bg-gray-50 transition-colors text-dark-green font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+			onclick={() => (openProposalDialog = true)}
+			disabled={!hasProposal}
+			aria-disabled={!hasProposal}
+		>
+			<FileText class="h-4 w-4" />
+			{m.view_full_proposal()}
+		</button>
 	</div>
 </div>
+
+<ProposalDialog bind:open={openProposalDialog} proposalId={data.proposal_id ?? null} />

@@ -120,6 +120,7 @@ export type SavedStory = {
 	id: number;
 	story_id: string;
 	created_at: string;
+	proposal_id?: number | null;
 	player_name: string;
 	story_title: string;
 	character: StoryCharacter;
