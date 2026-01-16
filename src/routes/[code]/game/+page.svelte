@@ -311,7 +311,7 @@
 				hasUserChattedThisRound = true;
 			}
 			const gameId = data.game.id;
-			const proposalId = (data.game as any).proposal_id || null; // Get proposal_id if exists
+			const proposalId = data.proposalId || null; // Get proposal_id from loader
 			const currentRound = gameState.currentRound;
 			const playerId = data.playerId;
 
@@ -606,7 +606,7 @@
 	<Button
 		size="lg"
 		class="absolute right-4 -translate-y-1/2 top-1/2 images z-50 pointer-events-auto"
-		disabled={!tourCompleted || !(data.game as any)?.proposal_id}
+		disabled={!tourCompleted}
 		onclick={() => (openProposalDialog = true)}
 	>
 		<FileText />
@@ -614,7 +614,7 @@
 	</Button>
 	<ProposalDialog 
 		bind:open={openProposalDialog} 
-		proposalId={(data.game as any)?.proposal_id ?? null} 
+		proposalId={data.proposalId ?? null} 
 	/>
 	
 	<Button
@@ -695,6 +695,6 @@
 		bind:open={openEndDialog}
 		{gameState}
 		{discussionMessages}
-		proposalId={(data.game as any)?.proposal_id ?? null}
+		proposalId={data.proposalId ?? null}
 	/>
 </div>

@@ -17,18 +17,19 @@ export const load = async ({ params, parent }) => {
 	const { userId } = await parent();
 	const code = params.code;
 
-	async function getGame(): Promise<Game> {
-		const { data: gameData, error: gameError } = await supabase
+	async function getGame(): Promise<Game & { proposal_id?: number | null; mode?: 'pedagogic' | 'decision_making' | null }> {
+		// Select proposal_id and mode explicitly since they're not in the generated types yet
+		const { data: gameData, error: gameError } = await (supabase
 			.from('games')
 			.select('*')
 			.eq('code', code)
-			.single();
+			.single()) as any;
 
 		if (gameError) {
 			return error(404, { message: 'Game not found' });
 		}
 
-		return gameData;
+		return gameData as Game & { proposal_id?: number | null; mode?: 'pedagogic' | 'decision_making' | null };
 	}
 
 	async function getPlayers(gameId: GameId): Promise<Player[]> {
@@ -137,6 +138,7 @@ export const load = async ({ params, parent }) => {
 	const gameRounds = await getGameRounds(game.id);
 	const playerCards = await getPlayerCards(game.id);
 	const playerAnswers = await getPlayerAnswers(game.id);
+	const proposalId = game.proposal_id ?? null;
 
 	// Check if player was inactive and if they can rejoin
 	if (player.is_active === false) {
@@ -170,6 +172,8 @@ export const load = async ({ params, parent }) => {
 		playerId: player.id,
 		gameRounds,
 		playerCards,
-		playerAnswers
+		playerAnswers,
+		proposalId,
+		gameMode: game.mode ?? 'pedagogic'
 	};
 };

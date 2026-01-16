@@ -17,7 +17,8 @@
 
 	async function fetchProposal() {
 		if (!proposalId) {
-			error = 'No proposal ID provided';
+			error = null; // Don't show error if no proposal_id, just show empty state
+			loading = false;
 			return;
 		}
 
@@ -30,6 +31,28 @@
 				throw new Error('Failed to fetch proposal');
 			}
 			const { proposal: proposalData } = await response.json();
+			
+			// Ensure objectives is parsed if it comes as a string (JSONB from Supabase)
+			if (proposalData && proposalData.objectives) {
+				if (typeof proposalData.objectives === 'string') {
+					try {
+						proposalData.objectives = JSON.parse(proposalData.objectives);
+					} catch (parseError) {
+						console.error('Error parsing objectives:', parseError);
+					}
+				}
+			}
+			
+			// Debug: log the proposal data structure
+			console.log('Proposal data loaded:', {
+				hasTitle: !!proposalData?.title,
+				hasObjectives: !!proposalData?.objectives,
+				objectivesType: typeof proposalData?.objectives,
+				objectivesLength: Array.isArray(proposalData?.objectives) ? proposalData.objectives.length : 'not array',
+				hasFunctionalities: !!proposalData?.functionalities,
+				hasDiscussion: !!proposalData?.discussion
+			});
+			
 			proposal = proposalData;
 		} catch (err) {
 			console.error('Error fetching proposal:', err);
@@ -41,13 +64,13 @@
 
 	$effect(() => {
 		if (open && proposalId) {
-			if (!proposal) {
-				fetchProposal();
-			}
+			// Always fetch when dialog opens to ensure fresh data
+			fetchProposal();
 		} else if (!open) {
 			// Reset state when dialog closes
 			proposal = null;
 			error = null;
+			loading = false;
 		}
 	});
 </script>
@@ -65,8 +88,15 @@
 					<Button>{m.close()}</Button>
 				</Dialog.Close>
 			</div>
+		{:else if !proposalId}
+			<div class="flex flex-col items-center justify-center p-8">
+				<p class="text-gray-600 mb-4">No proposal available for this discussion.</p>
+				<Dialog.Close>
+					<Button>{m.close()}</Button>
+				</Dialog.Close>
+			</div>
 		{:else if proposal}
-			<h2 class="text-2xl font-bold text-dark-green mb-6">{proposal.title}</h2>
+			<h2 class="text-2xl font-bold text-dark-green mb-6">{proposal.title || 'Proposal'}</h2>
 			
 			<div class="space-y-6 flex-grow">
 				<!-- Theory of Change Section -->
@@ -74,6 +104,7 @@
 					<h3 class="text-2xl font-bold text-dark-green">{m.theory_of_change()}</h3>
 					
 					<!-- Long-term Objectives -->
+					{#if proposal.objectives && Array.isArray(proposal.objectives) && proposal.objectives.length > 0}
 					<div class="space-y-4">
 						<div class="block text-lg font-semibold text-dark-green">
 							{m.long_term_objectives()}
@@ -131,8 +162,10 @@
 							</div>
 						{/each}
 					</div>
+					{/if}
 					
 					<!-- Functionalities -->
+					{#if proposal.functionalities}
 					<div>
 						<label class="block text-lg font-semibold text-dark-green mb-2">
 							{m.functionalities()}
@@ -141,9 +174,11 @@
 							<p class="text-gray-700 whitespace-pre-line">{proposal.functionalities}</p>
 						</div>
 					</div>
+					{/if}
 				</div>
 
 				<!-- Discussion Field -->
+				{#if proposal.discussion}
 				<div class="mt-6">
 					<label class="block text-sm font-medium text-dark-green mb-2">
 						{m.proposal_discussion()}
@@ -152,6 +187,7 @@
 						<p class="text-gray-700 whitespace-pre-line">{proposal.discussion}</p>
 					</div>
 				</div>
+				{/if}
 			</div>
 			
 			<div class="flex w-full justify-center mt-6">
