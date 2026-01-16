@@ -822,5 +822,25 @@ Enable users to select their preferred discussion mode and implement timer funct
 
 ---
 
+## ZD-171: Complete Discussion view with proposal actions and round points
 
+**Overview:**
+Add a consistent "View full proposal" action to discussion cards and ensure each card reflects the proposal points tied to its round, aligning discussion UX with assembly behavior.
 
+**Goal:**
+Provide a clear path to the full proposal from discussion cards and display accurate round-specific proposal points.
+
+**Description:**
+a) Add an input-style button below each discussion card to view the full proposal, duplicating the assembly button behavior.
+b) Wire the button to the same navigation/handler used in assembly.
+c) Ensure discussion cards show the proposal points for their corresponding round.
+d) Validate that the displayed points update correctly when rounds change.
+
+**Acceptance Criteria:**
+1. Each discussion card includes a "View full proposal" button below the card, matching assembly styling and behavior.
+2. Clicking the button opens the full proposal view for the card’s proposal.
+3. Discussion cards show the proposal points specific to the card’s round.
+
+**Completion Criteria:**
+1. UI behavior matches assembly button for all discussion cards.
+2. Round-specific points are confirmed correct across multiple rounds and proposals.
