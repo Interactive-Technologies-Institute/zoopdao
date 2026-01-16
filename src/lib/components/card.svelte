@@ -30,6 +30,6 @@
 	</div>
 	<p class="px-4 text-pretty leading-snug relative">
 		<span class="absolute mx-5 inset-0 bg-white [box-shadow:0_0_15px_15px_white]"></span>
-		<span class="relative z-10">{card.text}</span>
+		<span class="relative z-10 whitespace-pre-line">{card.text}</span>
 	</p>
 </div>

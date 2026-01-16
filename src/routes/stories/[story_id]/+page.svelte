@@ -29,6 +29,7 @@
 	let { data } = $props();
 	let story = data.story;
 	let cards = data.cards;
+	let proposal = data.proposal;
 
 	let storyCharacter = story.character.type;
 
@@ -79,6 +80,65 @@
 	onDestroy(() => {
 		if (copyTimeout) clearTimeout(copyTimeout);
 	});
+
+	function normalizeObjectives(objectives: unknown) {
+		if (!objectives) return [];
+		if (Array.isArray(objectives)) return objectives;
+		if (typeof objectives === 'string') {
+			try {
+				return JSON.parse(objectives);
+			} catch {
+				return [];
+			}
+		}
+		return [];
+	}
+
+	const objectives = $derived.by(() => normalizeObjectives(proposal?.objectives));
+	const objectiveValues = $derived.by(() =>
+		objectives
+			.map((objective: { value?: string }) => objective.value)
+			.filter((value: string | undefined): value is string => !!value)
+	);
+	const preconditions = $derived.by(() =>
+		objectives
+			.flatMap((objective: { preconditions?: { value?: string }[] }) => objective.preconditions ?? [])
+			.map((precondition) => precondition.value)
+			.filter((value: string | undefined): value is string => !!value)
+	);
+	const indicativeSteps = $derived.by(() =>
+		objectives
+			.flatMap((objective: { preconditions?: { indicativeSteps?: { value?: string }[] }[] }) => objective.preconditions ?? [])
+			.flatMap((precondition) => precondition.indicativeSteps ?? [])
+			.map((step) => step.value)
+			.filter((value: string | undefined): value is string => !!value)
+	);
+	const keyIndicators = $derived.by(() =>
+		objectives
+			.flatMap((objective: { preconditions?: { keyIndicators?: { value?: string }[] }[] }) => objective.preconditions ?? [])
+			.flatMap((precondition) => precondition.keyIndicators ?? [])
+			.map((indicator) => indicator.value)
+			.filter((value: string | undefined): value is string => !!value)
+	);
+
+	function getProposalPointsForRound(roundNumber: number): string[] {
+		if (!proposal) return [];
+		if (roundNumber === 0) return proposal.title ? [proposal.title] : [];
+		if (roundNumber === 1) return objectiveValues[0] ? [objectiveValues[0]] : [];
+		if (roundNumber === 2) return objectiveValues[1] ? [objectiveValues[1]] : [];
+		if (roundNumber === 3) return preconditions;
+		if (roundNumber === 4) return indicativeSteps;
+		if (roundNumber === 5) return keyIndicators;
+		if (roundNumber === 6) return proposal.functionalities ? [proposal.functionalities] : [];
+		if (roundNumber === 7) return proposal.discussion ? [proposal.discussion] : [];
+		return [];
+	}
+
+function getProposalTextForRound(roundNumber: number): string {
+	const points = getProposalPointsForRound(roundNumber);
+	if (points.length === 0) return '';
+	return points.join(' • ');
+}
 </script>
 
 <div class="flex flex-col p-6 lg:p-24 w-screen mx-auto">
@@ -173,7 +233,21 @@
 						{/if}
 					</div>
 
-					<p class="flex-1 max-w-[75ch] text-pretty">{round.answer}</p>
+					<div class="flex-1 max-w-[75ch]">
+						<p class="text-pretty">{round.answer}</p>
+						{#if getProposalPointsForRound(round.roundNumber).length > 0}
+							<div class="mt-3 rounded-lg border border-dark-green/10 bg-gray-50 px-4 py-3">
+								<p class="text-xs font-semibold uppercase tracking-wide text-dark-green/70">
+									{m.proposal_points()}
+								</p>
+								<ul class="mt-2 list-disc pl-5 text-sm text-gray-700 space-y-1">
+									{#each getProposalPointsForRound(round.roundNumber) as point}
+										<li>{point}</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
+					</div>
 				</div>
 			{/each}
 		</div>
@@ -197,7 +271,20 @@
 									{m.intro()}
 								</span>
 							</div>
-							<CharacterCard character={storyCharacter} />
+							{#if getProposalTextForRound(0)}
+								<Card
+									card={{
+										id: 0,
+										type: 'nature',
+										title: getTranslation(ROUNDS[0]?.title),
+										text: getProposalTextForRound(0),
+										hero_steps: [],
+										character_category: ['human']
+									}}
+								/>
+							{:else}
+								<CharacterCard character={storyCharacter} />
+							{/if}
 						</div>
 					</div>
 					<div class="h-999 w-[2px] bg-gray-200 flex-shrink-0"></div>
@@ -208,6 +295,19 @@
 								{#if round.round !== 0 && round.round !== 7}
 									{@const card = getCardDetails(round.card_id)}
 									{@const roundDetails = getRoundDetails(round.round)}
+									{@const proposalText = getProposalTextForRound(round.roundNumber)}
+									{@const displayCard = card
+										? { ...card, text: proposalText || card.text }
+										: proposalText
+											? {
+													id: -round.roundNumber,
+													type: round.type ?? 'nature',
+													title: getTranslation(roundDetails?.title),
+													text: proposalText,
+													hero_steps: [],
+													character_category: ['human']
+												}
+											: null}
 
 									<div class="flex-shrink-0 snap-center flex flex-col items-center gap-4">
 										<div class="flex items-center justify-center gap-2">
@@ -221,8 +321,8 @@
 											</span>
 										</div>
 
-										{#if card}
-											<Card {card} />
+										{#if displayCard}
+											<Card card={displayCard} />
 										{/if}
 									</div>
 								{/if}

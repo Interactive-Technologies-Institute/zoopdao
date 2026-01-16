@@ -8,6 +8,7 @@ const mapDiscussionToStory = (discussion: SavedDiscussion): SavedStory => ({
 	id: discussion.id,
 	story_id: discussion.discussion_id,
 	created_at: discussion.created_at,
+	proposal_id: discussion.proposal_id,
 	player_name: discussion.player_name,
 	story_title: discussion.discussion_title,
 	character: discussion.character,
@@ -46,24 +47,42 @@ export const load = (async ({ params }) => {
                 id,
                 type,
                 title,
-                prompt_text(text)
+                prompt_text(text, lang)
             `
 			)
-			.in('id', cardIds)
-			.eq('prompt_text.lang', currentLang);
+			.in('id', cardIds);
 
 		if (cardError) {
 			throw error(500, 'Could not load card info');
 		}
-		// Flatten text from prompt_text
-		cards = cardData.map((card) => ({
-			...card,
-			text: card.prompt_text?.[0]?.text ?? ''
-		}));
+		// Flatten text from prompt_text, prefer current locale but fall back to first entry
+		cards = cardData.map((card) => {
+			const promptTexts = card.prompt_text ?? [];
+			const localized = promptTexts.find((prompt: { lang?: string }) => prompt.lang === currentLang);
+			const fallback = promptTexts[0];
+			return {
+				...card,
+				text: localized?.text ?? fallback?.text ?? ''
+			};
+		});
+	}
+
+	let proposal = null;
+	if (discussion.proposal_id) {
+		const { data: proposalData, error: proposalError } = await supabase
+			.from('proposals')
+			.select('id, title, objectives, functionalities, discussion')
+			.eq('id', discussion.proposal_id)
+			.single();
+
+		if (!proposalError) {
+			proposal = proposalData;
+		}
 	}
 
 	return {
 		story,
-		cards
+		cards,
+		proposal
 	};
 }) satisfies PageLoad;
