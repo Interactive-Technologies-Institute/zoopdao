@@ -301,7 +301,11 @@ function getProposalTextForRound(roundNumber: number): string {
 										: proposalText
 											? {
 													id: -round.roundNumber,
-													type: round.type ?? 'nature',
+													type:
+														round.type ??
+														(round.roundNumber === 1 || round.roundNumber === 2
+															? 'sense'
+															: 'nature'),
 													title: getTranslation(roundDetails?.title),
 													text: proposalText,
 													hero_steps: [],

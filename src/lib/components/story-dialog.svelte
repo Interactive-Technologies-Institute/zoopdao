@@ -158,6 +158,9 @@
 	}
 
 	function getFallbackCardType(roundIndex: number): CardData['type'] {
+		// Keep both long-term objectives visually consistent.
+		// Round 1 and 2 correspond to long-term objective 1 and 2.
+		if (roundIndex === 1) return 'sense';
 		const types: CardData['type'][] = ['nature', 'sense', 'history', 'action', 'landmark'];
 		return types[(roundIndex - 1) % types.length];
 	}
