@@ -14,6 +14,6 @@
 	{#if children}
 		{@render children?.()}
 	{:else}
-		<Dot class="text-dark-green" />
+		<Dot class="text-deep-teal" />
 	{/if}
 </div>

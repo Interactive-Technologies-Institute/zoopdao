@@ -34,7 +34,7 @@
 	<div
 		class="sticky top-0 z-10 w-full bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center"
 	>
-		<div class="bg-dark-green p-2 flex flex-col items-center justify-center rounded-lg text-center">
+		<div class="bg-deep-teal p-2 flex flex-col items-center justify-center rounded-lg text-center">
 			<p class="text-white md:text-sm text-xs font-medium">Lobby code</p>
 			<p class="text-white lg:text-4xl md:text-xl text-md font-bold">{data.game.code}</p>
 		</div>
@@ -44,14 +44,14 @@
 					{#if gameState.state === 'waiting' && currentPlayer.nickname === null}
 					<!-- Back button removed as category selection is hidden -->
 					{:else if !currentPlayer.is_owner}
-						<p class="text-dark-green font-bold text-center px-2">
+						<p class="text-deep-teal font-bold text-center px-2">
 							Waiting for host to start the game...
 						</p>
 					{/if}
 
 					{#if currentPlayer.is_owner}
 						{#if gameState.state === 'ready'}
-							<p class="text-dark-green font-bold text-center px-2">All players are ready!</p>
+							<p class="text-deep-teal font-bold text-center px-2">All players are ready!</p>
 						{/if}
 						<Button
 							size="default"
@@ -69,7 +69,7 @@
 	</div>
 
 	<!-- Role selection (category selection hidden, defaulting to human) -->
-	<p class="text-dark-green text-lg font-bold my-2">{m.select_role()}</p>
+	<p class="text-deep-teal text-lg font-bold my-2">{m.select_role()}</p>
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
 		{#each CHARACTER_CATEGORIES[selectedCategory] as character}
 				{@const player = gameState.players.find((player) => player.character === character)}

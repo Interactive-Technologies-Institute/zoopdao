@@ -95,10 +95,10 @@
 		>
 			<img src="/images/illustrations/step_2_1.png" alt="" class="w-full h-full object-contain" />
 		</div>
-		<h1 class="flex items-center justify-center text-dark-green font-black text-5xl md:text-7xl">
+		<h1 class="flex items-center justify-center text-deep-teal font-black text-5xl md:text-7xl">
 			ZoopDAO
 		</h1>
-		<p class="text-dark-green text-center text-lg mb-5 px-4 italic">
+		<p class="text-deep-teal text-center text-lg mb-5 px-4 italic">
 			"Participate on the multispecies governance in Aquário Vasco da Gama"
 		</p>
 		<div
@@ -108,13 +108,13 @@
 				<Button size="lg" href={localizeUrl('/proposals/new').toString()}>{m.new_proposal()}</Button>
 			</div>
 			<div class="flex items-center gap-4 w-full">
-				<div class="h-px w-full bg-dark-green"></div>
-				<p class="text-dark-green text-center text-lg font-bold">{m.or()}</p>
-				<div class="h-px w-full bg-dark-green"></div>
+				<div class="h-px w-full bg-deep-teal"></div>
+				<p class="text-deep-teal text-center text-lg font-bold">{m.or()}</p>
+				<div class="h-px w-full bg-deep-teal"></div>
 			</div>
 			<!-- Proposals List -->
 			<div class="w-full flex flex-col items-center justify-center gap-2">
-				<p class="flex items-center justify-center text-dark-green font-medium mb-2">
+				<p class="flex items-center justify-center text-deep-teal font-medium mb-2">
 					{m.current_proposals()}
 				</p>
 				{#if proposals.length === 0}
@@ -127,11 +127,11 @@
 							{@const StatusIcon = getProposalStatusIcon(status)}
 							<button
 								onclick={() => handleProposalClick(proposal.id)}
-								class="w-full p-3 bg-white border-2 border-dark-green/20 rounded-lg hover:border-dark-green/60 hover:bg-gray-50 transition-all text-left"
+								class="w-full p-3 bg-white border-2 border-deep-teal border-opacity-20 rounded-lg hover:border-deep-teal hover:border-opacity-60 hover:bg-gray-50 transition-all text-left"
 							>
 								<div class="flex items-start justify-between gap-2">
 									<div class="flex-1 flex flex-col gap-1">
-										<p class="font-semibold text-dark-green">{translatedProposal.title}</p>
+										<p class="font-semibold text-deep-teal">{translatedProposal.title}</p>
 										<p class="text-xs text-gray-500">
 											{m.voting_period()}: {getVotingPeriodLabel(proposal.voting_period_id)}
 										</p>
@@ -149,16 +149,16 @@
 				{/if}
 			</div>
 			<div class="flex items-center gap-4 w-full">
-				<div class="h-px w-full bg-dark-green"></div>
-				<p class="text-dark-green text-center text-lg font-bold">{m.or()}</p>
-				<div class="h-px w-full bg-dark-green"></div>
+				<div class="h-px w-full bg-deep-teal"></div>
+				<p class="text-deep-teal text-center text-lg font-bold">{m.or()}</p>
+				<div class="h-px w-full bg-deep-teal"></div>
 			</div>
 			<div class="flex flex-col items-center justify-center">
 				<Button
 					variant="outline"
 					size="lg"
 					onclick={handleBrowseDiscussions}
-					class="text-dark-green hover:text-dark-green/90 mb-4 bg-white hover-bg-gray-200 transition-all duration-200 ease-in-out border-dark-green/20 hover:border-dark-green/90"
+					class="text-deep-teal hover:opacity-90 mb-4 bg-white hover-bg-gray-200 transition-all duration-200 ease-in-out border-deep-teal border-opacity-20 hover:border-deep-teal hover:border-opacity-90"
 				>
 					{m.browse_stories()}
 				</Button>

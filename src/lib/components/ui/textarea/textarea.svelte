@@ -14,7 +14,7 @@
 <textarea
 	bind:this={ref}
 	class={cn(
-		'border-dark-green bg-white ring-offset-white placeholder:text-text/50 focus-visible:ring-dark-green flex min-h-[80px] w-full rounded-md border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+		'border-deep-teal bg-white ring-offset-white placeholder:text-text placeholder:opacity-50 focus-visible:ring-deep-teal flex min-h-[80px] w-full rounded-md border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
 		className
 	)}
 	bind:value

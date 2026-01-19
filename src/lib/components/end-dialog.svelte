@@ -302,8 +302,8 @@
 		class="overflow-y-auto max-h-[96vh] sm:max-h-[80vh] w-[calc(100vw-2rem)] lg:max-w-4xl flex flex-col"
 	>
 		<div class="flex flex-col items-center justify-center gap-1">
-			<p class="text-dark-green rounded-full font-medium text-lg underline">{m.game_ended()}</p>
-			<p class="text-dark-green font-bold text-4xl text-center">{m.thanks_for_playing()}</p>
+			<p class="text-deep-teal rounded-full font-medium text-lg underline">{m.game_ended()}</p>
+			<p class="text-deep-teal font-bold text-4xl text-center">{m.thanks_for_playing()}</p>
 		</div>
 		<div class="flex flex-col lg:flex-row gap-4 p-4 h-full">
 			<div class="overflow-y-auto flex flex-col flex-grow w-full max-w-full sm:max-w-[75ch]">
@@ -312,10 +312,10 @@
 						{#each storiesByPlayer as playerData, index}
 							<div
 								class="border-2 {playerData.isCurrent
-									? 'border-dark-green'
+									? 'border-deep-teal'
 									: 'border-gray-300'} rounded-lg overflow-hidden"
 							>
-								<h2 class="text-xl font-bold text-dark-green p-2">
+								<h2 class="text-xl font-bold text-deep-teal p-2">
 									{playerData.isCurrent ? m.your_story() : m.others_stories()}
 								</h2>
 								<div class="bg-gray-50 p-4 flex items-center gap-3 border-b">
@@ -327,7 +327,7 @@
 										/>
 									</div>
 									<div>
-										<h3 class="font-bold text-2xl text-dark-green">
+										<h3 class="font-bold text-2xl text-deep-teal">
 											{playerData.player.nickname}
 										</h3>
 										<p class="text-sm text-gray-500 capitalize">
@@ -345,19 +345,19 @@
 												<div class="flex gap-4 mb-2">
 													{#if answer.round === 0}
 														<div
-															class="flex gap-1 items-start text-sm font-semibold text-dark-green"
+															class="flex gap-1 items-start text-sm font-semibold text-deep-teal"
 														>
 															<span>{m.intro()}</span>
 														</div>
 													{:else if answer.round === 7}
 														<div
-															class="flex gap-1 items-start text-sm font-semibold text-dark-green"
+															class="flex gap-1 items-start text-sm font-semibold text-deep-teal"
 														>
 															<span>{m.post_story()}</span>
 														</div>
 													{:else}
 														<div
-															class="flex gap-1 items-start text-sm font-semibold text-dark-green"
+															class="flex gap-1 items-start text-sm font-semibold text-deep-teal"
 														>
 															<span>{m.round()}</span>
 															<span>{answer.round}</span>
@@ -370,7 +370,7 @@
 
 												<Textarea
 													bind:value={editedContent}
-													class="w-full min-h-32 p-3 border-2 border-dark-green rounded-md focus:ring-dark-green focus:outline-none"
+													class="w-full min-h-32 p-3 border-2 border-deep-teal rounded-md focus:ring-deep-teal focus:outline-none"
 													placeholder="Edit your answer..."
 												></Textarea>
 
@@ -400,19 +400,19 @@
 															<div class="flex gap-4 mb-2 animate-fade-in">
 																{#if answer.round === 0}
 																	<div
-																		class="flex gap-1 items-start text-sm font-semibold text-dark-green"
+																		class="flex gap-1 items-start text-sm font-semibold text-deep-teal"
 																	>
 																		<span>{m.intro()}</span>
 																	</div>
 																{:else if answer.round === 7}
 																	<div
-																		class="flex gap-1 items-start text-sm font-semibold text-dark-green"
+																		class="flex gap-1 items-start text-sm font-semibold text-deep-teal"
 																	>
 																		<span>{m.post_story()}</span>
 																	</div>
 																{:else}
 																	<div
-																		class="flex gap-1 items-start text-sm font-semibold text-dark-green"
+																		class="flex gap-1 items-start text-sm font-semibold text-deep-teal"
 																	>
 																		<span>{m.round()}</span>
 																		<span>{answer.round}</span>

@@ -58,7 +58,7 @@
 		<div bind:this={scrollContainer} class="flex items-center min-w-min mx-auto">
 			{#each Array.from({ length: 8 }, (_, i) => i) as index}
 				{#if index > 0}
-					<div class="h-1 w-4 md:w-8 {index <= currentRound ? 'bg-dark-green' : 'bg-white'}"></div>
+					<div class="h-1 w-4 md:w-8 {index <= currentRound ? 'bg-deep-teal' : 'bg-white'}"></div>
 				{/if}
 				<div
 					id="step-{index}"
@@ -66,16 +66,16 @@
 					0
 						? 'bg-[#FF6157]'
 						: index <= currentRound
-							? 'bg-dark-green'
+							? 'bg-deep-teal'
 							: 'bg-white'}"
 				>
 					{#if index === 0}
 						<Flag class="w-6 h-6 text-white" />
 					{:else if index === 7}
-						<PostStory color={index <= currentRound ? 'white' : 'dark-green'} />
+						<PostStory color={index <= currentRound ? 'white' : 'deep-teal'} />
 					{:else}
 						<span
-							class="text-lg font-medium {index <= currentRound ? 'text-white' : 'text-dark-green'}"
+							class="text-lg font-medium {index <= currentRound ? 'text-white' : 'text-deep-teal'}"
 						>
 							{index}
 						</span>
@@ -86,7 +86,7 @@
 	</div>
 	{#if currentRound === 0}
 		<div>
-			<h2 class="text-2xl font-medium text-dark-green text-center">
+			<h2 class="text-2xl font-medium text-deep-teal text-center">
 				{getTranslation(ROUNDS[0].title)}
 			</h2>
 			<p class="text-center text-text">{m.choose_starting_stop()}</p>
@@ -97,7 +97,7 @@
 				{m.round()}
 				{roundsMap[currentRound]?.index}
 			</h2>
-			<p class="text-xl md:text-2xl text-dark-green font-medium text-center">
+			<p class="text-xl md:text-2xl text-deep-teal font-medium text-center">
 				{getTranslation(ROUNDS[currentRound]?.title)}
 			</p>
 		</div>

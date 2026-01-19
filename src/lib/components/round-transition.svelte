@@ -49,7 +49,7 @@
 </script>
 
 <div
-	class="fixed inset-0 z-50 bg-dark-green/95 flex items-center justify-center p-4 md:p-8"
+	class="fixed inset-0 z-50 bg-deep-teal bg-opacity-95 flex items-center justify-center p-4 md:p-8"
 	transition:fade={{ duration: 200 }}
 >
 	<div class="relative max-w-5xl w-full mx-auto px-16 sm:px-24 md:px-32 flex flex-col">

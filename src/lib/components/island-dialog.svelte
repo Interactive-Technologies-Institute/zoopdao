@@ -30,7 +30,7 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content class="overflow-y-auto max-h-[95vh] w-[95vw] lg:max-w-4xl flex flex-col">
-		<h2 class="text-2xl font-bold text-dark-green">{m.island_dialog_heading()}</h2>
+		<h2 class="text-2xl font-bold text-deep-teal">{m.island_dialog_heading()}</h2>
 		<div class="space-y-4 flex-grow">
 			<!-- Image Carousel -->
 			<div class="relative">
@@ -57,8 +57,8 @@
 							<button
 								onclick={() => (currentLandmarkIndex = index)}
 								class="w-2 h-2 rounded-full transition-all {currentLandmarkIndex === index
-									? 'bg-dark-green w-4'
-									: 'bg-dark-green/50 hover:bg-dark-green/75'}"
+									? 'bg-deep-teal w-4'
+									: 'bg-deep-teal bg-opacity-50 hover:bg-deep-teal hover:bg-opacity-75'}"
 								aria-label={`Go to landmark ${index + 1}`}
 							></button>
 						{/each}

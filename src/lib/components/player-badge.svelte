@@ -28,13 +28,13 @@
 <div class="relative inline-block {isCurrentPlayer ? 'player-badges' : ''}">
 	<div
 		class="h-12 w-12 md:h-14 md:w-14 relative rounded-full z-20 flex items-center justify-center bg-gray-200 {isCurrentPlayer
-			? 'border-4 border-dark-green'
+			? 'border-4 border-deep-teal'
 			: ''}"
 	>
 		<User class="h-6 w-6 md:h-7 md:w-7 text-gray-600" />
 	</div>
 	<div
-		class="absolute origin-right -top-2 left-full ml-2 rounded-full bg-dark-green text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-nowrap"
+		class="absolute origin-right -top-2 left-full ml-2 rounded-full bg-deep-teal text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-nowrap"
 	>
 		{#if playerState.state === 'starting'}
 			<div class="flex items-center gap-2">

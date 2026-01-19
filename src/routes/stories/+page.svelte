@@ -23,11 +23,11 @@
 	import { localizeUrl } from '../../paraglide/runtime.js';
 
 	const buttonColor = {
-		landmark: 'bg-landmark-green',
-		nature: 'bg-nature-green',
-		sense: 'bg-sense-red',
-		history: 'bg-history-yellow',
-		action: 'bg-action-beige'
+		landmark: 'bg-dark-deep',
+		nature: 'bg-sea-green',
+		sense: 'bg-sand',
+		history: 'bg-sand',
+		action: 'bg-driftwood'
 	} as const;
 
 	function formatCharacterLabel(type: string): string {
@@ -134,28 +134,28 @@
 	</div>
 
 	<div class="flex flex-col gap-1">
-		<h1 class="text-4xl font-bold text-dark-green mt-4">{m.player_stories()}</h1>
-		<p class="text-sm text-dark-green">{m.explore_stories()}</p>
+		<h1 class="text-4xl font-bold text-deep-teal mt-4">{m.player_stories()}</h1>
+		<p class="text-sm text-deep-teal">{m.explore_stories()}</p>
 	</div>
 
 	<div class="flex flex-wrap gap-4 mt-8">
 		<div class="relative self-end">
 			<div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-				<Search class="w-5 h-5 text-dark-green" />
+				<Search class="w-5 h-5 text-deep-teal" />
 			</div>
 			<input
 				type="text"
 				placeholder={m.search_by()}
 				bind:value={search}
 				bind:this={searchInput}
-				class="p-2 pl-10 w-fit h-10 border-gray-300 rounded-md border focus:ring-dark-green focus:border-dark-green focus:ring-1 outline-none"
+				class="p-2 pl-10 w-fit h-10 border-gray-300 rounded-md border focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none"
 			/>
 		</div>
 		<div class="flex flex-col items-center gap-2">
-			<p class="self-start text-dark-green text-sm font-medium">{m.filter_by_character()}</p>
+			<p class="self-start text-deep-teal text-sm font-medium">{m.filter_by_character()}</p>
 			<Select.Root type="single" onValueChange={(v) => (value = v)} items={characterOptions}>
 				<Select.Trigger
-					class="h-10 rounded-md border-gray-300 bg-white focus:ring-dark-green focus:border-dark-green focus:ring-1 outline-none inline-flex w-64 select-none items-center border px-3 text-sm transition-colors"
+					class="h-10 rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex w-64 select-none items-center border px-3 text-sm transition-colors"
 					aria-label="Select a character"
 				>
 					<span class={value ? 'text-black' : 'text-gray-400'}>{selectedLabel}</span>
@@ -163,7 +163,7 @@
 				</Select.Trigger>
 				<Select.Portal>
 					<Select.Content
-						class="focus-override border-dark-green bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 h-96 max-h-[var(--bits-select-content-available-height)] w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-3 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
+						class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 h-96 max-h-[var(--bits-select-content-available-height)] w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-3 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
 						sideOffset={10}
 					>
 						<Select.ScrollUpButton class="flex w-full items-center justify-center">
@@ -172,7 +172,7 @@
 						<Select.Viewport class="p-1">
 							{#each characterOptions as option, i (i + option.value)}
 								<Select.Item
-									class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 text-sm outline-none transition-colors  data-[highlighted]:bg-gray-100 data-[selected]:bg-dark-green data-[selected]:text-white"
+									class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 text-sm outline-none transition-colors  data-[highlighted]:bg-gray-100 data-[selected]:bg-deep-teal data-[selected]:text-white"
 									value={option.value}
 									label={option.label}
 								>
@@ -195,7 +195,7 @@
 			</Select.Root>
 		</div>
 		<div class="flex flex-col items-center gap-2 h-full">
-			<p class="self-start text-dark-green text-sm font-medium">{m.filter_by_card()}</p>
+			<p class="self-start text-deep-teal text-sm font-medium">{m.filter_by_card()}</p>
 			<div class="h-full flex flex-wrap gap-2">
 				{#each cardTypes as type}
 					<button
@@ -232,7 +232,7 @@
 
 	<div class="flex flex-col mt-8 gap-3">
 		<div class="flex items-center justify-between">
-			<p class="text-2xl text-dark-green font-bold">{m.stories()}</p>
+			<p class="text-2xl text-deep-teal font-bold">{m.stories()}</p>
 			<div class="flex items-center gap-2">
 				<p class="font-medium text-sm">{m.sort_by()}</p>
 				<Select.Root
@@ -242,7 +242,7 @@
 					items={sortOptions}
 				>
 					<Select.Trigger
-						class="h-10 rounded-md border-gray-300 bg-white focus:ring-dark-green focus:border-dark-green focus:ring-1 outline-none inline-flex w-36 lg:w-48 select-none items-center border px-3 text-sm transition-colors"
+						class="h-10 rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex w-36 lg:w-48 select-none items-center border px-3 text-sm transition-colors"
 						aria-label="Sort stories"
 					>
 						<span>{sortOptions.find((opt) => opt.value === sort)?.label}</span>
@@ -250,13 +250,13 @@
 					</Select.Trigger>
 					<Select.Portal>
 						<Select.Content
-							class="focus-override border-dark-green bg-white z-50 min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-3"
+							class="focus-override border-deep-teal bg-white z-50 min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-3"
 							sideOffset={10}
 						>
 							<Select.Viewport class="p-1">
 								{#each sortOptions as option (option.value)}
 									<Select.Item
-										class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 text-sm outline-none transition-colors data-[highlighted]:bg-gray-100 data-[selected]:bg-dark-green data-[selected]:text-white"
+										class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 text-sm outline-none transition-colors data-[highlighted]:bg-gray-100 data-[selected]:bg-deep-teal data-[selected]:text-white"
 										value={option.value}
 										label={option.label}
 									>
@@ -281,7 +281,7 @@
 			{#if loading}
 				<div class="flex items-center justify-center h-full">
 					<!-- You can add a spinner here if you want -->
-					<p class="text-dark-green/60">Loading stories...</p>
+					<p class="text-deep-teal text-opacity-60">Loading stories...</p>
 				</div>
 			{:else if stories.length === 0}
 				<div class="flex items-center justify-center h-full">
@@ -312,7 +312,7 @@
 								{:else}
 									<Pagination.Page
 										{page}
-										class="hover:bg-gray-200 data-[selected]:bg-dark-green data-[selected]:text-white inline-flex size-10 select-none items-center justify-center rounded-lg bg-transparent font-medium active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent"
+										class="hover:bg-gray-200 data-[selected]:bg-deep-teal data-[selected]:text-white inline-flex size-10 select-none items-center justify-center rounded-lg bg-transparent font-medium active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent"
 									>
 										{page.value}
 									</Pagination.Page>

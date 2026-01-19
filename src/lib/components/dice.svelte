@@ -100,7 +100,7 @@
 			style="transform: translateZ(calc(var(--dice-size, 32px))); backface-visibility: hidden;"
 		>
 			<div class="flex justify-center items-center col-start-2 row-start-2">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 		</div>
 
@@ -110,22 +110,22 @@
 			style="transform: rotateY(180deg) translateZ(calc(var(--dice-size, 32px))); backface-visibility: hidden;"
 		>
 			<div class="flex justify-center items-center col-start-1 row-start-1">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-1">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-1 row-start-2">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-2">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-1 row-start-3">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-3">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 		</div>
 
@@ -135,13 +135,13 @@
 			style="transform: rotateY(90deg) translateZ(calc(var(--dice-size, 32px))); backface-visibility: hidden;"
 		>
 			<div class="flex justify-center items-center col-start-1 row-start-1">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-2 row-start-2">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-3">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 		</div>
 
@@ -151,16 +151,16 @@
 			style="transform: rotateY(-90deg) translateZ(calc(var(--dice-size, 32px))); backface-visibility: hidden;"
 		>
 			<div class="flex justify-center items-center col-start-1 row-start-1">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-1">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-1 row-start-3">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-3">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 		</div>
 
@@ -170,10 +170,10 @@
 			style="transform: rotateX(90deg) translateZ(calc(var(--dice-size, 32px))); backface-visibility: hidden;"
 		>
 			<div class="flex justify-center items-center col-start-1 row-start-1">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-3">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 		</div>
 
@@ -183,19 +183,19 @@
 			style="transform: rotateX(-90deg) translateZ(calc(var(--dice-size, 32px))); backface-visibility: hidden;"
 		>
 			<div class="flex justify-center items-center col-start-1 row-start-1">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-1">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-2 row-start-2">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-1 row-start-3">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 			<div class="flex justify-center items-center col-start-3 row-start-3">
-				<div class="md:w-4 md:h-4 w-2 h-2 bg-dark-green rounded-full"></div>
+				<div class="md:w-4 md:h-4 w-2 h-2 bg-deep-teal rounded-full"></div>
 			</div>
 		</div>
 	</div>

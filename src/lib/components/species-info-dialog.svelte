@@ -26,18 +26,18 @@
 		class="flex flex-col gap-4 max-w-xl w-[95vw] max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-lg"
 	>
 		{#if details}
-			<h2 class="text-2xl lg:text-3xl font-bold text-dark-green">
+			<h2 class="text-2xl lg:text-3xl font-bold text-deep-teal">
 				{getTranslation(details.title)}
 			</h2>
 			<img
 				src={details.image}
 				alt={getTranslation(details.title)}
-				class="aspect-video object-cover rounded-xl border-4 border-dark-green"
+				class="aspect-video object-cover rounded-xl border-4 border-deep-teal"
 			/>
 			<div class="flex flex-col gap-2">
 				<p>{getTranslation(details.description)}</p>
 				<p class="">
-					<span class="font-semibold text-dark-green mr-2">{m.fun_fact()}:</span>{getTranslation(
+					<span class="font-semibold text-deep-teal mr-2">{m.fun_fact()}:</span>{getTranslation(
 						details.fun_fact
 					)}
 				</p>
@@ -46,7 +46,7 @@
 			<p class="text-gray-500">No species info available.</p>
 		{/if}
 		<Dialog.Close>
-			<button class="mt-4 px-4 py-2 rounded bg-dark-green text-white">{m.back()}</button>
+			<button class="mt-4 px-4 py-2 rounded bg-deep-teal text-white">{m.back()}</button>
 		</Dialog.Close>
 	</Dialog.Content>
 </Dialog.Root>

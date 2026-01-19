@@ -94,16 +94,16 @@
 	<div class="max-w-3xl mx-auto">
 		<!-- Back Button -->
 		<div class="mb-4">
-			<Button variant="ghost" size="icon" onclick={handleBack} class="text-dark-green">
+			<Button variant="ghost" size="icon" onclick={handleBack} class="text-deep-teal">
 				<ArrowLeft class="h-6 w-6" />
 			</Button>
 		</div>
 
 		<!-- Preview Card -->
-		<div class="bg-white rounded-lg border-2 border-dark-green/20 p-6 md:p-8 shadow-lg">
+		<div class="bg-white rounded-lg border-2 border-deep-teal border-opacity-20 p-6 md:p-8 shadow-lg">
 			<!-- Header -->
 			<div class="mb-6">
-				<h1 class="text-3xl font-bold text-dark-green mb-4">{proposal.title}</h1>
+				<h1 class="text-3xl font-bold text-deep-teal mb-4">{proposal.title}</h1>
 				
 				<div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
 					<div class="flex items-center gap-2">
@@ -123,7 +123,7 @@
 			<div class="space-y-4 mb-6">
 				<!-- Objectives Preview -->
 				<div>
-					<h3 class="text-lg font-semibold text-dark-green mb-2">{m.long_term_objectives()}</h3>
+					<h3 class="text-lg font-semibold text-deep-teal mb-2">{m.long_term_objectives()}</h3>
 					<ul class="list-disc list-inside space-y-1 text-gray-700">
 						{#each proposal.objectives.slice(0, 2) as objective}
 							<li>{objective.value}</li>
@@ -133,13 +133,13 @@
 
 				<!-- Functionalities Preview -->
 				<div>
-					<h3 class="text-lg font-semibold text-dark-green mb-2">{m.functionalities()}</h3>
+					<h3 class="text-lg font-semibold text-deep-teal mb-2">{m.functionalities()}</h3>
 					<p class="text-gray-700 line-clamp-3">{proposal.functionalities}</p>
 				</div>
 
 				<!-- Discussion Preview -->
 				<div>
-					<h3 class="text-lg font-semibold text-dark-green mb-2">{m.proposal_discussion()}</h3>
+					<h3 class="text-lg font-semibold text-deep-teal mb-2">{m.proposal_discussion()}</h3>
 					<p class="text-gray-700 line-clamp-3">{proposal.discussion}</p>
 				</div>
 			</div>

@@ -385,20 +385,20 @@
 								<Flag class="w-4 h-4 text-white flex items-center justify-center" />
 							</div>
 						{:else if round.index === 7}
-							<div class="w-8 h-8 rounded-full bg-dark-green grid place-items-center">
+							<div class="w-8 h-8 rounded-full bg-deep-teal grid place-items-center">
 								<div class="w-4 h-4 flex items-center justify-center">
 									<PostStory color={'white'} />
 								</div>
 							</div>
 						{:else}
-							<div class="w-8 h-8 rounded-full bg-dark-green grid place-items-center">
+							<div class="w-8 h-8 rounded-full bg-deep-teal grid place-items-center">
 								<span
 									class="text-white font-medium text-center text-base flex items-center justify-center"
 									>{round.index}</span
 								>
 							</div>
 						{/if}
-						<p class="text-xl font-bold text-dark-green">
+						<p class="text-xl font-bold text-deep-teal">
 							{getTranslation(ROUNDS[round.index].title)}
 						</p>
 					</div>

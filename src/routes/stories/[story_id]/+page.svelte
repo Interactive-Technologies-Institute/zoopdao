@@ -19,11 +19,11 @@
 	let copyTimeout: ReturnType<typeof setTimeout>;
 
 	const buttonColor = {
-		landmark: 'bg-landmark-green',
-		nature: 'bg-nature-green',
-		sense: 'bg-sense-red',
-		history: 'bg-history-yellow',
-		action: 'bg-action-beige'
+		landmark: 'bg-dark-deep',
+		nature: 'bg-sea-green',
+		sense: 'bg-sand',
+		history: 'bg-sand',
+		action: 'bg-driftwood'
 	} as const;
 
 	let { data } = $props();
@@ -156,7 +156,7 @@ function getProposalTextForRound(roundNumber: number): string {
 		<div class="flex flex-col gap-4">
 			<div class="flex">
 				<div class="flex mt-4 flex-wrap w-full items-center justify-between">
-					<h1 class="font-bold text-dark-green text-4xl">{data.story.story_title}</h1>
+					<h1 class="font-bold text-deep-teal text-4xl">{data.story.story_title}</h1>
 					<div class="flex gap-4 items-center mt-4">
 						<Button
 							variant={'outline'}
@@ -202,7 +202,7 @@ function getProposalTextForRound(roundNumber: number): string {
 
 	<div class="flex items-center gap-4 my-4">
 		<div class="h-[1px] flex-1 bg-gray-200"></div>
-		<h2 class="text-xl font-medium text-dark-green">{m.story()}</h2>
+		<h2 class="text-xl font-medium text-deep-teal">{m.story()}</h2>
 		<div class="h-[1px] flex-1 bg-gray-200"></div>
 	</div>
 	<div class="flex items-center justify-center w-full mb-8">
@@ -210,7 +210,7 @@ function getProposalTextForRound(roundNumber: number): string {
 			{#each sortedRounds as round (round.roundNumber)}
 				<div class="flex gap-4 md:gap-8 w-full relative">
 					{#if round.round < sortedRounds.length - 1}
-						<div class="absolute left-4 md:left-4 top-8 w-[2px] h-full bg-dark-green -z-10"></div>
+						<div class="absolute left-4 md:left-4 top-8 w-[2px] h-full bg-deep-teal -z-10"></div>
 					{/if}
 
 					<div class="flex-shrink-0">
@@ -220,13 +220,13 @@ function getProposalTextForRound(roundNumber: number): string {
 							</div>
 						{:else if round.round === 7}
 							<div
-								class="w-8 h-8 rounded-full text-white bg-dark-green grid place-items-center self-start"
+								class="w-8 h-8 rounded-full text-white bg-deep-teal grid place-items-center self-start"
 							>
 								<PostStory color={'white'} />
 							</div>
 						{:else}
 							<div
-								class="w-8 h-8 rounded-full text-sm font-bold text-white bg-dark-green grid place-items-center self-start"
+								class="w-8 h-8 rounded-full text-sm font-bold text-white bg-deep-teal grid place-items-center self-start"
 							>
 								{round.round}
 							</div>
@@ -236,8 +236,8 @@ function getProposalTextForRound(roundNumber: number): string {
 					<div class="flex-1 max-w-[75ch]">
 						<p class="text-pretty">{round.answer}</p>
 						{#if getProposalPointsForRound(round.roundNumber).length > 0}
-							<div class="mt-3 rounded-lg border border-dark-green/10 bg-gray-50 px-4 py-3">
-								<p class="text-xs font-semibold uppercase tracking-wide text-dark-green/70">
+							<div class="mt-3 rounded-lg border border-deep-teal border-opacity-10 bg-gray-50 px-4 py-3">
+								<p class="text-xs font-semibold uppercase tracking-wide text-deep-teal text-opacity-70">
 									{m.proposal_points()}
 								</p>
 								<ul class="mt-2 list-disc pl-5 text-sm text-gray-700 space-y-1">
@@ -254,7 +254,7 @@ function getProposalTextForRound(roundNumber: number): string {
 	</div>
 	<div class="flex items-center gap-4 my-4">
 		<div class="h-[1px] flex-1 bg-gray-200"></div>
-		<h2 class="text-xl font-medium text-dark-green">{m.cards_drawn()}</h2>
+		<h2 class="text-xl font-medium text-deep-teal">{m.cards_drawn()}</h2>
 		<div class="h-[1px] flex-1 bg-gray-200"></div>
 	</div>
 	<div class="flex gap-4 items-center justify-start w-full">
@@ -312,7 +312,7 @@ function getProposalTextForRound(roundNumber: number): string {
 									<div class="flex-shrink-0 snap-center flex flex-col items-center gap-4">
 										<div class="flex items-center justify-center gap-2">
 											<div
-												class="w-8 h-8 rounded-full text-white bg-dark-green grid place-items-center"
+												class="w-8 h-8 rounded-full text-white bg-deep-teal grid place-items-center"
 											>
 												{round.round}
 											</div>

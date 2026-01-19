@@ -97,7 +97,7 @@ let ready = $derived(player?.character === character);
 			<div
 				class="absolute inset-0 translate-y-20 px-3 flex flex-col items-center justify-center text-center gap-2"
 			>
-				<h3 class={`text-2xl font-bold ${!taken ? 'text-dark-green' : 'text-black'}`}>
+				<h3 class={`text-2xl font-bold ${!taken ? 'text-deep-teal' : 'text-black'}`}>
 					{getTranslation(characterDetails?.title)}
 				</h3>
 				<p class="text-sm font-medium">{getTranslation(characterDetails?.description)}</p>
@@ -106,7 +106,7 @@ let ready = $derived(player?.character === character);
 
 		<!-- Back of card -->
 		<div
-			class="absolute inset-0 w-full h-full rounded-lg p-4 bg-white border-2 border-dark-green [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col gap-y-2"
+			class="absolute inset-0 w-full h-full rounded-lg p-4 bg-white border-2 border-deep-teal [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col gap-y-2"
 		>
 			<Input placeholder={m.nickname()} bind:value={nickname} />
 			<Textarea
@@ -119,7 +119,7 @@ let ready = $derived(player?.character === character);
 	</div>
 	{#if taken || selected && ready}
 		<div
-			class="absolute -top-5 -right-5 w-16 h-16 rounded-full bg-dark-green/50 z-20 flex items-center justify-center"
+			class="absolute -top-5 -right-5 w-16 h-16 rounded-full bg-deep-teal bg-opacity-50 z-20 flex items-center justify-center"
 		>
 			<Check class="text-white w-8 h-8" />
 		</div>

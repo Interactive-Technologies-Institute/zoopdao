@@ -129,19 +129,19 @@
 	<div class="max-w-4xl mx-auto">
 		<!-- Exit Button -->
 		<div class="flex justify-end mb-4">
-			<Button variant="ghost" size="icon" onclick={handleExit} class="text-dark-green">
+			<Button variant="ghost" size="icon" onclick={handleExit} class="text-deep-teal">
 				<X class="h-6 w-6" />
 			</Button>
 		</div>
 
 		<!-- Form -->
-		<div class="bg-white rounded-lg border-2 border-dark-green/20 p-6 md:p-8">
-			<h1 class="text-3xl font-bold text-dark-green mb-6">{m.new_proposal()}</h1>
+		<div class="bg-white rounded-lg border-2 border-deep-teal border-opacity-20 p-6 md:p-8">
+			<h1 class="text-3xl font-bold text-deep-teal mb-6">{m.new_proposal()}</h1>
 
 			<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-6">
 				<!-- Title Field -->
 				<div>
-					<label for="title" class="block text-sm font-medium text-dark-green mb-2">
+					<label for="title" class="block text-sm font-medium text-deep-teal mb-2">
 						{m.proposal_title()}
 					</label>
 					<Input
@@ -156,19 +156,19 @@
 
 				<!-- Theory of Change Section -->
 				<div class="space-y-6">
-					<h2 class="text-2xl font-bold text-dark-green">{m.theory_of_change()}</h2>
+					<h2 class="text-2xl font-bold text-deep-teal">{m.theory_of_change()}</h2>
 					
 					<!-- Long-term Objectives -->
 					<div class="space-y-4">
-						<div class="block text-lg font-semibold text-dark-green">
+						<div class="block text-lg font-semibold text-deep-teal">
 							{m.long_term_objectives()} <span class="text-red-500">*</span>
 							<span class="text-sm font-normal text-gray-600 ml-2">({m.long_term_objectives_description()})</span>
 						</div>
 						
 						{#each objectives as objective, objectiveIndex}
-							<div class="border-2 border-dark-green/20 rounded-lg p-4 bg-gray-50">
+							<div class="border-2 border-deep-teal border-opacity-20 rounded-lg p-4 bg-gray-50">
 								<div class="flex items-start gap-2 mb-3">
-									<span class="text-sm font-medium text-dark-green mt-2">
+									<span class="text-sm font-medium text-deep-teal mt-2">
 										{m.objective()} {objectiveIndex + 1}:
 									</span>
 									<Input
@@ -181,15 +181,15 @@
 								
 								<!-- Preconditions -->
 								<div class="ml-4 space-y-3 mt-4">
-									<div class="block text-sm font-semibold text-dark-green">
+									<div class="block text-sm font-semibold text-deep-teal">
 										{m.preconditions_and_goals()} <span class="text-red-500">*</span>
 										<span class="text-xs font-normal text-gray-600 ml-2">({m.preconditions_and_goals_description()})</span>
 									</div>
 									
 									{#each objective.preconditions as precondition, preconditionIndex}
-										<div class="border border-dark-green/10 rounded p-3 bg-white">
+										<div class="border border-deep-teal border-opacity-10 rounded p-3 bg-white">
 											<div class="flex items-start gap-2 mb-2">
-												<span class="text-xs font-medium text-dark-green mt-2">
+												<span class="text-xs font-medium text-deep-teal mt-2">
 													{m.precondition()} {preconditionIndex + 1}:
 												</span>
 												<Input
@@ -202,7 +202,7 @@
 											
 											<!-- Indicative Steps -->
 											<div class="ml-4 space-y-2 mt-3">
-												<div class="block text-xs font-semibold text-dark-green">
+												<div class="block text-xs font-semibold text-deep-teal">
 													{m.indicative_steps()} <span class="text-red-500">*</span>
 												</div>
 												{#each precondition.indicativeSteps as step}
@@ -217,7 +217,7 @@
 											
 											<!-- Key Indicators -->
 											<div class="ml-4 space-y-2 mt-3">
-												<div class="block text-xs font-semibold text-dark-green">
+												<div class="block text-xs font-semibold text-deep-teal">
 													{m.key_indicators()} <span class="text-red-500">*</span>
 													<span class="text-xs font-normal text-gray-600 ml-2">({m.key_indicators_description()})</span>
 												</div>
@@ -239,7 +239,7 @@
 					
 					<!-- Functionalities -->
 					<div>
-						<label for="functionalities" class="block text-lg font-semibold text-dark-green mb-2">
+						<label for="functionalities" class="block text-lg font-semibold text-deep-teal mb-2">
 							{m.functionalities()} <span class="text-red-500">*</span>
 						</label>
 						<Textarea
@@ -254,7 +254,7 @@
 
 				<!-- Discussion Field -->
 				<div>
-					<label for="discussion" class="block text-sm font-medium text-dark-green mb-2">
+					<label for="discussion" class="block text-sm font-medium text-deep-teal mb-2">
 						{m.proposal_discussion()}
 					</label>
 					<Textarea
@@ -268,14 +268,14 @@
 
 				<!-- Voting Period Selection (placeholder for ZD-154) -->
 				<div>
-					<label for="votingPeriod" class="block text-sm font-medium text-dark-green mb-2">
+					<label for="votingPeriod" class="block text-sm font-medium text-deep-teal mb-2">
 						{m.voting_period()}
 					</label>
 					<select
 						id="votingPeriod"
 						bind:value={votingPeriod}
 						required
-						class="border-dark-green bg-white ring-offset-white focus-visible:ring-dark-green flex h-10 w-full rounded-md border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+						class="border-deep-teal bg-white ring-offset-white focus-visible:ring-deep-teal flex h-10 w-full rounded-md border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
 					>
 						<option value="">{m.select_voting_period()}</option>
 						{#each votingPeriods as period}
@@ -297,4 +297,3 @@
 		</div>
 	</div>
 </div>
-

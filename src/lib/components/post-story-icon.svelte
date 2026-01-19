@@ -1,15 +1,15 @@
 <script lang="ts">
-	type ColorOption = 'white' | 'dark-green';
+	type ColorOption = 'white' | 'deep-teal';
 	interface IconProps {
 		size?: number;
 		color?: string;
 	}
 
-	let { size = 24, color = 'dark-green' }: IconProps = $props();
+	let { size = 24, color = 'deep-teal' }: IconProps = $props();
 
 	const colorMap: Record<ColorOption, string> = {
 		white: '#FFFFFF',
-		'dark-green': '#27613F'
+		'deep-teal': '#0c6b78'
 	};
 	let color_code = $derived.by(() => {
 		return colorMap[color as ColorOption] || 'currentColor';

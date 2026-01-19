@@ -91,15 +91,15 @@
 </script>
 
 <div class="relative flex flex-grow items-center justify-center gap-3">
-	<span class="hourglass-animation {isUnderOneMinute ? 'flash-text' : 'text-dark-green'}">
+	<span class="hourglass-animation {isUnderOneMinute ? 'flash-text' : 'text-deep-teal'}">
 		<Hourglass strokeWidth={2.5} absoluteStrokeWidth={true} size={24} />
 	</span>
-	<p class="text-xl font-bold text-left {isUnderOneMinute ? 'flash-time' : 'text-dark-green'}">
+	<p class="text-xl font-bold text-left {isUnderOneMinute ? 'flash-time' : 'text-deep-teal'}">
 		{formattedTime}
 	</p>
 	<div class="relative flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
 		<div
-			class="absolute top-0 left-0 h-full bg-dark-green transition-all duration-1000 ease-linear {isUnderOneMinute
+			class="absolute top-0 left-0 h-full bg-deep-teal transition-all duration-1000 ease-linear {isUnderOneMinute
 				? 'flash-bg'
 				: ''}"
 			style="width: {progressWidth}%"

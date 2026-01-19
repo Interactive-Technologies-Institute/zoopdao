@@ -10,11 +10,11 @@
 
 	let { data } = $props();
 	const buttonColor = {
-		landmark: 'bg-landmark-green',
-		nature: 'bg-nature-green',
-		sense: 'bg-sense-red',
-		history: 'bg-history-yellow',
-		action: 'bg-action-beige'
+		landmark: 'bg-dark-deep',
+		nature: 'bg-sea-green',
+		sense: 'bg-sand',
+		history: 'bg-sand',
+		action: 'bg-driftwood'
 	} as const;
 
 	function getTranslation(key: string | null | undefined): string {
@@ -57,7 +57,7 @@
 </script>
 
 <div
-	class="flex flex-col md:flex-row min-w-full h-full gap-4 items-stretch justify-between p-4 border-2 border-dark-green rounded-lg hover:bg-gray-100 transition-all duration-300 ease-in-out"
+	class="flex flex-col md:flex-row min-w-full h-full gap-4 items-stretch justify-between p-4 border-2 border-deep-teal rounded-lg hover:bg-gray-100 transition-all duration-300 ease-in-out"
 >
 	<div class="flex flex-col items-center justify-center p-4">
 		<img
@@ -69,7 +69,7 @@
 	<div class="flex flex-1 flex-col gap-4 w-full justify-between">
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-wrap gap-4 items-start justify-between">
-				<p class="text-dark-green font-bold text-2xl text-ellipsis line-clamp-3">
+				<p class="text-deep-teal font-bold text-2xl text-ellipsis line-clamp-3">
 					{data.story_title}
 				</p>
 				<RelativeTime date={data.created_at} />
@@ -110,7 +110,7 @@
 			</div>
 		</div>
 		<button
-			class="w-full mt-2 px-4 py-3 text-left rounded-lg border-2 border-dark-green/20 bg-white hover:bg-gray-50 transition-colors text-dark-green font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+			class="w-full mt-2 px-4 py-3 text-left rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-gray-50 transition-colors text-deep-teal font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
 			onclick={() => (openProposalDialog = true)}
 			disabled={!hasProposal}
 			aria-disabled={!hasProposal}

@@ -14,9 +14,9 @@
 <Dialog.Root bind:open>
 	<Dialog.Content class="overflow-y-auto max-h-[95vh] w-[95vw] lg:max-w-4xl">
 		<div class="space-y-6 p-4">
-			<h2 class="text-3xl font-black text-dark-green text-center">{m.instructions()}</h2>
+			<h2 class="text-3xl font-black text-deep-teal text-center">{m.instructions()}</h2>
 			<section class="space-y-4">
-				<h3 class="text-2xl font-bold text-dark-green">{m.about_the_game()}</h3>
+				<h3 class="text-2xl font-bold text-deep-teal">{m.about_the_game()}</h3>
 
 				<p>
 					{m.about_the_game_description()}
@@ -24,12 +24,12 @@
 			</section>
 
 			<section class="space-y-4">
-				<h3 class="text-2xl font-bold text-sense-red">{m.how_to_play()}</h3>
+				<h3 class="text-2xl font-bold text-sand">{m.how_to_play()}</h3>
 				<p>{m.individual_or_group()}</p>
 				{#each Array.from({ length: 5 }, (_, i) => i + 1) as step}
 					<div class="flex gap-4 items-start">
 						<div
-							class="w-8 h-8 rounded-full bg-nature-green/30 grid place-items-center text-nature-green font-bold flex-shrink-0"
+							class="w-8 h-8 rounded-full bg-sea-green bg-opacity-30 grid place-items-center text-sea-green font-bold flex-shrink-0"
 						>
 							{step}
 						</div>

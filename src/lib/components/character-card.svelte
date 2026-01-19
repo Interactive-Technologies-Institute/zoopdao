@@ -27,7 +27,7 @@
 	style="background-image: url('/images/characters/cards/{character}.svg');"
 >
 	<div class="absolute inset-0 mb-2 px-1 pb-2 flex flex-col justify-end text-center gap-2">
-		<h3 class={`text-sm lg:text-2xl font-bold text-dark-green`}>
+		<h3 class={`text-sm lg:text-2xl font-bold text-deep-teal`}>
 			{getTranslation(characterDetails?.title)}
 		</h3>
 		<p class="text-xs font-medium">{getTranslation(characterDetails?.description)}</p>

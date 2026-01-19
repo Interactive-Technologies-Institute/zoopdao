@@ -15,8 +15,8 @@
 	{cell}
 	bind:ref
 	class={cn(
-		'border-dark-green bg-white relative flex h-10 w-10 items-center justify-center border-y border-r text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md',
-		cell.isActive && 'ring-dark-green ring-offset-dark-green z-10 ring-2',
+		'border-deep-teal bg-white relative flex h-10 w-10 items-center justify-center border-y border-r text-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md',
+		cell.isActive && 'ring-deep-teal ring-offset-deep-teal z-10 ring-2',
 		className
 	)}
 	{...restProps}
@@ -24,7 +24,7 @@
 	{cell.char}
 	{#if cell.hasFakeCaret}
 		<div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-			<div class="animate-caret-blink bg-dark-green h-4 w-px duration-1000"></div>
+			<div class="animate-caret-blink bg-deep-teal h-4 w-px duration-1000"></div>
 		</div>
 	{/if}
 </InputCodePrimitive.Cell>

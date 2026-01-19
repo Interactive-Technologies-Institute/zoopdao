@@ -7,14 +7,24 @@ export default {
 		extend: {
 			colors: {
 				white: '#ffffff',
-				text: '#231f20',
-				'light-green': '#8ca33a',
-				'dark-green': '#27613F',
-				'nature-green': '#6a773b',
-				'sense-red': '#b5692a',
-				'action-beige': '#dec2a4',
-				'history-yellow': '#e2b138',
-				'landmark-green': '#173c2e'
+				text: '#0a1f22',
+				'deep-teal': '#0c6b78',
+				'bright-aqua': '#23c1d2',
+				'dark-deep': '#05363d',
+				'mist-gray': '#a8b3b3',
+				'sea-green': '#6aa85a',
+				'seafoam': '#7fb56b',
+				'kelp': '#1a3f43',
+				sand: '#b8b09c',
+				driftwood: '#d7d2c3',
+				slate: '#7f8a8a',
+				charcoal: '#5b6464',
+				midnight: '#0f1717',
+				ice: '#c8fbff',
+				ink: '#0a1f22',
+				graphite: '#2f3a3a',
+				fog: '#5b6464',
+				glow: '#7fe3f2'
 			},
 			fontFamily: {
 				sans: ['Barlow', 'sans-serif'],

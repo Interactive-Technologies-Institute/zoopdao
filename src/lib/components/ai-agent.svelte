@@ -49,7 +49,7 @@
 	</div>
 	
 	<!-- Agent Name -->
-	<div class="text-xs font-semibold text-dark-green text-center max-w-[80px] truncate mt-1">
+	<div class="text-xs font-semibold text-deep-teal text-center max-w-[80px] truncate mt-1">
 		{agent.name}
 	</div>
 	
