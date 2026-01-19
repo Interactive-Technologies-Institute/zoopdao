@@ -7,6 +7,7 @@
 	import { localizeHref } from '@src/paraglide/runtime';
 	import type { StoryRound } from '$lib/types';
 	import ProposalDialog from '@/components/proposal-dialog.svelte';
+	import { ROLES } from '@/types';
 
 	let { data } = $props();
 	const buttonColor = {
@@ -32,6 +33,13 @@
 	let copyTimeout: ReturnType<typeof setTimeout>;
 	let openProposalDialog = $state(false);
 	const hasProposal = $derived.by(() => data.proposal_id !== null && data.proposal_id !== undefined);
+	const roleSet = new Set<string>(ROLES as unknown as string[]);
+
+	function getBadgeSrc(characterType: string | null | undefined) {
+		const type = characterType ?? 'custom';
+		if (roleSet.has(type)) return `/images/characters/badges/roles/${type}.svg`;
+		return `/images/characters/badges/${type}.svg`;
+	}
 
 	async function copyToClipboard() {
 		const baseUrl = window.location.origin;
@@ -61,7 +69,7 @@
 >
 	<div class="flex flex-col items-center justify-center p-4">
 		<img
-			src={`/images/characters/badges/${data.character?.type ?? 'custom'}.svg`}
+			src={getBadgeSrc(data.character?.type)}
 			alt={data.character.nickname}
 			class="h-32 w-32 border-2 border-gray-300 rounded-full"
 		/>

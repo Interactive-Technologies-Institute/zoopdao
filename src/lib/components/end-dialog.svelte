@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte';
 	import { GameState } from '@/state/game-state.svelte';
 	import type { Player, PlayerAnswer } from '@/types';
+	import { ROLES } from '@/types';
 	import { CARDS } from '../data/cards';
 	import { CHARACTER } from '../data/characters';
 	import { goto } from '$app/navigation';
@@ -38,6 +39,14 @@
 	let currentPlayerId = $state(gameState?.playerId || -1);
 	let discussionMessagesRound7 = $state<Array<{ senderName: string; content: string; timestamp: Date }>>([]);
 	let vote = $state<'yes' | 'no' | 'abstain' | null>(null);
+
+	const roleSet = new Set<string>(ROLES as unknown as string[]);
+
+	function getBadgeSrc(characterType: string | null | undefined) {
+		const type = characterType ?? 'custom';
+		if (roleSet.has(type)) return `/images/characters/badges/roles/${type}.svg`;
+		return `/images/characters/badges/${type}.svg`;
+	}
 
 	// Load discussion messages for round 7 when dialog opens
 	$effect(() => {
@@ -321,7 +330,7 @@
 								<div class="bg-gray-50 p-4 flex items-center gap-3 border-b">
 									<div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
 										<img
-											src={`/images/characters/badges/${playerData.player.character ?? 'custom'}.svg`}
+											src={getBadgeSrc(playerData.player.character)}
 											alt={playerData.player.character ?? 'custom'}
 											class="w-full h-full object-cover"
 										/>

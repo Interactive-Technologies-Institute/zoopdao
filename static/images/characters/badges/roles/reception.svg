@@ -5,19 +5,26 @@
       <stop offset="1" stop-color="#b8b09c" />
     </linearGradient>
   </defs>
+
   <circle cx="64" cy="64" r="62" fill="#0a1f22" />
   <circle cx="64" cy="64" r="58" fill="url(#bg)" />
   <circle cx="64" cy="64" r="58" stroke="#d7d2c3" opacity="0.25" stroke-width="2" />
 
-  <circle cx="64" cy="64" r="28" stroke="#c8fbff" stroke-width="6" opacity="0.9" />
-  <path d="M64 64V48" stroke="#c8fbff" stroke-width="6" stroke-linecap="round" opacity="0.9" />
-  <path d="M64 64l14 10" stroke="#c8fbff" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <!-- desk bell -->
   <path
-    d="M92 44c6 8 9 18 8 29"
-    stroke="#7fe3f2"
+    d="M44 86h40"
+    stroke="#c8fbff"
+    stroke-width="8"
+    stroke-linecap="round"
+    opacity="0.9"
+  />
+  <path
+    d="M52 86c0-14 8-22 12-22s12 8 12 22"
+    stroke="#c8fbff"
     stroke-width="6"
     stroke-linecap="round"
-    opacity="0.35"
+    opacity="0.9"
   />
-  <path d="M98 74l6-2-3-6" stroke="#7fe3f2" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.35" />
+  <circle cx="64" cy="58" r="6" fill="#c8fbff" opacity="0.9" />
+  <path d="M40 52c8-10 40-10 48 0" stroke="#7fe3f2" stroke-width="5" stroke-linecap="round" opacity="0.25" />
 </svg>
