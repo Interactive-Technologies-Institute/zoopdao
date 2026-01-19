@@ -1,4 +1,47 @@
-# ZD-151-169: Adapt LogaCulture to ZoopDAO Flow - Story Breakdown
+# ZD-14-171: Adapt LogaCulture to ZoopDAO Flow - Story Breakdown
+
+## ZD-14: Define UI color palette from assembly table visuals
+
+**Overview:**
+Establish a cohesive color palette derived from the assembly table images to guide buttons, typography, backgrounds, and key UI accents. This ensures visual consistency and a grounded ZoopDAO identity.
+
+**Goal:**
+Translate the assembly table imagery into a practical, reusable UI color system.
+
+**Description:**
+a) Extract dominant and accent colors from the assembly table images and document them.
+b) Define primary/secondary/tertiary colors for buttons and interactive states.
+c) Set typography colors for headings, body text, and muted text.
+d) Specify background, surface, border, and focus/outline colors.
+e) Provide contrast guidance to meet accessibility needs for text and controls.
+
+**Palette (source: static/images/aquarium/assembly_table.svg):**
+- Primary (buttons): `#0c6b78` hover `#23c1d2` active `#05363d` disabled `#a8b3b3`
+- Secondary (buttons): `#6aa85a` hover `#7fb56b` active `#1a3f43`
+- Tertiary (buttons): `#b8b09c` hover `#d7d2c3` active `#7f8a8a`
+- Background: `#c8fbff` (light water shimmer), deep background `#0f1717`
+- Surface: `#d7d2c3`, muted surface `#b8b09c`
+- Borders: `#7f8a8a`, strong border `#5b6464`
+- Text: heading `#0a1f22`, body `#2f3a3a`, muted `#5b6464`
+- Focus/outline: `#7fe3f2`
+
+**Token mapping (src/app.css):**
+`--zd-bg`, `--zd-bg-deep`, `--zd-surface`, `--zd-surface-muted`, `--zd-border`, `--zd-border-strong`,
+`--zd-text`, `--zd-text-muted`, `--zd-text-subtle`, `--zd-primary`, `--zd-primary-hover`,
+`--zd-primary-active`, `--zd-primary-disabled`, `--zd-secondary`, `--zd-secondary-hover`,
+`--zd-secondary-active`, `--zd-tertiary`, `--zd-tertiary-hover`, `--zd-tertiary-active`, `--zd-focus`
+
+**Acceptance Criteria:**
+1. Palette includes primary/secondary/tertiary, background/surface, border, and text colors.
+2. Buttons have defined default/hover/active/disabled states.
+3. Typography colors are defined for headings, body, and muted text.
+4. Palette references assembly table imagery as the source.
+
+**Completion Criteria:**
+1. Color tokens are documented and ready to be used in the UI.
+2. Basic contrast checks are satisfied for primary text and primary buttons.
+
+--
 
 ## ZD-151: Update Homepage Branding and Text (English & Portuguese)
 
@@ -844,3 +887,5 @@ d) Validate that the displayed points update correctly when rounds change.
 **Completion Criteria:**
 1. UI behavior matches assembly button for all discussion cards.
 2. Round-specific points are confirmed correct across multiple rounds and proposals.
+
+---

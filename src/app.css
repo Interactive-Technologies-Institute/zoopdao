@@ -16,6 +16,27 @@ body {
 
 :root {
 	font-family: RobotoSlabVariable, serif;
+	/* ZD-14 palette (assembly_table.svg) */
+	--zd-bg: #c8fbff;
+	--zd-bg-deep: #0f1717;
+	--zd-surface: #d7d2c3;
+	--zd-surface-muted: #b8b09c;
+	--zd-border: #7f8a8a;
+	--zd-border-strong: #5b6464;
+	--zd-text: #0a1f22;
+	--zd-text-muted: #2f3a3a;
+	--zd-text-subtle: #5b6464;
+	--zd-primary: #0c6b78;
+	--zd-primary-hover: #23c1d2;
+	--zd-primary-active: #05363d;
+	--zd-primary-disabled: #a8b3b3;
+	--zd-secondary: #6aa85a;
+	--zd-secondary-hover: #7fb56b;
+	--zd-secondary-active: #1a3f43;
+	--zd-tertiary: #b8b09c;
+	--zd-tertiary-hover: #d7d2c3;
+	--zd-tertiary-active: #7f8a8a;
+	--zd-focus: #7fe3f2;
 }
 
 @font-face {
