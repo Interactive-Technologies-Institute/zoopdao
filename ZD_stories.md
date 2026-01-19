@@ -1,6 +1,291 @@
-# ZD-14-171: Adapt LogaCulture to ZoopDAO Flow - Story Breakdown
+# ZD-121-171: Adapt LogaCulture to ZoopDAO Flow - Story Breakdown
 
-## ZD-14: Define UI color palette from assembly table visuals
+---
+
+## ZD-121: Audit existing SVG assets (excluding aquarium)
+
+**Overview:**
+Review all current `.svg` assets except the aquarium assembly table to identify what exists, where it’s used, and what function it serves in the UI.
+
+**Goal:**
+Produce a complete, usage-aware SVG inventory that can be used to create the replacement plan and production backlog.
+
+**Description:**
+a) Inventory all `.svg` files used in the app, excluding the aquarium assembly table image.
+b) For each SVG, document current usage (component/page) and function.
+c) Flag any SVGs that appear unused (no refs found).
+
+**Acceptance Criteria:**
+1) Inventory list includes all non-aquarium SVG assets with usage context.
+2) Each SVG has a documented purpose (what it visually represents / UI function).
+
+**Completion Criteria:**
+1) Audit report is complete and ready for planning (ZD-122).
+
+**Audit Report (non-aquarium SVGs):**
+- Excluded per brief: `static/images/aquarium/assembly_table.svg`.
+- Usage references found in:
+  - `src/lib/components/character-card.svelte`
+  - `src/lib/components/story-card.svelte`
+  - `src/lib/components/end-dialog.svelte`
+  - `src/lib/components/card.svelte`
+  - `src/lib/components/story-dialog.svelte`
+
+### Inventory — Card backgrounds (used by `src/lib/components/card.svelte` and post-story in `src/lib/components/story-dialog.svelte`)
+| Asset | Current usage | Function |
+| --- | --- | --- |
+| `static/images/cards/landmark.svg` | Card background for `landmark` type | Round prompt card. |
+| `static/images/cards/nature.svg` | Card background for `nature` type | Round prompt card. |
+| `static/images/cards/sense.svg` | Card background for `sense` type | Round prompt card. |
+| `static/images/cards/history.svg` | Card background for `history` type | Round prompt card. |
+| `static/images/cards/action.svg` | Card background for `action` type | Round prompt card. |
+| `static/images/cards/post-story.svg` | Post-story card background | Closing prompt card. |
+
+### Inventory — Character badges (used by `src/lib/components/story-card.svelte` and `src/lib/components/end-dialog.svelte`)
+| Asset | Current usage | Function |
+| --- | --- | --- |
+| `static/images/characters/badges/scientist.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/time-traveller.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/local-specialist.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/water.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/vulcanic-rock.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/nature-lover.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/child.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/different-needs.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/iberian-green-frog.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/non-human-being.svg` | Badge avatar | Character identity. |
+| `static/images/characters/badges/custom.svg` | Badge avatar | Custom character / fallback identity. |
+| `static/images/characters/badges/trocaz-pigeon.svg` | Badge avatar | Species identity. |
+| `static/images/characters/badges/monk-seal.svg` | Badge avatar | Species identity. |
+| `static/images/characters/badges/zinos-petrel.svg` | Badge avatar | Species identity. |
+
+### Inventory — Character cards (used by `src/lib/components/character-card.svelte` and round 0 in `src/lib/components/story-dialog.svelte`)
+| Asset | Current usage | Function |
+| --- | --- | --- |
+| `static/images/characters/cards/scientist.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/time-traveller.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/local-specialist.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/water.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/vulcanic-rock.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/nature-lover.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/child.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/different-needs.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/iberian-green-frog.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/non-human-being.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/custom.svg` | Character card background | Custom character / fallback. |
+| `static/images/characters/cards/trocaz-pigeon.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/monk-seal.svg` | Character card background | Character selection/intro. |
+| `static/images/characters/cards/zinos-petrel.svg` | Character card background | Character selection/intro. |
+
+### Inventory — Illustrations (raster, tutorial/round transition)
+| Asset | Current usage | Function |
+| --- | --- | --- |
+| `static/images/illustrations/step_1_1.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 1, variant 1). |
+| `static/images/illustrations/step_1_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 1, variant 2). |
+| `static/images/illustrations/step_2_1.png` | `src/lib/components/round-transition.svelte`, `src/routes/+page.svelte` | Round transition + homepage tutorial illustration (step 2, variant 1). |
+| `static/images/illustrations/step_2_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 2, variant 2). |
+| `static/images/illustrations/step_3_1.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 3, variant 1). |
+| `static/images/illustrations/step_3_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 3, variant 2). |
+| `static/images/illustrations/step_4_1.png` | `src/lib/components/round-transition.svelte`, `src/routes/+page.svelte` | Round transition + homepage tutorial illustration (step 4, variant 1). |
+| `static/images/illustrations/step_4_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 4, variant 2). |
+| `static/images/illustrations/step_5_1.png` | `src/lib/components/round-transition.svelte`, `src/routes/+page.svelte` | Round transition + homepage tutorial illustration (step 5, variant 1). |
+| `static/images/illustrations/step_5_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 5, variant 2). |
+| `static/images/illustrations/step_6_1.png` | `src/lib/components/round-transition.svelte`, `src/routes/+page.svelte` | Round transition + homepage tutorial illustration (step 6, variant 1). |
+| `static/images/illustrations/step_6_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 6, variant 2). |
+
+---
+
+## ZD-122: Define SVG replacement plan + production backlog
+
+**Overview:**
+Use the ZD-121 inventory to decide which assets are reused, revised, or regenerated, and to create an ordered backlog for design/production.
+
+**Goal:**
+Create a ready-to-execute plan that preserves current UI behavior while shifting visual identity to ZoopDAO.
+
+**Description:**
+a) Define global SVG delivery constraints (drop-in, scalable, optimized).
+b) Define a minimal style guide for the ZoopDAO SVG set (framing, strokes, textures, palette usage).
+c) Assign each SVG a plan category (reuse/revise/regenerate) and a replacement concept.
+d) Prioritize execution order (P0 cards → P1 badges → P2 character cards → P3 misc/legacy).
+
+**Acceptance Criteria:**
+1) Every SVG in ZD-121 has a plan category and replacement concept.
+2) Backlog has clear priorities and “done” checks per asset family.
+3) Global delivery constraints are documented for consistent output.
+
+**Completion Criteria:**
+1) Backlog is ready to split into production tasks (ZD-123+).
+
+### Global export requirements (applies to all SVG deliverables)
+- Preserve filenames and paths (drop-in replacement).
+- Keep `viewBox` set; avoid fixed pixel assumptions; scale cleanly at `64x64` (badges) and `w-64 h-96` (cards).
+- Convert text to paths; avoid external fonts; inline styles only.
+- Use ZoopDAO palette tokens from `src/app.css` (teal/sand/seafoam family); maintain contrast for overlaid text.
+- Optimize output (remove editor metadata, unnecessary groups, unused defs).
+
+### Plan — Card backgrounds
+| Asset | Plan | Replacement concept (ZoopDAO) |
+| --- | --- | --- |
+| `static/images/cards/landmark.svg` | Revise | Aquarium map pin + waypoint grid, teal/sand palette. |
+| `static/images/cards/nature.svg` | Revise | Species silhouette + kelp/coral texture. |
+| `static/images/cards/sense.svg` | Revise | Sonar rings + eye/wave motif. |
+| `static/images/cards/history.svg` | Revise | Archive scroll + tank blueprint layers. |
+| `static/images/cards/action.svg` | Revise | Hand/gear collaboration emblem with ripples. |
+| `static/images/cards/post-story.svg` | Revise | Proposal report sheet + seal/reef watermark. |
+
+### Plan — Character badges
+| Asset | Plan | Replacement concept (ZoopDAO) |
+| --- | --- | --- |
+| `static/images/characters/badges/scientist.svg` | Revise | Lab goggles + specimen vial with aquatic glyphs. |
+| `static/images/characters/badges/time-traveller.svg` | Revise | Chrono ring + coral strata. |
+| `static/images/characters/badges/local-specialist.svg` | Revise | Beacon/map marker + shoreline contour. |
+| `static/images/characters/badges/water.svg` | Revise | Flowing wave crest + plankton dots. |
+| `static/images/characters/badges/vulcanic-rock.svg` | Revise | Basalt column + hydrothermal vent lines. |
+| `static/images/characters/badges/nature-lover.svg` | Revise | Leaf + fish tail hybrid mark. |
+| `static/images/characters/badges/child.svg` | Revise | Playful fish + bubble trail. |
+| `static/images/characters/badges/different-needs.svg` | Revise | Accessibility icon merged with wave arc. |
+| `static/images/characters/badges/iberian-green-frog.svg` | Revise | Frog silhouette with lily + tide lines. |
+| `static/images/characters/badges/non-human-being.svg` | Revise | Cephalopod/whale icon with orbiting nodes. |
+| `static/images/characters/badges/custom.svg` | Revise | Neutral placeholder with ZoopDAO seal. |
+| `static/images/characters/badges/trocaz-pigeon.svg` | Revise | Trocaz pigeon profile + sea breeze motif. |
+| `static/images/characters/badges/monk-seal.svg` | Revise | Monk seal head + reef contour. |
+| `static/images/characters/badges/zinos-petrel.svg` | Revise | Petrel in flight over wave lines. |
+
+### Plan — Character cards
+| Asset | Plan | Replacement concept (ZoopDAO) |
+| --- | --- | --- |
+| `static/images/characters/cards/scientist.svg` | Revise | Scientist vignette with aquarium lab desk + teal lighting. |
+| `static/images/characters/cards/time-traveller.svg` | Revise | Time portal + layered reef history strata. |
+| `static/images/characters/cards/local-specialist.svg` | Revise | Coastal map + observation tools. |
+| `static/images/characters/cards/water.svg` | Revise | Water currents + microfauna patterns. |
+| `static/images/characters/cards/vulcanic-rock.svg` | Revise | Volcanic rock texture + vent glow. |
+| `static/images/characters/cards/nature-lover.svg` | Revise | Reef garden + sprouting mangrove. |
+| `static/images/characters/cards/child.svg` | Revise | Playful aquarium doodles + bubbles. |
+| `static/images/characters/cards/different-needs.svg` | Revise | Inclusive symbols + calm wave texture. |
+| `static/images/characters/cards/iberian-green-frog.svg` | Revise | Frog habitat with wetland plants. |
+| `static/images/characters/cards/non-human-being.svg` | Revise | Abstract marine intelligence + node network. |
+| `static/images/characters/cards/custom.svg` | Revise | Blank template with ZoopDAO frame and subtle watermark. |
+| `static/images/characters/cards/trocaz-pigeon.svg` | Revise | Pigeon + laurel/sea breeze motif. |
+| `static/images/characters/cards/monk-seal.svg` | Revise | Monk seal + sandy seabed texture. |
+| `static/images/characters/cards/zinos-petrel.svg` | Revise | Petrel in flight over open water. |
+
+### Plan — Illustrations (tutorial/round transition)
+| Asset set | Plan | Replacement concept (ZoopDAO) |
+| --- | --- | --- |
+| `static/images/illustrations/step_{1..6}_{1..2}.png` | Revise | Replace game/tutorial imagery with ZoopDAO governance flow illustrations (proposal, discussion, voting, outcome) using the assembly-table palette and aquarium context. |
+
+---
+
+## ZD-123: Produce revised card background SVGs (ZoopDAO)
+
+**Overview:**
+Revise the card background SVGs so the card deck reflects ZoopDAO identity while preserving type recognition (landmark/nature/sense/history/action/post-story).
+
+**Goal:**
+Replace the card SVGs in-place with a consistent ZoopDAO visual system that remains readable behind existing text layouts.
+
+**Description:**
+- Update the following files in-place:
+  - `static/images/cards/landmark.svg`
+  - `static/images/cards/nature.svg`
+  - `static/images/cards/sense.svg`
+  - `static/images/cards/history.svg`
+  - `static/images/cards/action.svg`
+  - `static/images/cards/post-story.svg`
+- Validate with existing UI components:
+  - `src/lib/components/card.svelte`
+  - `src/lib/components/story-dialog.svelte`
+
+**Acceptance Criteria:**
+1) Each card type is visually distinct and matches the ZoopDAO palette.
+2) Overlaid text remains readable without adding new text styling hacks.
+3) No clipping/overflow artifacts at `w-64 h-96` sizing.
+
+**Completion Criteria:**
+1) All listed SVG files are updated and render correctly in the app.
+
+---
+
+## ZD-124: Produce revised character badge SVGs (ZoopDAO)
+
+**Overview:**
+Revise character badge SVGs used as avatars so they share a consistent framing and icon language aligned with ZoopDAO.
+
+**Goal:**
+Replace badge SVGs in-place and ensure they read well when circular-cropped in UI.
+
+**Description:**
+- Update all files under `static/images/characters/badges/*.svg` in-place.
+- Validate with:
+  - `src/lib/components/story-card.svelte`
+  - `src/lib/components/end-dialog.svelte`
+
+**Acceptance Criteria:**
+1) Badges are legible from `32px` up to `128px` and look consistent as a set.
+2) `custom.svg` is a neutral, high-quality fallback.
+3) No important details are lost when cropped to a circle.
+
+**Completion Criteria:**
+1) Badge set is complete and visually consistent.
+
+---
+
+## ZD-125: Produce revised character card background SVGs (ZoopDAO)
+
+**Overview:**
+Revise the character card background SVGs used for character intro/selection screens.
+
+**Goal:**
+Replace character card SVGs in-place with safe text-overlay areas and consistent styling.
+
+**Description:**
+- Update all files under `static/images/characters/cards/*.svg` in-place.
+- Validate with:
+  - `src/lib/components/character-card.svelte`
+  - round 0 view in `src/lib/components/story-dialog.svelte`
+
+**Acceptance Criteria:**
+1) Text overlays remain readable across all cards without extra shadows/overrides.
+2) Card backgrounds align stylistically with the badge set (ZD-124).
+3) No clipping/overflow artifacts at `w-64 h-96` sizing.
+
+**Completion Criteria:**
+1) Character card set is complete and visually consistent.
+
+---
+
+## ZD-126: Revise tutorial + round transition illustrations (ZoopDAO)
+
+**Overview:**
+Revise the existing tutorial and round transition illustration PNGs so they match ZoopDAO identity and the updated governance narrative.
+
+**Goal:**
+Replace the illustration set in-place while preserving filenames and usage locations.
+
+**Description:**
+- Update in-place:
+  - `static/images/illustrations/step_1_1.png` / `step_1_2.png`
+  - `static/images/illustrations/step_2_1.png` / `step_2_2.png`
+  - `static/images/illustrations/step_3_1.png` / `step_3_2.png`
+  - `static/images/illustrations/step_4_1.png` / `step_4_2.png`
+  - `static/images/illustrations/step_5_1.png` / `step_5_2.png`
+  - `static/images/illustrations/step_6_1.png` / `step_6_2.png`
+- Validate in UI:
+  - `src/lib/components/round-transition.svelte`
+  - `src/routes/+page.svelte`
+
+**Acceptance Criteria:**
+1) Illustrations reflect ZoopDAO governance flow (proposal → discussion → voting → outcome) and match the palette.
+2) Images remain readable on common viewport sizes (mobile + desktop) and do not clash with overlaid UI text.
+3) No missing files or broken image URLs in the pages/components that reference them.
+
+**Completion Criteria:**
+1) All listed `static/images/illustrations/*.png` files are updated and render correctly.
+
+---
+
+## ZD-140: Define UI color palette from assembly table visuals
 
 **Overview:**
 Establish a cohesive color palette derived from the assembly table images to guide buttons, typography, backgrounds, and key UI accents. This ensures visual consistency and a grounded ZoopDAO identity.
@@ -14,6 +299,16 @@ b) Define primary/secondary/tertiary colors for buttons and interactive states.
 c) Set typography colors for headings, body text, and muted text.
 d) Specify background, surface, border, and focus/outline colors.
 e) Provide contrast guidance to meet accessibility needs for text and controls.
+
+**Acceptance Criteria:**
+1. Palette includes primary/secondary/tertiary, background/surface, border, and text colors.
+2. Buttons have defined default/hover/active/disabled states.
+3. Typography colors are defined for headings, body, and muted text.
+4. Palette references assembly table imagery as the source.
+
+**Completion Criteria:**
+1. Color tokens are documented and ready to be used in the UI.
+2. Basic contrast checks are satisfied for primary text and primary buttons.
 
 **Palette (source: static/images/aquarium/assembly_table.svg):**
 - Primary (buttons): `#0c6b78` hover `#23c1d2` active `#05363d` disabled `#a8b3b3`
@@ -30,16 +325,6 @@ e) Provide contrast guidance to meet accessibility needs for text and controls.
 `--zd-text`, `--zd-text-muted`, `--zd-text-subtle`, `--zd-primary`, `--zd-primary-hover`,
 `--zd-primary-active`, `--zd-primary-disabled`, `--zd-secondary`, `--zd-secondary-hover`,
 `--zd-secondary-active`, `--zd-tertiary`, `--zd-tertiary-hover`, `--zd-tertiary-active`, `--zd-focus`
-
-**Acceptance Criteria:**
-1. Palette includes primary/secondary/tertiary, background/surface, border, and text colors.
-2. Buttons have defined default/hover/active/disabled states.
-3. Typography colors are defined for headings, body, and muted text.
-4. Palette references assembly table imagery as the source.
-
-**Completion Criteria:**
-1. Color tokens are documented and ready to be used in the UI.
-2. Basic contrast checks are satisfied for primary text and primary buttons.
 
 --
 

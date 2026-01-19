@@ -88,12 +88,12 @@
 		<div
 			class="absolute -left-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
 		>
-			<img src="/images/illustrations/step_5_1.png" alt="" class="w-full h-full object-contain" />
+			<img src="/images/illustrations/step_5_1_home.png" alt="" class="w-full h-full object-contain" />
 		</div>
 		<div
 			class="absolute -right-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
 		>
-			<img src="/images/illustrations/step_2_1.png" alt="" class="w-full h-full object-contain" />
+			<img src="/images/illustrations/step_2_1_home.png" alt="" class="w-full h-full object-contain" />
 		</div>
 		<h1 class="flex items-center justify-center text-deep-teal font-black text-5xl md:text-7xl">
 			ZoopDAO
@@ -167,12 +167,12 @@
 		<div
 			class="absolute -right-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
 		>
-			<img src="/images/illustrations/step_4_1.png" alt="" class="w-full h-full object-contain" />
+			<img src="/images/illustrations/step_4_1_home.png" alt="" class="w-full h-full object-contain" />
 		</div>
 		<div
 			class="absolute -left-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
 		>
-			<img src="/images/illustrations/step_6_1.png" alt="" class="w-full h-full object-contain" />
+			<img src="/images/illustrations/step_6_1_home.png" alt="" class="w-full h-full object-contain" />
 		</div>
 	</div>
 	<div class="absolute top-4 right-4">
