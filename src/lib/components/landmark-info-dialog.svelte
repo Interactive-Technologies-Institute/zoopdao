@@ -23,11 +23,17 @@
 		{#if card}
 			<h2 class="text-2xl font-bold text-deep-teal">{card.title}</h2>
 			<div class="relative aspect-video overflow-hidden rounded-lg">
-				<img
-					src={currentLandmark?.image_url}
-					alt={currentLandmark?.name}
-					class="w-full h-full object-cover"
-				/>
+				{#if imageUrl}
+					<img src={imageUrl} alt={currentLandmark?.name} class="w-full h-full object-cover" />
+				{:else}
+					<div class="w-full h-full grid place-items-center bg-sand/30">
+						<img
+							src="/images/cards/landmark.svg"
+							alt=""
+							class="w-full h-full object-contain opacity-80"
+						/>
+					</div>
+				{/if}
 			</div>
 			<p class="text-base text-gray-700 mt-4">
 				{description}

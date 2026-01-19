@@ -35,11 +35,20 @@
 			<!-- Image Carousel -->
 			<div class="relative">
 				<div class="relative aspect-video overflow-hidden rounded-lg">
-					<img
-						src={currentLandmark.image_url}
-						alt={currentLandmark.name}
-						class="w-full h-full object-cover"
-					/>
+					{#if currentLandmark.image_url}
+						<img
+							src={currentLandmark.image_url}
+							alt={currentLandmark.name}
+							class="w-full h-full object-cover"
+						/>
+					{:else}
+						<div class="w-full h-full grid place-items-center bg-sand/30">
+							<div class="flex flex-col items-center gap-2 text-deep-teal">
+								<LampDesk class="w-10 h-10 opacity-80" />
+								<p class="text-sm opacity-80">{m.island_dialog_heading()}</p>
+							</div>
+						</div>
+					{/if}
 					<div
 						class="absolute bottom-0 left-0 right-0 bg-black/75 text-white p-2 rounded-b-lg flex items-center"
 					>

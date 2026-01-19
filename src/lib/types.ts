@@ -55,7 +55,7 @@ export type Landmark = {
 	id: number;
 	name: string;
 	description: { en: string; pt: string };
-	image_url: string;
+	image_url?: string | null;
 };
 
 export const CHARACTER_OPTIONS: Character[] = [
