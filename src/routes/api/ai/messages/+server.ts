@@ -5,6 +5,12 @@ import { GEMINI_API_KEY } from '$env/static/private';
 import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/supabase';
+import {
+	AI_AGENT_ROLES,
+	AI_MESSAGE_MAX_CHARS,
+	type AiAgentRole,
+	type AiGenerateSuccess
+} from '@/lib/ai/llm-types';
 
 // #region agent log
 if (!GEMINI_API_KEY) {
@@ -119,7 +125,7 @@ const generateMessageSchema = z.object({
 	gameId: z.number().int().positive(),
 	proposalId: z.number().int().positive().nullable(),
 	round: z.number().int().min(0).max(7),
-	agentRole: z.enum(['administration', 'research', 'reception', 'operations', 'bar', 'cleaning']),
+	agentRole: z.enum(AI_AGENT_ROLES),
 	proposalPoint: z.string().optional(), // Current round's proposal section content
 	chatHistory: z.array(z.object({
 		content: z.string(),
@@ -131,7 +137,7 @@ const generateMessageSchema = z.object({
 });
 
 const messageResponseSchema = z.object({
-	content: z.string().min(1).max(500)
+	content: z.string().min(1).max(AI_MESSAGE_MAX_CHARS)
 });
 
 /**
@@ -261,7 +267,7 @@ async function retryWithBackoff<T>(
  * Generate AI message using Gemini API with retry logic
  */
 async function generateAIMessage(
-	agentRole: string,
+	agentRole: AiAgentRole,
 	round: number,
 	proposalPoint: string | null,
 	chatHistory: Array<{ content: string; senderType: string; senderName: string; round: number }> = [],
@@ -455,7 +461,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:265',message:'Request body received',data:{bodyKeys:Object.keys(body),gameId:body.gameId,proposalId:body.proposalId,round:body.round,agentRole:body.agentRole},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
 		// #endregion
 
-		const validated = generateMessageSchema.parse(body);
+	const validated = generateMessageSchema.parse(body);
 		
 		// #region agent log
 		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:270',message:'Request validated',data:{validated},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
@@ -486,16 +492,20 @@ export const POST: RequestHandler = async ({ request }) => {
 			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:340',message:'Message already exists for this agent/round, returning existing',data:{agentRole:validated.agentRole,round:validated.round,messageId:existingMessage.id},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
 			// #endregion
 
-			return json({
+			const response: AiGenerateSuccess = {
 				success: true,
+				provider: 'gemini',
+				model: 'gemini-2.5-flash',
 				message: {
 					id: existingMessage.id,
 					content: existingMessage.content,
-					agentRole: existingMessage.agent_role,
+					agentRole: existingMessage.agent_role as AiAgentRole,
 					round: existingMessage.round,
 					createdAt: existingMessage.created_at
 				}
-			});
+			};
+
+			return json(response);
 		}
 
 		// Check rate limit before calling Gemini API
@@ -565,16 +575,20 @@ export const POST: RequestHandler = async ({ request }) => {
 					.single();
 
 				if (existingMsg) {
-					return json({
+					const response: AiGenerateSuccess = {
 						success: true,
+						provider: 'gemini',
+						model: 'gemini-2.5-flash',
 						message: {
 							id: existingMsg.id,
 							content: existingMsg.content,
-							agentRole: existingMsg.agent_role,
+							agentRole: existingMsg.agent_role as AiAgentRole,
 							round: existingMsg.round,
 							createdAt: existingMsg.created_at
 						}
-					});
+					};
+
+					return json(response);
 				}
 			}
 
@@ -582,16 +596,20 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json({ error: 'Failed to store message' }, { status: 500 });
 		}
 
-		return json({
+		const response: AiGenerateSuccess = {
 			success: true,
+			provider: 'gemini',
+			model: 'gemini-2.5-flash',
 			message: {
 				id: (message as any).id,
 				content: (message as any).content,
-				agentRole: (message as any).agent_role,
+				agentRole: (message as any).agent_role as AiAgentRole,
 				round: (message as any).round,
 				createdAt: (message as any).created_at
 			}
-		});
+		};
+
+		return json(response);
 	} catch (error: any) {
 		// #region agent log
 		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:314',message:'API error caught',data:{errorMessage:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack:undefined,isZodError:error instanceof z.ZodError,errorStatus:error?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A,B,C,D,E,F'})}).catch(()=>{});
