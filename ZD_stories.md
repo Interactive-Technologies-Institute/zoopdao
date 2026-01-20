@@ -1199,3 +1199,108 @@ e) If legacy proposal records include a “discussion” field, define a safe ha
 **Completion Criteria:**
 1. UI, API, and persistence layers are aligned with the removal (no dead fields/validators).
 2. Manual verification confirms proposals render correctly and discussion history remains intact.
+
+---
+
+## ZD-173: Make Portuguese the primary language (default locale)
+
+**Overview:**
+Set Portuguese as the default language shown to users across the app, while keeping English available as an option. This ensures the initial experience matches the primary audience and content context.
+
+**Goal:**
+Load Portuguese by default on first visit and persist the user’s chosen language thereafter.
+
+**Description:**
+a) Set the app’s default locale to Portuguese (`pt`) for first-time visitors.
+b) Ensure language selection (if present) still allows switching to English and persists via storage/cookie.
+c) Update any locale detection logic to prefer Portuguese when no explicit user preference exists.
+d) Verify that all key routes/components render Portuguese strings by default.
+
+**Acceptance Criteria:**
+1) On first visit (no stored preference), the UI loads in Portuguese.
+2) If the user switches language, the chosen language persists across refresh and navigation.
+3) English remains selectable and renders correctly when chosen.
+
+**Completion Criteria:**
+1) Default locale behavior is implemented and verified across core flows (home, proposals, lobby/game).
+2) Language preference persistence is validated.
+
+---
+
+## ZD-174: Replace “play/game” wording with “participation/discussion” across the UI
+
+**Overview:**
+Update the product language to remove game-centric terms (“play”, “game”, “player”, etc.) and replace them with governance-centric terms (“participation”, “discussion”, “participant”) throughout UI text, buttons, and flows. This aligns LogaCulture legacy messaging with ZoopDAO’s DAO participation purpose.
+
+**Goal:**
+Ensure all user-facing copy reflects multispecies governance participation instead of gameplay.
+
+**Description:**
+a) Audit all user-facing strings (UI components + `messages/en.json` and `messages/pt.json`) for “play/game” concepts.
+b) Replace labels, buttons, and sentences with “participation” and/or “discussion” equivalents while keeping meaning and UX clarity.
+c) Update route/page titles and empty states that reference “game” (e.g., join game, start game, game code).
+d) Ensure any remaining “game” terminology is limited to internal code identifiers only (not user-facing).
+e) Review for consistency across flows: homepage, lobby, proposal creation, rounds, discussion, and history.
+
+**Acceptance Criteria:**
+1) No user-facing UI text contains “play” or “game” wording in English or Portuguese (unless explicitly justified).
+2) Updated copy uses “participate/participation” and/or “discussion” consistently across primary flows.
+3) Buttons and navigation labels remain clear and not misleading after copy changes.
+
+**Completion Criteria:**
+1) `messages/en.json` and `messages/pt.json` are updated and verified in the UI.
+2) Manual walkthrough confirms the main flows contain the new terminology end-to-end.
+
+---
+
+## ZD-175: Pedagogic Mode (Round 7): add per-AI 2-minute timer under avatars
+
+**Overview:**
+In Pedagogic Mode during the final discussion round, display a small 2-minute countdown timer below each AI avatar to structure AI turn timing. The timer runs during the AI’s turn (thinking) and stops when the AI message is visible to the user or when the AI passes.
+
+**Goal:**
+Provide clear AI turn timing indicators in the final pedagogic discussion round.
+
+**Description:**
+a) In Pedagogic Mode and Round 7 only, render a 2:00 timer UI below each AI avatar.
+b) Start/count down only during that AI’s turn (including AI thinking).
+c) Stop the timer when the AI message is sent and visible in the UI.
+d) If the AI passes its turn, stop the timer and yield the turn.
+e) Ensure timer resets correctly for each new AI turn.
+
+**Acceptance Criteria:**
+1) Timers appear only in Pedagogic Mode, Round 7, below each AI avatar.
+2) AI timer counts down during the AI’s turn and continues while AI is thinking.
+3) AI timer stops when the AI message becomes visible in the UI.
+4) AI pass stops the timer and yields the turn.
+
+**Completion Criteria:**
+1) AI timer UI + logic works across multiple AIs in Round 7 Pedagogic Mode.
+2) Manual verification confirms correct start/stop/reset behavior.
+
+---
+
+## ZD-176: Pedagogic Mode (Round 7): user turn timer + hand-emoji “pass” control
+
+**Overview:**
+In Pedagogic Mode during the final discussion round, add a user turn timer that runs while the user is writing and stops when the user sends a message or explicitly passes using a hand-emoji button. This gives the user control to yield without the timer continuing.
+
+**Goal:**
+Enable user turn timing and an explicit “pass turn” mechanism in the final pedagogic round.
+
+**Description:**
+a) In Pedagogic Mode and Round 7 only, implement a 2:00 countdown for the user’s turn.
+b) Timer counts down during the user’s turn, including while the user is typing/writing.
+c) Stop the user timer when the user sends a new message.
+d) Add a hand-emoji button for the user to pass/stop; while passed, the timer stays stopped and the turn yields.
+e) Ensure timer resets correctly when the user gets a new turn.
+
+**Acceptance Criteria:**
+1) User has a 2-minute turn timer in Pedagogic Mode, Round 7.
+2) Timer runs during the user’s turn and continues while typing.
+3) Timer stops when the user sends a message.
+4) Hand-emoji pass stops the timer and yields the turn; timer remains stopped while passed.
+
+**Completion Criteria:**
+1) User timer + pass control works reliably in Round 7 Pedagogic Mode.
+2) Manual verification confirms correct start/stop/reset and turn yielding.
