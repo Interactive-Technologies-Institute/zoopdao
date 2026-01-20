@@ -2,6 +2,7 @@
 	import * as Dialog from './ui/dialog';
 	import { Button } from './ui/button';
 	import { m } from '@src/paraglide/messages';
+	import { getLocale } from '@src/paraglide/runtime.js';
 	import { onMount } from 'svelte';
 
 	interface ProposalDialogProps {
@@ -28,7 +29,9 @@
 		try {
 			const response = await fetch(`/api/proposals/${proposalId}`);
 			if (!response.ok) {
-				throw new Error('Failed to fetch proposal');
+				throw new Error(
+					getLocale() === 'pt' ? 'Falha ao carregar a proposta.' : 'Failed to load proposal.'
+				);
 			}
 			const { proposal: proposalData } = await response.json();
 			
@@ -55,7 +58,7 @@
 			proposal = proposalData;
 		} catch (err) {
 			console.error('Error fetching proposal:', err);
-			error = 'Failed to load proposal';
+			error = getLocale() === 'pt' ? 'Falha ao carregar a proposta.' : 'Failed to load proposal.';
 		} finally {
 			loading = false;
 		}
@@ -89,7 +92,11 @@
 			</div>
 		{:else if !proposalId}
 			<div class="flex flex-col items-center justify-center p-8">
-				<p class="text-gray-600 mb-4">No proposal available for this discussion.</p>
+				<p class="text-gray-600 mb-4">
+					{getLocale() === 'pt'
+						? 'Não há proposta disponível para esta discussão.'
+						: 'No proposal available for this discussion.'}
+				</p>
 				<Dialog.Close>
 					<Button>{m.close()}</Button>
 				</Dialog.Close>

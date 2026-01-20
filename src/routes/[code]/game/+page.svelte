@@ -587,12 +587,12 @@
 	}
 
 	async function handleLeaveGame() {
-		const confirmed = confirm('Are you sure you want to leave the discussion?');
+		const confirmed = confirm(m.confirm_leave_discussion());
 
 		if (confirmed) {
 			const success = await gameState.markPlayerInactive();
 			if (!success) {
-				alert('Failed to leave discussion. Please try again.');
+				alert(m.leave_discussion_failed());
 			}
 			goto('/');
 		}
@@ -693,7 +693,7 @@
 		onclick={handleLeaveGame}
 		disabled={!tourCompleted}
 	>
-		Exit <LogOut size={16} />
+		{m.exit()} <LogOut size={16} />
 	</Button>
 	<!-- Participants (Humans + AI Agents) positioned around aquarium -->
 	<ParticipantsContainer

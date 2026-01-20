@@ -11,6 +11,7 @@
 	import type { Card as CardType } from '$lib/types';
 	import type { Round } from '$lib/types';
 	import { m } from '@src/paraglide/messages';
+	import { getLocale } from '@src/paraglide/runtime';
 	import { Share2, Check } from 'lucide-svelte';
 	import { onDestroy } from 'svelte';
 	import { localizeHref } from '@src/paraglide/runtime';
@@ -168,7 +169,7 @@ function getProposalTextForRound(roundNumber: number): string {
 								<Share2 class="w-4 h-4 mr-2" /> {m.share()}
 							{/if}
 						</Button>
-						<Button href={localizeHref('/')}>{m.play_game()}</Button>
+						<Button href={localizeHref('/')}>{m.participate()}</Button>
 					</div>
 				</div>
 			</div>
@@ -180,7 +181,9 @@ function getProposalTextForRound(roundNumber: number): string {
 				{#if story.character.description !== ''}
 					<p class="text-gray-500 text-sm">"{story.character.description}"</p>
 				{:else}
-					<p class="text-gray-500 text-sm italic">No description...</p>
+					<p class="text-gray-500 text-sm italic">
+						{getLocale() === 'pt' ? 'Sem descrição...' : 'No description...'}
+					</p>
 				{/if}
 			</div>
 			<div>
@@ -338,6 +341,6 @@ function getProposalTextForRound(roundNumber: number): string {
 	</div>
 	<div class="flex flex-col gap-4 items-center mt-16">
 		<p>{m.try_for_yourself()}!</p>
-		<Button href={'/'}>{m.play_game()}</Button>
+		<Button href={'/'}>{m.participate()}</Button>
 	</div>
 </div>

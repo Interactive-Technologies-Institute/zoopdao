@@ -4,6 +4,7 @@
 	import { ArrowLeft, Calendar, Clock } from 'lucide-svelte';
 	import { m } from '@src/paraglide/messages';
 	import { localizeUrl } from '@src/paraglide/runtime.js';
+	import { getLocale } from '@src/paraglide/runtime.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
 	import { supabase } from '$lib/supabase';
@@ -44,37 +45,47 @@
 				
 				if (authError || !authData.session) {
 					console.error('Error creating anonymous session:', authError);
-					alert('Failed to create session. Please try again.');
+					alert(getLocale() === 'pt' ? 'Falha ao criar sessão. Tenta novamente.' : 'Failed to create session. Please try again.');
 					isCreatingGame = false;
 					return;
 				}
 			}
 			
-			// Create a new game with proposal_id
+			// Create a new discussion with proposal_id
 			const { data: gameData, error: gameError } = await supabase.rpc('create_game', {
 				p_proposal_id: proposal.id,
 				p_mode: 'pedagogic'
 			});
 			
 			if (gameError) {
-				console.error('Error creating game:', gameError);
-				alert(`Failed to create discussion: ${gameError.message}. Please try again.`);
+				console.error('Error creating discussion:', gameError);
+				alert(
+					getLocale() === 'pt'
+						? `Falha ao criar discussão: ${gameError.message}. Tenta novamente.`
+						: `Failed to create discussion: ${gameError.message}. Please try again.`
+				);
 				isCreatingGame = false;
 				return;
 			}
 			
 			if (!gameData?.game_code) {
-				console.error('Error creating game: Missing game_code in response.', gameData);
-				alert('Failed to create discussion. Please try again.');
+				console.error('Error creating discussion: Missing game_code in response.', gameData);
+				alert(getLocale() === 'pt' ? 'Falha ao criar discussão. Tenta novamente.' : 'Failed to create discussion. Please try again.');
 				isCreatingGame = false;
 				return;
 			}
 
-			// Navigate to mode selection with the game code
-			goto(`/${gameData.game_code}/mode`);
+			// Navigate to mode selection with the discussion code
+			await goto(localizeUrl(`/${gameData.game_code}/mode`).toString());
 		} catch (error) {
 			console.error('Error starting discussion:', error);
-			alert(`Failed to start discussion: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+			const msg = error instanceof Error ? error.message : 'Unknown error';
+			alert(
+				getLocale() === 'pt'
+					? `Falha ao iniciar discussão: ${msg}. Tenta novamente.`
+					: `Failed to start discussion: ${msg}. Please try again.`
+			);
+		} finally {
 			isCreatingGame = false;
 		}
 	}

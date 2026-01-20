@@ -31,8 +31,8 @@
 				.eq('code', data.game.code);
 
 			if (error) {
-				console.error('Error updating game mode:', error);
-				alert('Failed to update mode. Please try again.');
+				console.error('Error updating discussion mode:', error);
+				alert(m.mode_update_failed());
 				isUpdating = false;
 				return;
 			}
@@ -41,7 +41,7 @@
 			goto(`/${data.game.code}/lobby`);
 		} catch (error) {
 			console.error('Error selecting mode:', error);
-			alert('Failed to select mode. Please try again.');
+			alert(m.mode_select_failed());
 			isUpdating = false;
 		}
 	}
@@ -50,7 +50,7 @@
 <div class="h-full flex flex-col items-center justify-center bg-white relative p-4">
 	<div class="sticky top-0 z-10 w-full bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center">
 		<div class="bg-deep-teal p-2 flex flex-col items-center justify-center rounded-lg text-center">
-			<p class="text-white md:text-sm text-xs font-medium">Discussion code</p>
+			<p class="text-white md:text-sm text-xs font-medium">{m.discussion_code_label()}</p>
 			<p class="text-white lg:text-4xl md:text-xl text-md font-bold">{data.game.code}</p>
 		</div>
 	</div>

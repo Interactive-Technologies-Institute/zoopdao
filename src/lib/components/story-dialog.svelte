@@ -6,6 +6,7 @@
 	import Textarea from './ui/textarea/textarea.svelte';
 	import CharacterCard from './character-card.svelte';
 	import { m } from '@src/paraglide/messages';
+	import { getLocale } from '@src/paraglide/runtime.js';
 	import { CARDS } from '../data/cards';
 	import { ROUNDS } from '../data/rounds';
 	import { onMount } from 'svelte';
@@ -218,9 +219,11 @@
 			const currentRoundBefore = gameState.currentRound;
 			
 			if (currentAnswer.trim() === '') {
-				await gameState.submitAnswer('(Empty submission)');
+				await gameState.submitAnswer(getLocale() === 'pt' ? '(Submissão vazia)' : '(Empty submission)');
 				alert(
-					"You didn't write anything for this round! You can edit your discussion at the end of the participation."
+					getLocale() === 'pt'
+						? 'Não escreveste nada nesta ronda! Podes editar a tua discussão no final da participação.'
+						: "You didn't write anything for this round! You can edit your discussion at the end of the participation."
 				);
 			} else {
 				await gameState.submitAnswer(currentAnswer);
@@ -309,7 +312,11 @@
 	>
 		{#if sortedRounds.length === 0}
 			<div class="p-8 text-center">
-				<p class="text-gray-500">No rounds available. Please check if rounds are loaded in the database.</p>
+				<p class="text-gray-500">
+					{getLocale() === 'pt'
+						? 'Não há rondas disponíveis. Verifica se as rondas estão carregadas na base de dados.'
+						: 'No rounds available. Please check if rounds are loaded in the database.'}
+				</p>
 			</div>
 		{:else}
 		{#each sortedRounds as round (round.index)}
@@ -335,7 +342,9 @@
 						<CharacterCard character={player?.character ?? 'child'} />
 						{#if player && isNonHumanCharacter(player.character)}
 							<Button variant="outline" class="mt-2" onclick={() => (showSpeciesDialog = true)}
-								>Learn more about your character</Button
+								>{getLocale() === 'pt'
+									? 'Saber mais sobre a tua personagem'
+									: 'Learn more about your character'}</Button
 							>
 							<SpeciesInfoDialog
 								bind:open={showSpeciesDialog}
@@ -356,7 +365,9 @@
 						<Card card={displayCard} />
 						{#if card?.type === 'landmark'}
 							<Button variant="outline" class="mt-2" onclick={() => (showLandmarkDialog = true)}
-								>Learn more about this landmark</Button
+								>{getLocale() === 'pt'
+									? 'Saber mais sobre este local'
+									: 'Learn more about this landmark'}</Button
 							>
 							<LandmarkInfoDialog bind:open={showLandmarkDialog} {card} />
 						{/if}

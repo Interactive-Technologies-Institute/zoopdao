@@ -41,7 +41,7 @@ export function createGameTour() {
 			text: m.welcome_description(),
 			buttons: [
 				{
-					text: 'Skip',
+					text: m.skip(),
 					action: tour.cancel,
 					secondary: true
 				},
@@ -61,7 +61,7 @@ export function createGameTour() {
 			},
 			buttons: [
 				{
-					text: 'Skip',
+					text: m.skip(),
 					action: tour.cancel,
 					secondary: true
 				},
@@ -84,7 +84,7 @@ export function createGameTour() {
 			},
 			buttons: [
 				{
-					text: 'Skip',
+					text: m.skip(),
 					action: tour.cancel,
 					secondary: true
 				},
@@ -107,7 +107,7 @@ export function createGameTour() {
 			},
 			buttons: [
 				{
-					text: 'Skip',
+					text: m.skip(),
 					action: tour.cancel,
 					secondary: true
 				},
@@ -130,7 +130,7 @@ export function createGameTour() {
 			},
 			buttons: [
 				{
-					text: 'Skip',
+					text: m.skip(),
 					action: tour.cancel,
 					secondary: true
 				},
@@ -153,7 +153,7 @@ export function createGameTour() {
 			},
 			buttons: [
 				{
-					text: 'Skip',
+					text: m.skip(),
 					action: tour.cancel,
 					secondary: true
 				},
@@ -176,7 +176,7 @@ export function createGameTour() {
 			},
 			buttons: [
 				{
-					text: 'Skip',
+					text: m.skip(),
 					action: tour.cancel,
 					secondary: true
 				},
