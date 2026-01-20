@@ -15,6 +15,7 @@ import {
 	type AiGenerateSuccess
 } from '@/lib/ai/llm-types';
 import { generateOpenAiDiscussionMessage } from '@/lib/ai/providers/openai';
+import { generateIaeduDiscussionMessage } from '@/lib/ai/providers/iaedu';
 import { LLM_PROVIDER } from '$env/static/private';
 
 // #region agent log
@@ -543,7 +544,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		let messageContent: string;
-		let provider: 'gemini' | 'openai' = 'gemini';
+		let provider: 'gemini' | 'openai' | 'iaedu' = 'gemini';
 		let model = 'gemini-2.5-flash';
 
 		if (ACTIVE_PROVIDER === 'openai') {
@@ -569,6 +570,49 @@ export const POST: RequestHandler = async ({ request }) => {
 					message: code === 'timeout' ? 'AI request timed out.' : 'Failed to generate AI message.',
 					details: reason,
 					provider: 'openai'
+				});
+				return json(response, { status: code === 'timeout' ? 504 : 500 });
+			}
+
+			if (!aiResult.success) {
+				const status =
+					aiResult.error.code === 'rate_limited'
+						? 429
+						: aiResult.error.code === 'unauthorized'
+							? 401
+							: aiResult.error.code === 'provider_unavailable'
+								? 503
+								: 500;
+
+				return json(aiResult, { status });
+			}
+
+			messageContent = aiResult.message.content;
+			provider = aiResult.provider;
+			model = aiResult.model;
+		} else if (ACTIVE_PROVIDER === 'iaedu') {
+			let aiResult: AiGenerateResult;
+			try {
+				aiResult = await withTimeout(
+					generateIaeduDiscussionMessage({
+						gameId: validated.gameId,
+						proposalId: validated.proposalId,
+						round: validated.round,
+						agentRole: validated.agentRole,
+						proposalPoint: proposalPoint || validated.proposalPoint || undefined,
+						chatHistory: validated.chatHistory,
+						latestUserMessage: validated.latestUserMessage ?? null
+					}),
+					AI_DEFAULT_TIMEOUT_MS
+				);
+			} catch (error) {
+				const reason = error instanceof Error ? error.message : String(error);
+				const code = reason === 'timeout' ? 'timeout' : 'provider_error';
+				const response = buildErrorResponse({
+					code,
+					message: code === 'timeout' ? 'AI request timed out.' : 'Failed to generate AI message.',
+					details: reason,
+					provider: 'iaedu'
 				});
 				return json(response, { status: code === 'timeout' ? 504 : 500 });
 			}
