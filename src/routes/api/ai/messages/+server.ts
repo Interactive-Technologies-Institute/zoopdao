@@ -7,6 +7,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/supabase';
 import {
 	AI_AGENT_ROLES,
+	AI_DEFAULT_TIMEOUT_MS,
+	AI_MAX_RETRIES,
 	AI_MESSAGE_MAX_CHARS,
 	type AiAgentRole,
 	type AiGenerateResult,
@@ -231,7 +233,7 @@ async function getProposalPoint(
  */
 async function retryWithBackoff<T>(
 	fn: () => Promise<T>,
-	maxRetries: number = 3,
+	maxRetries: number = AI_MAX_RETRIES,
 	initialDelay: number = 1000
 ): Promise<T> {
 	let lastError: Error | unknown;
@@ -265,6 +267,34 @@ async function retryWithBackoff<T>(
 	}
 	
 	throw lastError;
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+	let timeoutId: NodeJS.Timeout;
+	const timeoutPromise = new Promise<T>((_, reject) => {
+		timeoutId = setTimeout(() => reject(new Error('timeout')), timeoutMs);
+	});
+
+	return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
+function buildErrorResponse(params: {
+	code: 'invalid_request' | 'rate_limited' | 'provider_unavailable' | 'provider_error' | 'timeout' | 'unauthorized' | 'unknown';
+	message: string;
+	details?: string;
+	retryAfterSeconds?: number;
+	provider?: 'gemini' | 'openai';
+}): AiGenerateResult {
+	return {
+		success: false,
+		error: {
+			code: params.code,
+			message: params.message,
+			details: params.details,
+			retryAfterSeconds: params.retryAfterSeconds,
+			provider: params.provider
+		}
+	};
 }
 
 /**
@@ -423,13 +453,13 @@ ${messageCount > 1 ? `Generate ${messageCount} separate messages. Return a JSON 
 		
 		// Provide more specific error messages
 		if (error?.status === 503 || error?.message?.includes('overloaded')) {
-			throw new Error('AI service is temporarily unavailable. Please try again in a moment.');
+			throw new Error('provider_unavailable');
 		}
 		if (error?.status === 429 || error?.message?.includes('rate limit')) {
-			throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
+			throw new Error('rate_limited');
 		}
-		
-		throw new Error(error?.message || 'Failed to generate AI message');
+
+		throw new Error(error?.message || 'provider_error');
 	}
 }
 
@@ -517,15 +547,31 @@ export const POST: RequestHandler = async ({ request }) => {
 		let model = 'gemini-2.5-flash';
 
 		if (ACTIVE_PROVIDER === 'openai') {
-			const aiResult: AiGenerateResult = await generateOpenAiDiscussionMessage({
-				gameId: validated.gameId,
-				proposalId: validated.proposalId,
-				round: validated.round,
-				agentRole: validated.agentRole,
-				proposalPoint: proposalPoint || validated.proposalPoint || undefined,
-				chatHistory: validated.chatHistory,
-				latestUserMessage: validated.latestUserMessage ?? null
-			});
+			let aiResult: AiGenerateResult;
+			try {
+				aiResult = await withTimeout(
+					generateOpenAiDiscussionMessage({
+						gameId: validated.gameId,
+						proposalId: validated.proposalId,
+						round: validated.round,
+						agentRole: validated.agentRole,
+						proposalPoint: proposalPoint || validated.proposalPoint || undefined,
+						chatHistory: validated.chatHistory,
+						latestUserMessage: validated.latestUserMessage ?? null
+					}),
+					AI_DEFAULT_TIMEOUT_MS
+				);
+			} catch (error) {
+				const reason = error instanceof Error ? error.message : String(error);
+				const code = reason === 'timeout' ? 'timeout' : 'provider_error';
+				const response = buildErrorResponse({
+					code,
+					message: code === 'timeout' ? 'AI request timed out.' : 'Failed to generate AI message.',
+					details: reason,
+					provider: 'openai'
+				});
+				return json(response, { status: code === 'timeout' ? 504 : 500 });
+			}
 
 			if (!aiResult.success) {
 				const status =
@@ -550,26 +596,66 @@ export const POST: RequestHandler = async ({ request }) => {
 				// #region agent log
 				fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:rateLimit',message:'Rate limit exceeded',data:{waitTime,currentRequests:rateLimitTracker.length},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'RATE_LIMIT'})}).catch(()=>{});
 				// #endregion
-				return json(
-					{ 
-						error: `Rate limit exceeded. Maximum ${RATE_LIMIT_REQUESTS} requests per minute. Please try again in ${waitTime} seconds.`,
-						retryAfter: waitTime
-					}, 
-					{ status: 429 }
-				);
+				const response = buildErrorResponse({
+					code: 'rate_limited',
+					message: `Rate limit exceeded. Maximum ${RATE_LIMIT_REQUESTS} requests per minute.`,
+					retryAfterSeconds: waitTime,
+					provider: 'gemini'
+				});
+				return json(response, { status: 429 });
 			}
 
 			// #region agent log
 			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:273',message:'Calling generateAIMessage',data:{agentRole:validated.agentRole,round:validated.round,hasProposalPoint:!!proposalPoint,chatHistoryLength:validated.chatHistory?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
 			// #endregion
 
-			messageContent = await generateAIMessage(
-				validated.agentRole,
-				validated.round,
-				proposalPoint || validated.proposalPoint || null,
-				validated.chatHistory || [],
-				validated.latestUserMessage || null
-			);
+			try {
+				messageContent = await withTimeout(
+					generateAIMessage(
+						validated.agentRole,
+						validated.round,
+						proposalPoint || validated.proposalPoint || null,
+						validated.chatHistory || [],
+						validated.latestUserMessage || null
+					),
+					AI_DEFAULT_TIMEOUT_MS
+				);
+			} catch (error) {
+				const reason = error instanceof Error ? error.message : String(error);
+				const code =
+					reason === 'timeout'
+						? 'timeout'
+						: reason === 'rate_limited'
+							? 'rate_limited'
+							: reason === 'provider_unavailable'
+								? 'provider_unavailable'
+								: 'provider_error';
+
+				const response = buildErrorResponse({
+					code,
+					message:
+						code === 'timeout'
+							? 'AI request timed out.'
+							: code === 'rate_limited'
+								? 'Rate limit exceeded. Please wait before retrying.'
+								: code === 'provider_unavailable'
+									? 'AI service is temporarily unavailable.'
+									: 'Failed to generate AI message.',
+					details: reason,
+					provider: 'gemini'
+				});
+
+				const status =
+					code === 'rate_limited'
+						? 429
+						: code === 'provider_unavailable'
+							? 503
+							: code === 'timeout'
+								? 504
+								: 500;
+
+				return json(response, { status });
+			}
 		}
 
 		// #region agent log
@@ -655,31 +741,45 @@ export const POST: RequestHandler = async ({ request }) => {
 		console.error('API error:', error);
 		
 		if (error instanceof z.ZodError) {
-			return json({ error: 'Invalid request data', details: error.issues }, { status: 400 });
+			const response = buildErrorResponse({
+				code: 'invalid_request',
+				message: 'Invalid request data.',
+				details: JSON.stringify(error.issues)
+			});
+			return json(response, { status: 400 });
 		}
 
 		// Provide user-friendly error messages
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		let statusCode = 500;
-		let userMessage = 'Failed to generate message';
+		let code: 'provider_unavailable' | 'rate_limited' | 'provider_error' | 'unknown' = 'provider_error';
 
 		if (errorMessage.includes('temporarily unavailable') || errorMessage.includes('overloaded')) {
 			statusCode = 503;
-			userMessage = 'AI service is temporarily unavailable. Please try again in a moment.';
+			code = 'provider_unavailable';
 		} else if (errorMessage.includes('rate limit')) {
 			statusCode = 429;
-			userMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
+			code = 'rate_limited';
 		} else if (error?.status === 503) {
 			statusCode = 503;
-			userMessage = 'AI service is temporarily unavailable. Please try again in a moment.';
+			code = 'provider_unavailable';
 		} else if (error?.status === 429) {
 			statusCode = 429;
-			userMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
+			code = 'rate_limited';
 		}
 
-		return json(
-			{ error: userMessage, details: errorMessage },
-			{ status: statusCode }
-		);
+		const response = buildErrorResponse({
+			code,
+			message:
+				code === 'provider_unavailable'
+					? 'AI service is temporarily unavailable.'
+					: code === 'rate_limited'
+						? 'Rate limit exceeded. Please wait before retrying.'
+						: 'Failed to generate message.',
+			details: errorMessage,
+			provider: ACTIVE_PROVIDER === 'openai' ? 'openai' : 'gemini'
+		});
+
+		return json(response, { status: statusCode });
 	}
 };
