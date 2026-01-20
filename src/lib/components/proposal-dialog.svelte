@@ -49,8 +49,7 @@
 				hasObjectives: !!proposalData?.objectives,
 				objectivesType: typeof proposalData?.objectives,
 				objectivesLength: Array.isArray(proposalData?.objectives) ? proposalData.objectives.length : 'not array',
-				hasFunctionalities: !!proposalData?.functionalities,
-				hasDiscussion: !!proposalData?.discussion
+				hasFunctionalities: !!proposalData?.functionalities
 			});
 			
 			proposal = proposalData;
@@ -177,17 +176,6 @@
 					{/if}
 				</div>
 
-				<!-- Discussion Field -->
-				{#if proposal.discussion}
-				<div class="mt-6">
-					<label class="block text-sm font-medium text-deep-teal mb-2">
-						{m.proposal_discussion()}
-					</label>
-					<div class="bg-gray-50 border border-deep-teal border-opacity-10 rounded p-4">
-						<p class="text-gray-700 whitespace-pre-line">{proposal.discussion}</p>
-					</div>
-				</div>
-				{/if}
 			</div>
 			
 			<div class="flex w-full justify-center mt-6">

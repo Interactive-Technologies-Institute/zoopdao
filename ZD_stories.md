@@ -1174,3 +1174,28 @@ d) Validate that the displayed points update correctly when rounds change.
 2. Round-specific points are confirmed correct across multiple rounds and proposals.
 
 ---
+
+## ZD-172: Remove “Discussion” field from initial proposal flow
+
+**Overview:**
+Remove the “Discussion” field from the initial proposal creation and proposal display surfaces (new proposal form, proposals list, and “view full proposal” popups). Discussion should exist only as messages saved in the history browser (chat), not as a proposal attribute.
+
+**Goal:**
+Ensure proposals contain only proposal data, while discussion content is captured exclusively in the discussion/history system.
+
+**Description:**
+a) Remove the “Discussion” input from the new proposal form UI and validation.
+b) Remove “Discussion” from proposal list card displays and any proposal preview/full-proposal popups.
+c) Ensure proposal creation no longer writes a “discussion” field to storage (client payload, API, and DB schema if applicable).
+d) Confirm discussion messages remain available via the history browser and continue to be saved per round/participant.
+e) If legacy proposal records include a “discussion” field, define a safe handling strategy (ignore/hide, or migrate content into history if required).
+
+**Acceptance Criteria:**
+1. New proposal form has no “Discussion” field and submits successfully without it.
+2. Proposals list and “view full proposal” popups do not display a “Discussion” field.
+3. Proposal create/update payloads do not include a “discussion” attribute.
+4. Discussion continues to be captured and viewable via the history browser (chat).
+
+**Completion Criteria:**
+1. UI, API, and persistence layers are aligned with the removal (no dead fields/validators).
+2. Manual verification confirms proposals render correctly and discussion history remains intact.

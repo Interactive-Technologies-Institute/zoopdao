@@ -112,15 +112,6 @@
 				</div>
 			</div>
 
-			<!-- Discussion Field -->
-			<div class="mt-6">
-				<label class="block text-sm font-medium text-deep-teal mb-2">
-					{m.proposal_discussion()}
-				</label>
-				<div class="bg-gray-50 border border-deep-teal border-opacity-10 rounded p-4">
-					<p class="text-gray-700 whitespace-pre-line">{proposal.discussion}</p>
-				</div>
-			</div>
 		</div>
 	</div>
 </div>

@@ -48,7 +48,6 @@
 		})) }
 	]);
 	let functionalities = $state('');
-	let discussion = $state('');
 	let votingPeriod = $state('');
 	let proposalLanguage = $state(getLocale()); // Default to current locale
 
@@ -77,7 +76,6 @@
 			}
 		}
 		if (!functionalities.trim()) return false;
-		if (!discussion.trim()) return false;
 		if (!votingPeriod) return false;
 		return true;
 	}
@@ -104,7 +102,6 @@
 					title,
 					objectives,
 					functionalities,
-					discussion,
 					voting_period_id: votingPeriod,
 					language: proposalLanguage
 				})
@@ -250,20 +247,6 @@
 							class="w-full min-h-[150px]"
 						/>
 					</div>
-				</div>
-
-				<!-- Discussion Field -->
-				<div>
-					<label for="discussion" class="block text-sm font-medium text-deep-teal mb-2">
-						{m.proposal_discussion()}
-					</label>
-					<Textarea
-						id="discussion"
-						bind:value={discussion}
-						placeholder={m.proposal_discussion_placeholder()}
-						required
-						class="w-full min-h-[150px]"
-					/>
 				</div>
 
 				<!-- Voting Period Selection (placeholder for ZD-154) -->

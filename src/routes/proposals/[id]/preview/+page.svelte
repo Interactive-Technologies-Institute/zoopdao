@@ -137,11 +137,6 @@
 					<p class="text-gray-700 line-clamp-3">{proposal.functionalities}</p>
 				</div>
 
-				<!-- Discussion Preview -->
-				<div>
-					<h3 class="text-lg font-semibold text-deep-teal mb-2">{m.proposal_discussion()}</h3>
-					<p class="text-gray-700 line-clamp-3">{proposal.discussion}</p>
-				</div>
 			</div>
 
 			<!-- Actions -->

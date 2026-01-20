@@ -59,10 +59,10 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		
 		const body = await request.json();
-		const { title, objectives, functionalities, discussion, voting_period_id, language = 'pt' } = body;
+		const { title, objectives, functionalities, voting_period_id, language = 'pt' } = body;
 		
 		// Validation
-		if (!title || !objectives || !functionalities || !discussion || !voting_period_id) {
+		if (!title || !objectives || !functionalities || !voting_period_id) {
 			return json({ error: 'Missing required fields' }, { status: 400 });
 		}
 		
@@ -105,7 +105,6 @@ export const POST: RequestHandler = async ({ request }) => {
 				title,
 				objectives: objectives,
 				functionalities,
-				discussion,
 				voting_period_id,
 				language,
 				user_id: user?.id || null
@@ -124,4 +123,3 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: 'Internal server error' }, { status: 500 });
 	}
 };
-
