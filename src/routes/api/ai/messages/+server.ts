@@ -9,8 +9,11 @@ import {
 	AI_AGENT_ROLES,
 	AI_MESSAGE_MAX_CHARS,
 	type AiAgentRole,
+	type AiGenerateResult,
 	type AiGenerateSuccess
 } from '@/lib/ai/llm-types';
+import { generateOpenAiDiscussionMessage } from '@/lib/ai/providers/openai';
+import { LLM_PROVIDER } from '$env/static/private';
 
 // #region agent log
 if (!GEMINI_API_KEY) {
@@ -19,6 +22,7 @@ if (!GEMINI_API_KEY) {
 // #endregion
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+const ACTIVE_PROVIDER = (LLM_PROVIDER ?? 'gemini').toLowerCase();
 
 // Rate limiting: 5 requests per minute
 const RATE_LIMIT_REQUESTS = 5;
@@ -508,32 +512,65 @@ export const POST: RequestHandler = async ({ request }) => {
 			return json(response);
 		}
 
-		// Check rate limit before calling Gemini API
-		if (checkRateLimit()) {
-			const waitTime = getTimeUntilNextRequest();
+		let messageContent: string;
+		let provider: 'gemini' | 'openai' = 'gemini';
+		let model = 'gemini-2.5-flash';
+
+		if (ACTIVE_PROVIDER === 'openai') {
+			const aiResult: AiGenerateResult = await generateOpenAiDiscussionMessage({
+				gameId: validated.gameId,
+				proposalId: validated.proposalId,
+				round: validated.round,
+				agentRole: validated.agentRole,
+				proposalPoint: proposalPoint || validated.proposalPoint || undefined,
+				chatHistory: validated.chatHistory,
+				latestUserMessage: validated.latestUserMessage ?? null
+			});
+
+			if (!aiResult.success) {
+				const status =
+					aiResult.error.code === 'rate_limited'
+						? 429
+						: aiResult.error.code === 'unauthorized'
+							? 401
+							: aiResult.error.code === 'provider_unavailable'
+								? 503
+								: 500;
+
+				return json(aiResult, { status });
+			}
+
+			messageContent = aiResult.message.content;
+			provider = aiResult.provider;
+			model = aiResult.model;
+		} else {
+			// Check rate limit before calling Gemini API
+			if (checkRateLimit()) {
+				const waitTime = getTimeUntilNextRequest();
+				// #region agent log
+				fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:rateLimit',message:'Rate limit exceeded',data:{waitTime,currentRequests:rateLimitTracker.length},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'RATE_LIMIT'})}).catch(()=>{});
+				// #endregion
+				return json(
+					{ 
+						error: `Rate limit exceeded. Maximum ${RATE_LIMIT_REQUESTS} requests per minute. Please try again in ${waitTime} seconds.`,
+						retryAfter: waitTime
+					}, 
+					{ status: 429 }
+				);
+			}
+
 			// #region agent log
-			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:rateLimit',message:'Rate limit exceeded',data:{waitTime,currentRequests:rateLimitTracker.length},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'RATE_LIMIT'})}).catch(()=>{});
+			fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:273',message:'Calling generateAIMessage',data:{agentRole:validated.agentRole,round:validated.round,hasProposalPoint:!!proposalPoint,chatHistoryLength:validated.chatHistory?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
 			// #endregion
-			return json(
-				{ 
-					error: `Rate limit exceeded. Maximum ${RATE_LIMIT_REQUESTS} requests per minute. Please try again in ${waitTime} seconds.`,
-					retryAfter: waitTime
-				}, 
-				{ status: 429 }
+
+			messageContent = await generateAIMessage(
+				validated.agentRole,
+				validated.round,
+				proposalPoint || validated.proposalPoint || null,
+				validated.chatHistory || [],
+				validated.latestUserMessage || null
 			);
 		}
-
-		// #region agent log
-		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:273',message:'Calling generateAIMessage',data:{agentRole:validated.agentRole,round:validated.round,hasProposalPoint:!!proposalPoint,chatHistoryLength:validated.chatHistory?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
-		// #endregion
-
-		const messageContent = await generateAIMessage(
-			validated.agentRole,
-			validated.round,
-			proposalPoint || validated.proposalPoint || null,
-			validated.chatHistory || [],
-			validated.latestUserMessage || null
-		);
 
 		// #region agent log
 		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:282',message:'Message generated, storing in DB',data:{messageContentLength:messageContent.length,messageContentPreview:messageContent.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'A'})}).catch(()=>{});
@@ -598,8 +635,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		const response: AiGenerateSuccess = {
 			success: true,
-			provider: 'gemini',
-			model: 'gemini-2.5-flash',
+			provider,
+			model,
 			message: {
 				id: (message as any).id,
 				content: (message as any).content,
