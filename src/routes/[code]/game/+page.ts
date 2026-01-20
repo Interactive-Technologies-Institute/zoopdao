@@ -26,7 +26,7 @@ export const load = async ({ params, parent }) => {
 			.single()) as any;
 
 		if (gameError) {
-			return error(404, { message: 'Game not found' });
+			return error(404, { message: 'Discussion not found' });
 		}
 
 		return gameData as Game & { proposal_id?: number | null; mode?: 'pedagogic' | 'decision_making' | null };
@@ -39,7 +39,7 @@ export const load = async ({ params, parent }) => {
 			.eq('game_id', gameId);
 
 		if (playersError) {
-			return error(500, { message: 'Error fetching players' });
+			return error(500, { message: 'Error fetching participants' });
 		}
 
 		return playersData;
@@ -86,7 +86,7 @@ export const load = async ({ params, parent }) => {
 			.eq('game_id', gameId);
 
 		if (gameRoundsError) {
-			return error(500, { message: 'Error fetching game rounds' });
+			return error(500, { message: 'Error fetching discussion rounds' });
 		}
 
 		return gameRoundsData;
@@ -99,7 +99,7 @@ export const load = async ({ params, parent }) => {
 			.eq('game_id', gameId);
 
 		if (playerCardsError) {
-			return error(500, { message: 'Error fetching player cards' });
+			return error(500, { message: 'Error fetching participant cards' });
 		}
 
 		return playerCardsData;
@@ -112,7 +112,7 @@ export const load = async ({ params, parent }) => {
 			.eq('game_id', gameId);
 
 		if (playerAnswersError) {
-			return error(500, { message: 'Error fetching player answers' });
+			return error(500, { message: 'Error fetching participant answers' });
 		}
 
 		return playerAnswersData;
@@ -129,7 +129,7 @@ export const load = async ({ params, parent }) => {
 	const player = players.find((player) => player.user_id === userId);
 
 	if (!player) {
-		return error(403, { message: 'You are not a player in this game' });
+		return error(403, { message: 'You are not a participant in this discussion' });
 	}
 
 	const rounds = await getRounds();
@@ -153,7 +153,7 @@ export const load = async ({ params, parent }) => {
 		if (currentRound - playerLastRound > 1) {
 			goto('/');
 			return error(403, {
-				message: 'You cannot rejoin this game as it has progressed too far.'
+				message: 'You cannot rejoin this discussion as it has progressed too far.'
 			});
 		}
 

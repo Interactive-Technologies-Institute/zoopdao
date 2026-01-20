@@ -310,7 +310,6 @@
 		{#if sortedRounds.length === 0}
 			<div class="p-8 text-center">
 				<p class="text-gray-500">No rounds available. Please check if rounds are loaded in the database.</p>
-				<p class="text-xs text-gray-400 mt-2">gameState.rounds length: {gameState.rounds.length}</p>
 			</div>
 		{:else}
 		{#each sortedRounds as round (round.index)}

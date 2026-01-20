@@ -50,7 +50,7 @@
 <div class="h-full flex flex-col items-center justify-center bg-white relative p-4">
 	<div class="sticky top-0 z-10 w-full bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center">
 		<div class="bg-deep-teal p-2 flex flex-col items-center justify-center rounded-lg text-center">
-			<p class="text-white md:text-sm text-xs font-medium">Lobby code</p>
+			<p class="text-white md:text-sm text-xs font-medium">Discussion code</p>
 			<p class="text-white lg:text-4xl md:text-xl text-md font-bold">{data.game.code}</p>
 		</div>
 	</div>

@@ -35,7 +35,7 @@
 		class="sticky top-0 z-10 w-full bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center"
 	>
 		<div class="bg-deep-teal p-2 flex flex-col items-center justify-center rounded-lg text-center">
-			<p class="text-white md:text-sm text-xs font-medium">Lobby code</p>
+			<p class="text-white md:text-sm text-xs font-medium">Discussion code</p>
 			<p class="text-white lg:text-4xl md:text-xl text-md font-bold">{data.game.code}</p>
 		</div>
 
@@ -45,13 +45,13 @@
 					<!-- Back button removed as category selection is hidden -->
 					{:else if !currentPlayer.is_owner}
 						<p class="text-deep-teal font-bold text-center px-2">
-							Waiting for host to start the game...
+							Waiting for host to start the discussion...
 						</p>
 					{/if}
 
 					{#if currentPlayer.is_owner}
 						{#if gameState.state === 'ready'}
-							<p class="text-deep-teal font-bold text-center px-2">All players are ready!</p>
+							<p class="text-deep-teal font-bold text-center px-2">All participants are ready!</p>
 						{/if}
 						<Button
 							size="default"

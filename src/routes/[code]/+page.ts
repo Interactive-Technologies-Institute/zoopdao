@@ -11,7 +11,7 @@ export const load = async ({ params }) => {
 			.eq('code', code)
 			.single();
 		if (gameError) {
-			return error(500, { message: 'Error fetching game' });
+			return error(500, { message: 'Error fetching discussion' });
 		}
 		return gameData;
 	}

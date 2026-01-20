@@ -14,7 +14,7 @@ export const load: PageLoad = async ({ params, parent }) => {
 		.single();
 
 	if (gameError) {
-		return error(404, { message: 'Game not found' });
+		return error(404, { message: 'Discussion not found' });
 	}
 
 	// Check if user is owner

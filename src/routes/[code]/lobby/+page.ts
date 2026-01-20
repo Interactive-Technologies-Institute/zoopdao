@@ -14,7 +14,7 @@ export const load = async ({ params, parent }) => {
 			.single();
 
 		if (gameError) {
-			return error(404, { message: 'Game not found' });
+			return error(404, { message: 'Discussion not found' });
 		}
 
 		return gameData;
@@ -27,7 +27,7 @@ export const load = async ({ params, parent }) => {
 			.eq('game_id', gameId);
 
 		if (playersError) {
-			return error(500, { message: 'Error fetching players' });
+			return error(500, { message: 'Error fetching participants' });
 		}
 
 		return playersData;
@@ -44,7 +44,7 @@ export const load = async ({ params, parent }) => {
 	const player = players.find((player) => player.user_id === userId);
 
 	if (!player) {
-		return error(403, { message: 'You are not a player in this game' });
+		return error(403, { message: 'You are not a participant in this discussion' });
 	}
 
 	return { game, players, playerId: player.id };

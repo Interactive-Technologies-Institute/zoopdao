@@ -587,12 +587,12 @@
 	}
 
 	async function handleLeaveGame() {
-		const confirmed = confirm('Are you sure you want to leave the game?');
+		const confirmed = confirm('Are you sure you want to leave the discussion?');
 
 		if (confirmed) {
 			const success = await gameState.markPlayerInactive();
 			if (!success) {
-				alert('Failed to leave game. Please try again.');
+				alert('Failed to leave discussion. Please try again.');
 			}
 			goto('/');
 		}
