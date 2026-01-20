@@ -1304,3 +1304,396 @@ e) Ensure timer resets correctly when the user gets a new turn.
 **Completion Criteria:**
 1) User timer + pass control works reliably in Round 7 Pedagogic Mode.
 2) Manual verification confirms correct start/stop/reset and turn yielding.
+
+---
+
+## ZD-180: Epic — Finish AI assembly with switchable LLM provider (OpenAI GPT-4o + keep Gemini)
+
+**Overview:**
+Complete the AI assembly integration using OpenAI GPT-4o in TypeScript while preserving the existing Gemini script. Add a single configuration switch so the app can change providers without refactoring call sites.
+
+**Goal:**
+Run the AI assembly end-to-end with a consistent API shape, and allow switching between OpenAI and Gemini via one variable.
+
+**Description:**
+a) Implement OpenAI GPT-4o integration in the current AI server/API layer in TypeScript.
+b) Keep the Gemini script in its current location (do not remove or rewrite it).
+c) Add one configuration variable (env or constant) to choose active provider/model.
+d) Standardize inputs/outputs so UI and storage do not depend on provider-specific fields.
+e) Add basic reliability and error handling for AI calls.
+
+**Acceptance Criteria:**
+1) AI assembly runs end-to-end using OpenAI GPT-4o.
+2) Gemini integration remains available and unchanged in its location.
+3) Switching a single variable changes the active provider.
+4) AI API responses follow one consistent schema regardless of provider.
+
+**Completion Criteria:**
+1) Provider switching is documented and manually verified for both providers.
+2) Error handling is consistent and user-safe across providers.
+
+---
+
+## ZD-180a: Spike — Define unified LLM provider interface and message schema
+
+**Overview:**
+Define a single, provider-agnostic contract for AI generation so multiple LLMs can be swapped without changing UI and storage logic.
+
+**Goal:**
+Lock down the request/response schema used by the AI assembly for all providers.
+
+**Description:**
+a) Define TypeScript types for AI requests (proposal id, round, proposal point, recent messages, mode).
+b) Define TypeScript types for AI responses (agent id/name, message text, timestamps, round metadata, provider info).
+c) Define error shapes and retry/timeout policy requirements.
+d) Specify any required constraints (length limits, formatting rules) to support UI rendering.
+
+**Acceptance Criteria:**
+1) A single TS interface exists for “generate AI messages” used by all providers.
+2) Output schema includes all metadata needed by UI and history storage.
+
+**Completion Criteria:**
+1) Schema is referenced by the OpenAI and Gemini provider implementations.
+
+---
+
+## ZD-180b: Implement OpenAI GPT-4o provider in TypeScript
+
+**Overview:**
+Add a production-ready OpenAI provider that implements the unified interface for AI assembly generation.
+
+**Goal:**
+Generate AI assembly messages using GPT-4o with the standardized schema.
+
+**Description:**
+a) Implement an OpenAI provider module that conforms to the unified interface.
+b) Add env-based configuration for model selection and API key.
+c) Ensure outputs map into the standard response schema (no provider-specific leakage).
+d) Add minimal logging/metrics hooks for debugging failures.
+
+**Acceptance Criteria:**
+1) OpenAI provider generates valid messages for each round and returns the standard schema.
+2) Missing/invalid config returns a clear, safe error.
+
+**Completion Criteria:**
+1) Manual verification shows AI generation works in at least two rounds using OpenAI.
+
+---
+
+## ZD-180c: Add provider switch variable (OpenAI vs Gemini) without moving Gemini code
+
+**Overview:**
+Enable switching the active AI provider by changing a single variable, keeping Gemini code in place.
+
+**Goal:**
+Switch providers without modifying UI code or multiple call sites.
+
+**Description:**
+a) Add one config variable (e.g., `LLM_PROVIDER=openai|gemini`) read by the AI server layer.
+b) Route requests to the correct provider adapter based on the variable.
+c) Keep Gemini script untouched and wrap it only via a thin adapter if required.
+
+**Acceptance Criteria:**
+1) Changing only `LLM_PROVIDER` switches the running provider.
+2) No additional UI changes are required when switching providers.
+
+**Completion Criteria:**
+1) Both providers are verified to return the same response schema.
+
+---
+
+## ZD-180d: Add reliability layer for AI calls (timeouts, retries, consistent errors)
+
+**Overview:**
+Improve the robustness of AI calls to prevent UI hangs and provide consistent failure handling.
+
+**Goal:**
+Make AI assembly resilient to transient failures while staying predictable for the UI.
+
+**Description:**
+a) Add request timeouts and bounded retries where appropriate.
+b) Normalize provider errors into a single error response shape.
+c) Ensure partial failures are handled safely (e.g., some AI agents fail but UI still works).
+
+**Acceptance Criteria:**
+1) AI endpoints time out safely and return consistent errors.
+2) Transient failures can recover without user-facing crashes.
+
+**Completion Criteria:**
+1) Manual testing confirms UI remains stable under simulated AI failures.
+
+---
+
+## ZD-181: Epic — Documents upload (Round 7) + RAG using Supabase (pgvector) + LangChain.js
+
+**Overview:**
+Enable document uploads from the last round input bar and use those documents for retrieval-augmented generation (RAG). Store embeddings in Supabase Postgres with `pgvector` and implement ingestion/retrieval via LangChain.js `SupabaseVectorStore`.
+
+**Goal:**
+Allow participants to ground final-round discussion with uploaded documents that can be searched and injected into AI prompts.
+
+**Description:**
+a) Activate the existing “add documents” UI button (from ZD-161) in the last round input bar.
+b) Persist uploaded documents and derived chunks/embeddings in Supabase using `pgvector`.
+c) Implement RAG ingestion (extract text → chunk → embed → store) in TypeScript.
+d) Implement RAG retrieval using LangChain.js `SupabaseVectorStore` with metadata filters (proposal/round).
+e) Inject retrieved context into AI generation in a safe, token-bounded format with citations/metadata.
+
+**Acceptance Criteria:**
+1) Users can upload documents in the last round and see them attached to the proposal/round.
+2) Embeddings are stored and searchable via Supabase `pgvector`.
+3) AI calls can retrieve relevant chunks and use them as context in the final round.
+
+**Completion Criteria:**
+1) End-to-end upload → ingest → retrieve → AI prompt injection is manually verified.
+2) Retrieval is correctly scoped (no cross-proposal leakage).
+
+---
+
+## ZD-181a: Wire “add documents” button (Round 7) to real upload flow
+
+**Overview:**
+Turn the existing Round 7 “add documents” UI into a functional upload feature with clear UX states.
+
+**Goal:**
+Allow a user to attach one or more documents to a proposal during the final round.
+
+**Description:**
+a) Implement file selection and upload initiation from the existing button.
+b) Add upload progress/success/error states.
+c) Display an attachments list (name, size, status) associated to the current proposal/round.
+
+**Acceptance Criteria:**
+1) Upload works from the Round 7 input bar and shows clear success/failure feedback.
+2) Uploaded files appear in an attachments list tied to the active proposal/round.
+
+**Completion Criteria:**
+1) Manual verification covers multiple files and failure cases.
+
+---
+
+## ZD-181b: Spike — Define Supabase RAG schema + migrations (documents, chunks, embeddings with pgvector)
+
+**Overview:**
+Define the Supabase Postgres schema needed for RAG storage and retrieval using `pgvector`.
+
+**Goal:**
+Create a clear DB foundation for documents, chunks, embeddings, and metadata filtering.
+
+**Description:**
+a) Define tables for documents and document chunks (text, metadata, proposal/round scope).
+b) Add embedding vector column(s) using `pgvector` and required indexes for similarity search.
+c) Define row-level security (RLS) expectations and access patterns for reads/writes.
+
+**Acceptance Criteria:**
+1) Schema supports storing documents, chunks, and embeddings with proposal/round metadata.
+2) Schema supports similarity search with indexes appropriate for `pgvector`.
+
+**Completion Criteria:**
+1) Migrations are ready to apply in Supabase.
+
+---
+
+## ZD-181c: Implement ingestion pipeline in TypeScript (extract → chunk → embed → store)
+
+**Overview:**
+Implement the ingestion pipeline that turns uploaded documents into searchable embeddings stored in Supabase.
+
+**Goal:**
+Prepare uploaded documents for retrieval by chunking and embedding them.
+
+**Description:**
+a) Extract text from supported document types (initially limit to safe types like `.txt`/`.md`/`.pdf` if applicable).
+b) Chunk text with deterministic chunk size/overlap.
+c) Generate embeddings (e.g., OpenAI embeddings) and store them with chunk metadata in Supabase.
+d) Track ingestion status per document (pending, indexed, failed).
+
+**Acceptance Criteria:**
+1) Uploading a document results in stored chunks with embeddings in Supabase.
+2) Ingestion status is visible for troubleshooting.
+
+**Completion Criteria:**
+1) Manual verification confirms at least one document becomes retrievable via similarity search.
+
+---
+
+## ZD-181d: Implement retrieval via LangChain.js `SupabaseVectorStore` (top-k + metadata filters)
+
+**Overview:**
+Implement retrieval using LangChain.js to return the most relevant chunks for a user/AI query.
+
+**Goal:**
+Retrieve high-signal context scoped to the active proposal/round.
+
+**Description:**
+a) Implement a retriever using `SupabaseVectorStore` from `@langchain/community`.
+b) Apply metadata filters so results are limited to the active proposal (and round if required).
+c) Return chunks with citations (doc id/name, chunk id, score).
+
+**Acceptance Criteria:**
+1) Retrieval returns top-k relevant chunks for a query.
+2) Retrieval is correctly scoped to the proposal/round and does not leak other proposals’ docs.
+
+**Completion Criteria:**
+1) Manual testing confirms retrieved chunks match uploaded content.
+
+---
+
+## ZD-181e: Integrate RAG context into AI prompting (Round 7)
+
+**Overview:**
+Inject retrieved document context into AI prompts in a structured, token-bounded way.
+
+**Goal:**
+Improve AI responses by grounding them in participant-provided documents.
+
+**Description:**
+a) Fetch retrieved chunks for the current user query or round context.
+b) Add context to AI prompts with clear separators and citations.
+c) Enforce a token/length budget for injected context.
+
+**Acceptance Criteria:**
+1) AI responses can reference uploaded documents using retrieved chunks.
+2) Context injection respects a fixed token/length budget.
+
+**Completion Criteria:**
+1) Manual verification shows AI uses RAG context without breaking UI or exceeding limits.
+
+---
+
+## ZD-181f: Add access control + scoping rules for documents and retrieval
+
+**Overview:**
+Prevent cross-proposal data leakage by enforcing strict scoping for document storage and retrieval.
+
+**Goal:**
+Ensure documents and embeddings are only accessible within the correct proposal context.
+
+**Description:**
+a) Enforce proposal/round scoping in DB queries and retriever filters.
+b) Implement/validate Supabase RLS policies if used by the project.
+c) Define behavior for public vs private proposals (if applicable).
+
+**Acceptance Criteria:**
+1) A user cannot retrieve chunks from other proposals.
+2) Document reads/writes follow the project’s access rules.
+
+**Completion Criteria:**
+1) Manual verification confirms no cross-proposal retrieval is possible.
+
+---
+
+## ZD-181g: Document lifecycle and UX hygiene (limits, delete, reindex, failure states)
+
+**Overview:**
+Add the operational features needed to keep document upload and RAG stable over time.
+
+**Goal:**
+Make document uploads safe, manageable, and debuggable.
+
+**Description:**
+a) Add file size/type limits and friendly error messages.
+b) Add delete document (and cascade delete chunks/embeddings).
+c) Add reindex/retry for failed ingestions.
+
+**Acceptance Criteria:**
+1) Unsupported files are rejected with clear messaging.
+2) Deleting a document removes its chunks/embeddings from retrieval results.
+
+**Completion Criteria:**
+1) Manual verification covers upload limits and delete/reindex flows.
+
+---
+
+## ZD-182: Epic — Add per-round AI assistant button (one-sentence question, max 3 per round)
+
+**Overview:**
+Add an AI assistant button near the submit button to help the user think about the current proposal point in each round. The assistant returns exactly one sentence question and is limited to a maximum of 3 questions per round, with the button text showing how many are left.
+
+**Goal:**
+Help users reflect on the proposal point without generating their message, and prevent spam by limiting prompts per round.
+
+**Description:**
+a) Add a UI button near the submit button to request an “AI question”.
+b) Enforce “one sentence question only” output.
+c) Enforce per-round limit: max 3 AI questions per round per user/session.
+d) Update button label to indicate remaining questions (e.g., “AI question (2 left)”).
+e) Disable/hide the button when no questions remain, and reset counts when the round changes.
+
+**Acceptance Criteria:**
+1) Button is available near submit during rounds with discussion input.
+2) Each click returns exactly one sentence question relevant to the current round’s proposal point.
+3) The user can request at most 3 questions per round; after that the control is disabled/hidden.
+4) Button text always indicates remaining questions for the current round.
+
+**Completion Criteria:**
+1) Limit logic is verified by requesting 3 questions, then confirming the 4th is blocked.
+2) Round change resets the remaining questions counter.
+
+---
+
+## ZD-182a: Implement assistant button UI with remaining-questions label and per-round counter
+
+**Overview:**
+Implement the UI behavior for the assistant button, including remaining questions display and per-round limits.
+
+**Goal:**
+Make the assistant interaction clear and self-limiting in the UI.
+
+**Description:**
+a) Add the assistant button near submit and render remaining count in the label.
+b) Track per-round usage count and remaining questions (max 3).
+c) Disable/hide the button when remaining reaches 0.
+d) Reset count when the round changes.
+
+**Acceptance Criteria:**
+1) Button label updates after each use to reflect remaining questions.
+2) Button disables/hides at 0 remaining and resets on round change.
+
+**Completion Criteria:**
+1) Manual verification confirms the per-round counter behaves correctly.
+
+---
+
+## ZD-182b: Create assistant API endpoint (one-sentence question only) with per-round limit enforcement
+
+**Overview:**
+Implement the server endpoint that returns a single-sentence question and enforces the per-round maximum.
+
+**Goal:**
+Provide safe, consistent assistant questions and enforce limits server-side.
+
+**Description:**
+a) Create/extend API endpoint to generate one-sentence questions based on proposal point + round context.
+b) Enforce output constraint (exactly one sentence; trim and validate).
+c) Enforce max 3 questions per round (server-side), returning a clear “limit reached” response.
+d) Keep the response shape stable for UI consumption.
+
+**Acceptance Criteria:**
+1) Endpoint returns exactly one sentence question per request.
+2) 4th request in the same round returns a limit-reached response and does not generate a new question.
+
+**Completion Criteria:**
+1) Manual verification confirms both the one-sentence constraint and the per-round limit.
+
+---
+
+## ZD-182c: Make assistant round-aware and optionally RAG-aware (still one sentence)
+
+**Overview:**
+Improve relevance of the assistant question by incorporating round context and (optionally) retrieved document chunks when available, while still returning only one sentence.
+
+**Goal:**
+Generate higher-quality, grounded questions without changing the one-sentence constraint.
+
+**Description:**
+a) Include round number, proposal point, and recent user/AI messages as context.
+b) Optionally fetch RAG context (from ZD-181d) for the same proposal/round and use it as supporting context.
+c) Ensure the final output is still exactly one sentence question.
+
+**Acceptance Criteria:**
+1) Questions are clearly related to the current round’s proposal point.
+2) Output remains one sentence even when RAG context exists.
+
+**Completion Criteria:**
+1) Manual verification confirms improved relevance without breaking constraints.
