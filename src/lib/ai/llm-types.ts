@@ -8,7 +8,7 @@ export const AI_AGENT_ROLES = [
 ] as const;
 
 export type AiAgentRole = (typeof AI_AGENT_ROLES)[number];
-export type AiProvider = 'gemini' | 'openai';
+export type AiProvider = 'gemini' | 'openai' | 'iaedu';
 
 export interface AiChatMessage {
 	content: string;
