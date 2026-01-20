@@ -6,7 +6,7 @@ import {
 	type AiGenerateRequest,
 	type AiGenerateResult,
 	type AiGenerateSuccess
-} from '@/lib/ai/llm-types';
+} from '../llm-types';
 
 const DEFAULT_MODEL = OPENAI_MODEL || 'gpt-4o';
 const OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
