@@ -7,7 +7,6 @@
 	import CharacterCard from './character-card.svelte';
 	import { m } from '@src/paraglide/messages';
 	import { getLocale } from '@src/paraglide/runtime.js';
-	import { CARDS } from '../data/cards';
 	import { ROUNDS } from '../data/rounds';
 	import { onMount } from 'svelte';
 	import paperSound from '@/sounds/rustling-paper.mp3';
@@ -17,7 +16,6 @@
 	import PostStory from './post-story-icon.svelte';
 	import { getCharacterCategory, type Card as CardData, type Character } from '@src/lib/types';
 	import SpeciesInfoDialog from './species-info-dialog.svelte';
-	import LandmarkInfoDialog from './landmark-info-dialog.svelte';
 	import ProposalDialog from '@/components/proposal-dialog.svelte';
 
 	let audio: HTMLAudioElement;
@@ -196,16 +194,6 @@
 		}
 	});
 
-	let playerCardIds = $derived.by(() => {
-		return gameState.playersCards.filter((card) => card.player_id === gameState.playerId);
-	});
-
-	let playerCards = $derived.by(() => {
-		return gameState.cards.filter((card) =>
-			playerCardIds.map((pc) => pc.card_id).includes(card.id)
-		);
-	});
-
 	let playerAnswers = $derived.by(() => {
 		return gameState.playersAnswers.filter((answer) => answer.player_id === gameState.playerId);
 	});
@@ -296,7 +284,6 @@
 	});
 
 	let showSpeciesDialog = $state(false);
-	let showLandmarkDialog = $state(false);
 	function isNonHumanCharacter(character: Character | null | undefined): boolean {
 		if (!character) return false;
 		const category = getCharacterCategory(character);
@@ -320,15 +307,9 @@
 			</div>
 		{:else}
 		{#each sortedRounds as round (round.index)}
-			{@const card_id = playerCardIds.find((card) => card.round === round.index)?.card_id}
-			{@const card = playerCards.find((card) => card.id === card_id)}
 			{@const answer = playerAnswers.find((answer) => answer.round === round.index)}
 			{@const proposalText = getProposalTextForRound(round.index)}
-			{@const displayCard = card
-				? { ...card, text: proposalText || card.text }
-				: proposalText
-					? buildProposalCard(round.index, proposalText)
-					: null}
+			{@const displayCard = proposalText ? buildProposalCard(round.index, proposalText) : null}
 			{@const isCurrentRound = round.index === currentRound}
 			<div
 				id={`round-${round.index}`}
@@ -363,14 +344,6 @@
 						</div>
 					{:else if displayCard}
 						<Card card={displayCard} />
-						{#if card?.type === 'landmark'}
-							<Button variant="outline" class="mt-2" onclick={() => (showLandmarkDialog = true)}
-								>{getLocale() === 'pt'
-									? 'Saber mais sobre este local'
-									: 'Learn more about this landmark'}</Button
-							>
-							<LandmarkInfoDialog bind:open={showLandmarkDialog} {card} />
-						{/if}
 					{:else}
 						<div
 							class="w-64 h-96 rounded-lg border-black border-dashed border-2 flex items-center justify-center"

@@ -8,7 +8,6 @@
 	import { GameState } from '@/state/game-state.svelte';
 	import type { Player, PlayerAnswer } from '@/types';
 	import { ROLES } from '@/types';
-	import { CARDS } from '../data/cards';
 	import { CHARACTER } from '../data/characters';
 	import { goto } from '$app/navigation';
 	import { Textarea } from './ui/textarea';
@@ -39,6 +38,7 @@
 	let currentPlayerId = $state(gameState?.playerId || -1);
 	let discussionMessagesRound7 = $state<Array<{ senderName: string; content: string; timestamp: Date }>>([]);
 	let vote = $state<'yes' | 'no' | 'abstain' | null>(null);
+	let proposal = $state<any>(null);
 
 	const roleSet = new Set<string>(ROLES as unknown as string[]);
 
@@ -47,6 +47,40 @@
 		if (roleSet.has(type)) return `/images/characters/badges/roles/${type}.svg`;
 		return `/images/characters/badges/${type}.svg`;
 	}
+
+	async function fetchProposal() {
+		if (!proposalId) {
+			proposal = null;
+			return;
+		}
+
+		try {
+			const response = await fetch(`/api/proposals/${proposalId}`);
+			if (!response.ok) {
+				throw new Error('Failed to fetch proposal');
+			}
+			const { proposal: proposalData } = await response.json();
+			if (proposalData?.objectives && typeof proposalData.objectives === 'string') {
+				try {
+					proposalData.objectives = JSON.parse(proposalData.objectives);
+				} catch (parseError) {
+					console.error('Error parsing objectives:', parseError);
+				}
+			}
+			proposal = proposalData;
+		} catch (error) {
+			console.error('Failed to load proposal:', error);
+			proposal = null;
+		}
+	}
+
+	$effect(() => {
+		if (open) {
+			fetchProposal();
+		} else {
+			proposal = null;
+		}
+	});
 
 	// Load discussion messages for round 7 when dialog opens
 	$effect(() => {
@@ -182,16 +216,72 @@
 	}
 
 	function getCardText(playerId: number, round: number): string {
-		if (!gameState) return '';
+		if (!gameState || !proposal) return '';
 
-		const playerCardIds = gameState.playersCards.find(
-			(card) => card.player_id === playerId && card.round === round
-		);
-		if (playerCardIds) {
-			const card = gameState.cards.find((c) => c.id === playerCardIds.card_id);
-			return card?.text ?? '';
+		const objectives = normalizeObjectives(proposal?.objectives);
+		const objectiveValues = objectives
+			.map((objective: { value?: string }) => objective.value)
+			.filter((value: string | undefined): value is string => !!value);
+		const preconditions = objectives
+			.flatMap((objective: { preconditions?: { value?: string }[] }) => objective.preconditions ?? [])
+			.map((precondition) => precondition.value)
+			.filter((value: string | undefined): value is string => !!value);
+		const indicativeSteps = objectives
+			.flatMap(
+				(objective: { preconditions?: { indicativeSteps?: { value?: string }[] }[] }) =>
+					objective.preconditions ?? []
+			)
+			.flatMap((precondition) => precondition.indicativeSteps ?? [])
+			.map((step) => step.value)
+			.filter((value: string | undefined): value is string => !!value);
+		const keyIndicators = objectives
+			.flatMap(
+				(objective: { preconditions?: { keyIndicators?: { value?: string }[] }[] }) =>
+					objective.preconditions ?? []
+			)
+			.flatMap((precondition) => precondition.keyIndicators ?? [])
+			.map((indicator) => indicator.value)
+			.filter((value: string | undefined): value is string => !!value);
+
+		const points =
+			round === 0
+				? proposal.title
+					? [proposal.title]
+					: []
+				: round === 1
+					? objectiveValues[0]
+						? [objectiveValues[0]]
+						: []
+					: round === 2
+						? objectiveValues[1]
+							? [objectiveValues[1]]
+							: []
+						: round === 3
+							? preconditions
+							: round === 4
+								? indicativeSteps
+								: round === 5
+									? keyIndicators
+									: round === 6
+										? proposal.functionalities
+											? [proposal.functionalities]
+											: []
+										: [];
+
+		return points.length > 0 ? points.join('\n') : '';
+	}
+
+	function normalizeObjectives(objectives: unknown) {
+		if (!objectives) return [];
+		if (Array.isArray(objectives)) return objectives;
+		if (typeof objectives === 'string') {
+			try {
+				return JSON.parse(objectives);
+			} catch {
+				return [];
+			}
 		}
-		return '';
+		return [];
 	}
 	function getCharacterName(characterType: string): string {
 		// Find the character card with the matching type

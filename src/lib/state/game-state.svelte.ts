@@ -361,6 +361,10 @@ export class GameState {
 	}
 
 	async playerMove() {
+		if (this.mode === 'pedagogic' || this.mode === 'decision_making') {
+			return;
+		}
+
 		const currentPlayer = this.players.find(p => p.id === this.playerId);
 		if (!currentPlayer) {
 			console.error('Current player not found');
@@ -369,13 +373,14 @@ export class GameState {
 
 		const characterCategory = getCharacterCategory(currentPlayer.character ?? 'child');
 
-		console.log("Hero step:", this.currentRound);
+		const heroStep = Math.min(Math.max(this.currentRound, 1), 6);
+		console.log("Hero step:", heroStep);
 		console.log("Character category:", characterCategory);
 
 		const { error } = await (supabase.rpc as any)('player_next_discussion', {
 			game_code: this.code,
 			game_round: this.currentRound,
-			p_hero_step: this.currentRound,
+			p_hero_step: heroStep,
 			p_character_category: characterCategory
 		});
 		if (error) {
