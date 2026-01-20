@@ -147,7 +147,6 @@
 		if (roundIndex === 4) return indicativeSteps;
 		if (roundIndex === 5) return keyIndicators;
 		if (roundIndex === 6) return proposal.functionalities ? [proposal.functionalities] : [];
-		if (roundIndex === 7) return proposal.discussion ? [proposal.discussion] : [];
 		return [];
 	}
 

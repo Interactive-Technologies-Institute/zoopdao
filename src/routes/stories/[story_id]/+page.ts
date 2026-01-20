@@ -71,7 +71,7 @@ export const load = (async ({ params }) => {
 	if (discussion.proposal_id) {
 		const { data: proposalData, error: proposalError } = await supabase
 			.from('proposals')
-			.select('id, title, objectives, functionalities, discussion')
+			.select('id, title, objectives, functionalities')
 			.eq('id', discussion.proposal_id)
 			.single();
 

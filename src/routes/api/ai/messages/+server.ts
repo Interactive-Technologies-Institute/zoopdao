@@ -144,7 +144,7 @@ async function getProposalPoint(
 ): Promise<string | null> {
 	const { data: proposal, error } = await supabaseClient
 		.from('proposals')
-		.select('title, objectives, functionalities, discussion')
+		.select('title, objectives, functionalities')
 		.eq('id', proposalId)
 		.single();
 
@@ -211,8 +211,6 @@ async function getProposalPoint(
 			return allIndicators.join('\n') || null;
 		case 6:
 			return `Functionalities: ${proposal.functionalities}`;
-		case 7:
-			return `Discussion: ${proposal.discussion}`;
 		default:
 			return null;
 	}
@@ -630,4 +628,3 @@ export const POST: RequestHandler = async ({ request }) => {
 		);
 	}
 };
-

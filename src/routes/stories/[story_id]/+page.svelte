@@ -130,7 +130,6 @@
 		if (roundNumber === 4) return indicativeSteps;
 		if (roundNumber === 5) return keyIndicators;
 		if (roundNumber === 6) return proposal.functionalities ? [proposal.functionalities] : [];
-		if (roundNumber === 7) return proposal.discussion ? [proposal.discussion] : [];
 		return [];
 	}
 
