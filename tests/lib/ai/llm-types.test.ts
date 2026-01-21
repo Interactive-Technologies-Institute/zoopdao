@@ -5,7 +5,7 @@ import {
 	AI_MAX_RETRIES,
 	AI_MESSAGE_MAX_CHARS,
 	AI_MESSAGE_MIN_CHARS
-} from './llm-types';
+} from '../../../src/lib/ai/llm-types';
 
 describe('llm-types', () => {
 	it('defines the expected agent roles', () => {
