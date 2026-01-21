@@ -1497,22 +1497,24 @@ c) Display an attachments list (name, size, status) associated to the current pr
 ## ZD-181b: Spike — Define Supabase RAG schema + migrations (documents, chunks, embeddings with pgvector)
 
 **Overview:**
-Define the Supabase Postgres schema needed for RAG storage and retrieval using `pgvector`.
+Define the Supabase Postgres schema needed for RAG storage and retrieval using `pgvector`, aligned with Supabase + LangChain docs.
 
 **Goal:**
-Create a clear DB foundation for documents, chunks, embeddings, and metadata filtering.
+Create a DB foundation compatible with `SupabaseVectorStore` (table + `match_documents` RPC).
 
 **Description:**
-a) Define tables for documents and document chunks (text, metadata, proposal/round scope).
-b) Add embedding vector column(s) using `pgvector` and required indexes for similarity search.
-c) Define row-level security (RLS) expectations and access patterns for reads/writes.
+a) Enable `vector` extension in the `extensions` schema.
+b) Create `documents` for file metadata and `document_chunks` for chunk content + embeddings.
+c) Add `embedding extensions.vector(1536)` and an `ivfflat` cosine index.
+d) Add `match_documents` RPC with `query_embedding`, `match_count`, and `filter` JSONB.
+e) Define baseline RLS expectations for documents/chunks.
 
 **Acceptance Criteria:**
-1) Schema supports storing documents, chunks, and embeddings with proposal/round metadata.
-2) Schema supports similarity search with indexes appropriate for `pgvector`.
+1) Schema supports proposal/round-scoped documents and chunk embeddings.
+2) `match_documents` returns `id, content, metadata, similarity` for LangChain.
 
 **Completion Criteria:**
-1) Migrations are ready to apply in Supabase.
+1) Migrations are ready to apply and match Supabase/LangChain naming.
 
 ---
 
@@ -1525,10 +1527,11 @@ Implement the ingestion pipeline that turns uploaded documents into searchable e
 Prepare uploaded documents for retrieval by chunking and embedding them.
 
 **Description:**
-a) Extract text from supported document types (initially limit to safe types like `.txt`/`.md`/`.pdf` if applicable).
-b) Chunk text with deterministic chunk size/overlap.
-c) Generate embeddings (e.g., OpenAI embeddings) and store them with chunk metadata in Supabase.
-d) Track ingestion status per document (pending, indexed, failed).
+a) Extract text from supported types (`.txt`/`.md`/`.pdf`).
+b) Chunk text with deterministic size/overlap.
+c) Generate embeddings and insert into `documents` + `document_chunks`.
+d) Store chunk metadata for filtering: `proposal_id`, `round`, `document_id`, `filename`, `storage_path`.
+e) Track ingestion status in `documents.metadata` (pending/indexed/failed).
 
 **Acceptance Criteria:**
 1) Uploading a document results in stored chunks with embeddings in Supabase.
@@ -1548,9 +1551,9 @@ Implement retrieval using LangChain.js to return the most relevant chunks for a 
 Retrieve high-signal context scoped to the active proposal/round.
 
 **Description:**
-a) Implement a retriever using `SupabaseVectorStore` from `@langchain/community`.
-b) Apply metadata filters so results are limited to the active proposal (and round if required).
-c) Return chunks with citations (doc id/name, chunk id, score).
+a) Use `SupabaseVectorStore` with `tableName: 'document_chunks'` and `queryName: 'match_documents'`.
+b) Apply metadata filters (`proposal_id`, `round`) via the filter JSONB.
+c) Return chunks with citations from metadata (doc id/name, chunk id, similarity).
 
 **Acceptance Criteria:**
 1) Retrieval returns top-k relevant chunks for a query.
@@ -1570,9 +1573,9 @@ Inject retrieved document context into AI prompts in a structured, token-bounded
 Improve AI responses by grounding them in participant-provided documents.
 
 **Description:**
-a) Fetch retrieved chunks for the current user query or round context.
-b) Add context to AI prompts with clear separators and citations.
-c) Enforce a token/length budget for injected context.
+a) Fetch retrieved chunks for the Round 7 query using LangChain retrieval.
+b) Add context blocks with `source` metadata (filename, chunk id, similarity).
+c) Enforce a strict token/length budget for injected context.
 
 **Acceptance Criteria:**
 1) AI responses can reference uploaded documents using retrieved chunks.
@@ -1592,8 +1595,8 @@ Prevent cross-proposal data leakage by enforcing strict scoping for document sto
 Ensure documents and embeddings are only accessible within the correct proposal context.
 
 **Description:**
-a) Enforce proposal/round scoping in DB queries and retriever filters.
-b) Implement/validate Supabase RLS policies if used by the project.
+a) Enforce proposal/round scoping in `match_documents` filter.
+b) Harden Supabase RLS for `documents` and `document_chunks`.
 c) Define behavior for public vs private proposals (if applicable).
 
 **Acceptance Criteria:**
@@ -1614,8 +1617,8 @@ Add the operational features needed to keep document upload and RAG stable over 
 Make document uploads safe, manageable, and debuggable.
 
 **Description:**
-a) Add file size/type limits and friendly error messages.
-b) Add delete document (and cascade delete chunks/embeddings).
+a) Enforce file size/type limits with friendly UI errors.
+b) Add delete document (cascade delete chunks/embeddings).
 c) Add reindex/retry for failed ingestions.
 
 **Acceptance Criteria:**
