@@ -98,7 +98,7 @@ function parseIaeduResponse(text: string): { content: string | null; error?: unk
 	return { content: finalMessage };
 }
 
-export async function generateIaeduDiscussionMessage(
+export async function generateAIMessageIaedu(
 	request: AiGenerateRequest
 ): Promise<AiGenerateResult> {
 	const apiKey = IAEDU_API_KEY;

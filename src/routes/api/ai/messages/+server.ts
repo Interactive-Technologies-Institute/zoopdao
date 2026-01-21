@@ -14,7 +14,7 @@ import {
 	type AiGenerateResult,
 	type AiGenerateSuccess
 } from '@/lib/ai/llm-types';
-import { generateIaeduDiscussionMessage } from '@/lib/ai/providers/iaedu';
+import { generateAIMessageIaedu } from '@/lib/ai/providers/iaedu';
 
 // #region agent log
 if (!GEMINI_API_KEY) {
@@ -302,7 +302,7 @@ function buildErrorResponse(params: {
 /**
  * Generate AI message using Gemini API with retry logic
  */
-async function generateAIMessage(
+async function generateAIMessageGemini(
 	agentRole: AiAgentRole,
 	round: number,
 	proposalPoint: string | null,
@@ -553,7 +553,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			let aiResult: AiGenerateResult;
 			try {
 				aiResult = await withTimeout(
-					generateIaeduDiscussionMessage({
+					generateAIMessageIaedu({
 						gameId: validated.gameId,
 						proposalId: validated.proposalId,
 						round: validated.round,
@@ -616,7 +616,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			try {
 				messageContent = await withTimeout(
-					generateAIMessage(
+					generateAIMessageGemini(
 						validated.agentRole,
 						validated.round,
 						proposalPoint || validated.proposalPoint || null,

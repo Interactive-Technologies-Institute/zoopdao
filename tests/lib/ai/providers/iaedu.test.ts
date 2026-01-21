@@ -38,10 +38,10 @@ afterEach(() => {
 	}
 });
 
-describe('generateIaeduDiscussionMessage', () => {
+describe('generateAIMessageIaedu', () => {
 	it('returns unauthorized when API key is missing', async () => {
-		const { generateIaeduDiscussionMessage } = await loadModule();
-		const result = await generateIaeduDiscussionMessage(baseRequest);
+		const { generateAIMessageIaedu } = await loadModule();
+		const result = await generateAIMessageIaedu(baseRequest);
 
 		expect(result.success).toBe(false);
 		if (!result.success) {
@@ -51,7 +51,7 @@ describe('generateIaeduDiscussionMessage', () => {
 	});
 
 	it('returns success with parsed message and user_info', async () => {
-		const { generateIaeduDiscussionMessage } = await loadModule({ apiKey: 'test-key' });
+		const { generateAIMessageIaedu } = await loadModule({ apiKey: 'test-key' });
 		let capturedUserInfo: string | null = null;
 
 		globalThis.fetch = vi.fn(async (_url, init) => {
@@ -63,7 +63,7 @@ describe('generateIaeduDiscussionMessage', () => {
 			};
 		}) as typeof fetch;
 
-		const result = await generateIaeduDiscussionMessage(baseRequest);
+		const result = await generateAIMessageIaedu(baseRequest);
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.provider).toBe('iaedu');
@@ -79,7 +79,7 @@ describe('generateIaeduDiscussionMessage', () => {
 	});
 
 	it('uses token stream output when no final message is present', async () => {
-		const { generateIaeduDiscussionMessage } = await loadModule({ apiKey: 'test-key' });
+		const { generateAIMessageIaedu } = await loadModule({ apiKey: 'test-key' });
 
 		const tokenStream = [
 			JSON.stringify({ type: 'token', content: 'Hi' }),
@@ -91,7 +91,7 @@ describe('generateIaeduDiscussionMessage', () => {
 			text: async () => tokenStream
 		})) as typeof fetch;
 
-		const result = await generateIaeduDiscussionMessage(baseRequest);
+		const result = await generateAIMessageIaedu(baseRequest);
 		expect(result.success).toBe(true);
 		if (result.success) {
 			expect(result.message.content).toBe('Hi there');
@@ -99,7 +99,7 @@ describe('generateIaeduDiscussionMessage', () => {
 	});
 
 	it('maps rate limits to a standardized error', async () => {
-		const { generateIaeduDiscussionMessage } = await loadModule({ apiKey: 'test-key' });
+		const { generateAIMessageIaedu } = await loadModule({ apiKey: 'test-key' });
 
 		globalThis.fetch = vi.fn(async () => ({
 			ok: false,
@@ -107,7 +107,7 @@ describe('generateIaeduDiscussionMessage', () => {
 			text: async () => 'rate limit'
 		})) as typeof fetch;
 
-		const result = await generateIaeduDiscussionMessage(baseRequest);
+		const result = await generateAIMessageIaedu(baseRequest);
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			expect(result.error.code).toBe('rate_limited');
