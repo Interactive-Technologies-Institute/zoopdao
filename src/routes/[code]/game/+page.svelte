@@ -667,6 +667,9 @@
 		<DiscussionInputBar
 			onSend={handleSendMessage}
 			onOpenHistory={handleOpenHistory}
+			gameId={data.game.id}
+			proposalId={data.proposalId ?? null}
+			round={gameState.currentRound}
 			disabled={!tourCompleted}
 		/>
 	{/if}
