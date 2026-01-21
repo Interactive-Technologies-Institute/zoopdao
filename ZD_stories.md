@@ -1307,23 +1307,23 @@ e) Ensure timer resets correctly when the user gets a new turn.
 
 ---
 
-## ZD-180: Epic — Finish AI assembly with switchable LLM provider (OpenAI GPT-4o + keep Gemini)
+## ZD-180: Epic — Finish AI assembly with switchable LLM provider (IAEDU GPT-4o gateway + keep Gemini)
 
 **Overview:**
-Complete the AI assembly integration using OpenAI GPT-4o in TypeScript while preserving the existing Gemini script. Add a single configuration switch so the app can change providers without refactoring call sites.
+Complete the AI assembly integration using IAEDU OpenAI GPT-4o in TypeScript while preserving the existing Gemini script. Add a single configuration switch so the app can change providers without refactoring call sites.
 
 **Goal:**
-Run the AI assembly end-to-end with a consistent API shape, and allow switching between OpenAI and Gemini via one variable.
+Run the AI assembly end-to-end with a consistent API shape, and allow switching between IAEDU OpenAI GPT-4o and Gemini via one variable.
 
 **Description:**
-a) Implement OpenAI GPT-4o integration in the current AI server/API layer in TypeScript.
+a) Implement IAEDU OpenAI GPT-4o integration in the current AI server/API layer in TypeScript.
 b) Keep the Gemini script in its current location (do not remove or rewrite it).
 c) Add one configuration variable (env or constant) to choose active provider/model.
 d) Standardize inputs/outputs so UI and storage do not depend on provider-specific fields.
 e) Add basic reliability and error handling for AI calls.
 
 **Acceptance Criteria:**
-1) AI assembly runs end-to-end using OpenAI GPT-4o.
+1) AI assembly runs end-to-end using IAEDU OpenAI GPT-4o.
 2) Gemini integration remains available and unchanged in its location.
 3) Switching a single variable changes the active provider.
 4) AI API responses follow one consistent schema regardless of provider.
@@ -1353,34 +1353,34 @@ d) Specify any required constraints (length limits, formatting rules) to support
 2) Output schema includes all metadata needed by UI and history storage.
 
 **Completion Criteria:**
-1) Schema is referenced by the OpenAI and Gemini provider implementations.
+1) Schema is referenced by the IAEDU OpenAI GPT-4o and Gemini provider implementations.
 
 ---
 
-## ZD-180b: Implement OpenAI GPT-4o provider in TypeScript
+## ZD-180b: Implement IAEDU GPT-4o gateway provider in TypeScript
 
 **Overview:**
-Add a production-ready OpenAI provider that implements the unified interface for AI assembly generation.
+Add a production-ready IAEDU OpenAI GPT-4o provider that implements the unified interface for AI assembly generation.
 
 **Goal:**
-Generate AI assembly messages using GPT-4o with the standardized schema.
+Generate AI assembly messages using IAEDU OpenAI GPT-4o with the standardized schema.
 
 **Description:**
-a) Implement an OpenAI provider module that conforms to the unified interface.
-b) Add env-based configuration for model selection and API key.
+a) Implement an IAEDU provider module that conforms to the unified interface.
+b) Add env-based configuration for endpoint, channel, thread, and API key.
 c) Ensure outputs map into the standard response schema (no provider-specific leakage).
 d) Add minimal logging/metrics hooks for debugging failures.
 
 **Acceptance Criteria:**
-1) OpenAI provider generates valid messages for each round and returns the standard schema.
+1) IAEDU OpenAI GPT-4o provider generates valid messages for each round and returns the standard schema.
 2) Missing/invalid config returns a clear, safe error.
 
 **Completion Criteria:**
-1) Manual verification shows AI generation works in at least two rounds using OpenAI.
+1) Manual verification shows AI generation works in at least two rounds using IAEDU OpenAI GPT-4o.
 
 ---
 
-## ZD-180c: Add provider switch variable (OpenAI vs Gemini) without moving Gemini code
+## ZD-180c: Add provider switch variable (IAEDU OpenAI GPT-4o vs Gemini) without moving Gemini code
 
 **Overview:**
 Enable switching the active AI provider by changing a single variable, keeping Gemini code in place.
@@ -1389,7 +1389,7 @@ Enable switching the active AI provider by changing a single variable, keeping G
 Switch providers without modifying UI code or multiple call sites.
 
 **Description:**
-a) Add one config variable (e.g., `LLM_PROVIDER=openai|gemini`) read by the AI server layer.
+a) Add one config variable (e.g., `LLM_PROVIDER=iaedu|gemini`) read by the AI server layer.
 b) Route requests to the correct provider adapter based on the variable.
 c) Keep Gemini script untouched and wrap it only via a thin adapter if required.
 
@@ -1421,6 +1421,28 @@ c) Ensure partial failures are handled safely (e.g., some AI agents fail but UI 
 
 **Completion Criteria:**
 1) Manual testing confirms UI remains stable under simulated AI failures.
+
+---
+
+## ZD-180e: Smoke test IAEDU OpenAI GPT-4o endpoint
+
+**Overview:**
+Add a minimal terminal-based smoke test to verify the IAEDU OpenAI GPT-4o gateway responds with a basic message.
+
+**Goal:**
+Validate connectivity and request format for IAEDU before relying on it in the UI.
+
+**Description:**
+a) Add a simple Node script that posts a "hello world" message to the IAEDU endpoint.
+b) Read configuration from `.env` (IAEDU endpoint, API key, channel, thread, user info).
+c) Print status code and a short response preview.
+
+**Acceptance Criteria:**
+1) Running the script succeeds when network/DNS is available.
+2) Script exits with a clear error when configuration is missing.
+
+**Completion Criteria:**
+1) Manual test is run and output logged in the terminal.
 
 ---
 
