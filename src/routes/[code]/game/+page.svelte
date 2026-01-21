@@ -454,6 +454,8 @@
 					}
 					
 					try {
+						const inputSource = message.trim() ? 'manual' : 'auto';
+
 						// Generate message in backend first (respects rate limit)
 						const response = await fetch('/api/ai/messages', {
 							method: 'POST',
@@ -465,6 +467,8 @@
 								proposalId: proposalId,
 								round: currentRound,
 								agentRole: agent.role,
+								userId: data.userId,
+								inputSource,
 								chatHistory: chatHistory,
 								latestUserMessage: message // Pass the most recent user message
 							})

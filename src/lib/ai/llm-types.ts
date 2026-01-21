@@ -8,7 +8,7 @@ export const AI_AGENT_ROLES = [
 ] as const;
 
 export type AiAgentRole = (typeof AI_AGENT_ROLES)[number];
-export type AiProvider = 'gemini' | 'openai' | 'iaedu';
+export type AiProvider = 'gemini' | 'iaedu';
 
 export interface AiChatMessage {
 	content: string;
@@ -22,6 +22,8 @@ export interface AiGenerateRequest {
 	proposalId: number | null;
 	round: number;
 	agentRole: AiAgentRole;
+	userId?: string | null;
+	inputSource?: 'manual' | 'auto';
 	proposalPoint?: string;
 	chatHistory?: AiChatMessage[];
 	latestUserMessage?: string | null;

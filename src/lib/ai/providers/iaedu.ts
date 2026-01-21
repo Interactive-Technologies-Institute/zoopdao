@@ -1,9 +1,9 @@
+import { createHash } from 'node:crypto';
 import {
 	IAEDU_API_KEY,
 	IAEDU_CHANNEL_ID,
 	IAEDU_ENDPOINT,
-	IAEDU_THREAD_ID,
-	IAEDU_USER_INFO
+	IAEDU_THREAD_ID
 } from '$env/static/private';
 import type {
 	AiAgentRole,
@@ -14,6 +14,7 @@ import type {
 
 const DEFAULT_ENDPOINT =
 	'https://api.iaedu.pt/agent-chat//api/v1/agent/cmamvd3n40000c801qeacoad2/stream';
+const USER_INFO_PREFIX = 'zoopdao';
 
 const roleSystemPrompts: Record<AiAgentRole, string> = {
 	administration: `You are an Administration role participant in the Aquário Vasco da Gama governance assembly.`,
@@ -35,29 +36,73 @@ function buildPrompt(request: AiGenerateRequest): string {
 	return promptParts.join('\n\n');
 }
 
-function parseUserInfo(): string {
-	if (!IAEDU_USER_INFO) return '{}';
-	try {
-		JSON.parse(IAEDU_USER_INFO);
-		return IAEDU_USER_INFO;
-	} catch {
-		return '{}';
-	}
+function resolveInputSource(request: AiGenerateRequest): 'manual' | 'auto' {
+	if (request.inputSource) return request.inputSource;
+	return request.latestUserMessage ? 'manual' : 'auto';
 }
 
-function buildThreadId(request: AiGenerateRequest): string {
-	if (IAEDU_THREAD_ID && IAEDU_THREAD_ID.trim().length > 0) {
-		return IAEDU_THREAD_ID;
+function buildUserInfo(request: AiGenerateRequest): string {
+	const source = resolveInputSource(request);
+	const rawUserId = request.userId?.trim() || 'anonymous';
+	const encryptedId = createHash('sha256').update(rawUserId).digest('hex');
+	const userId = `${USER_INFO_PREFIX}${encryptedId}`;
+
+	return JSON.stringify({
+		user_id: userId,
+		input_source: source
+	});
+}
+
+function parseIaeduResponse(text: string): { content: string | null; error?: unknown } {
+	const events: Array<Record<string, unknown>> = [];
+	let tokenBuffer = '';
+
+	for (const line of text.split('\n')) {
+		const trimmed = line.trim();
+		if (!trimmed) continue;
+		try {
+			const event = JSON.parse(trimmed);
+			events.push(event);
+			if (event?.type === 'token' && typeof event?.content === 'string') {
+				tokenBuffer += event.content;
+			}
+		} catch {
+			// Ignore non-JSON lines, but allow raw text fallback below.
+		}
 	}
 
-	const gamePart = request.gameId > 0 ? request.gameId : Date.now();
-	return `${gamePart}-${request.agentRole}`;
+	let finalMessage: string | null = null;
+	let errorPayload: unknown;
+
+	for (const event of events) {
+		if (event.type === 'message' && typeof event.content === 'string') {
+			finalMessage = event.content;
+		}
+		if (event.type === 'error') {
+			errorPayload = event;
+		}
+	}
+
+	if (!finalMessage && tokenBuffer.trim()) {
+		finalMessage = tokenBuffer.trim();
+	}
+
+	if (!events.length && text.trim()) {
+		finalMessage = text.trim();
+	}
+
+	if (errorPayload) {
+		return { content: null, error: errorPayload };
+	}
+
+	return { content: finalMessage };
 }
 
 export async function generateIaeduDiscussionMessage(
 	request: AiGenerateRequest
 ): Promise<AiGenerateResult> {
-	if (!IAEDU_API_KEY) {
+	const apiKey = IAEDU_API_KEY;
+	if (!apiKey) {
 		return {
 			success: false,
 			error: {
@@ -70,7 +115,7 @@ export async function generateIaeduDiscussionMessage(
 
 	const endpoint = IAEDU_ENDPOINT || DEFAULT_ENDPOINT;
 	const channelId = IAEDU_CHANNEL_ID || '';
-	const threadId = buildThreadId(request);
+	const threadId = IAEDU_THREAD_ID || '';
 
 	if (!channelId) {
 		return {
@@ -83,18 +128,30 @@ export async function generateIaeduDiscussionMessage(
 		};
 	}
 
+	if (!threadId) {
+		return {
+			success: false,
+			error: {
+				code: 'invalid_request',
+				message: 'IAEDU thread id is not configured.',
+				provider: 'iaedu'
+			}
+		};
+	}
+
 	const formData = new FormData();
 	formData.append('channel_id', channelId);
 	formData.append('thread_id', threadId);
-	formData.append('user_info', parseUserInfo());
+	formData.append('user_info', buildUserInfo(request));
 	formData.append('message', buildPrompt(request));
 
 	try {
 		const response = await fetch(endpoint, {
 			method: 'POST',
 			headers: {
-				'x-api-key': IAEDU_API_KEY
+				'x-api-key': apiKey
 			},
+			// Let fetch set multipart boundaries when using FormData.
 			body: formData
 		});
 
@@ -111,7 +168,20 @@ export async function generateIaeduDiscussionMessage(
 			};
 		}
 
-		const content = (await response.text()).trim();
+		const rawText = await response.text();
+		const { content, error } = parseIaeduResponse(rawText);
+
+		if (error) {
+			return {
+				success: false,
+				error: {
+					code: 'provider_error',
+					message: 'IAEDU returned an error response.',
+					details: JSON.stringify(error),
+					provider: 'iaedu'
+				}
+			};
+		}
 
 		if (!content) {
 			return {

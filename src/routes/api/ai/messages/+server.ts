@@ -14,9 +14,7 @@ import {
 	type AiGenerateResult,
 	type AiGenerateSuccess
 } from '@/lib/ai/llm-types';
-import { generateOpenAiDiscussionMessage } from '@/lib/ai/providers/openai';
 import { generateIaeduDiscussionMessage } from '@/lib/ai/providers/iaedu';
-import { LLM_PROVIDER } from '$env/static/private';
 
 // #region agent log
 if (!GEMINI_API_KEY) {
@@ -25,7 +23,8 @@ if (!GEMINI_API_KEY) {
 // #endregion
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-const ACTIVE_PROVIDER = (LLM_PROVIDER ?? 'gemini').toLowerCase();
+// Configure the active provider in code instead of relying on .env values.
+const ACTIVE_PROVIDER: 'gemini' | 'iaedu' = 'iaedu';
 
 // Rate limiting: 5 requests per minute
 const RATE_LIMIT_REQUESTS = 5;
@@ -133,6 +132,8 @@ const generateMessageSchema = z.object({
 	proposalId: z.number().int().positive().nullable(),
 	round: z.number().int().min(0).max(7),
 	agentRole: z.enum(AI_AGENT_ROLES),
+	userId: z.string().min(1).optional(),
+	inputSource: z.enum(['manual', 'auto']).optional(),
 	proposalPoint: z.string().optional(), // Current round's proposal section content
 	chatHistory: z.array(z.object({
 		content: z.string(),
@@ -284,7 +285,7 @@ function buildErrorResponse(params: {
 	message: string;
 	details?: string;
 	retryAfterSeconds?: number;
-	provider?: 'gemini' | 'openai';
+	provider?: 'gemini' | 'iaedu';
 }): AiGenerateResult {
 	return {
 		success: false,
@@ -497,6 +498,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		// #endregion
 
 	const validated = generateMessageSchema.parse(body);
+	const inputSource = validated.inputSource ?? (validated.latestUserMessage ? 'manual' : 'auto');
 		
 		// #region agent log
 		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:270',message:'Request validated',data:{validated},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
@@ -544,53 +546,10 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		let messageContent: string;
-		let provider: 'gemini' | 'openai' | 'iaedu' = 'gemini';
+		let provider: 'gemini' | 'iaedu' = 'gemini';
 		let model = 'gemini-2.5-flash';
 
-		if (ACTIVE_PROVIDER === 'openai') {
-			let aiResult: AiGenerateResult;
-			try {
-				aiResult = await withTimeout(
-					generateOpenAiDiscussionMessage({
-						gameId: validated.gameId,
-						proposalId: validated.proposalId,
-						round: validated.round,
-						agentRole: validated.agentRole,
-						proposalPoint: proposalPoint || validated.proposalPoint || undefined,
-						chatHistory: validated.chatHistory,
-						latestUserMessage: validated.latestUserMessage ?? null
-					}),
-					AI_DEFAULT_TIMEOUT_MS
-				);
-			} catch (error) {
-				const reason = error instanceof Error ? error.message : String(error);
-				const code = reason === 'timeout' ? 'timeout' : 'provider_error';
-				const response = buildErrorResponse({
-					code,
-					message: code === 'timeout' ? 'AI request timed out.' : 'Failed to generate AI message.',
-					details: reason,
-					provider: 'openai'
-				});
-				return json(response, { status: code === 'timeout' ? 504 : 500 });
-			}
-
-			if (!aiResult.success) {
-				const status =
-					aiResult.error.code === 'rate_limited'
-						? 429
-						: aiResult.error.code === 'unauthorized'
-							? 401
-							: aiResult.error.code === 'provider_unavailable'
-								? 503
-								: 500;
-
-				return json(aiResult, { status });
-			}
-
-			messageContent = aiResult.message.content;
-			provider = aiResult.provider;
-			model = aiResult.model;
-		} else if (ACTIVE_PROVIDER === 'iaedu') {
+		if (ACTIVE_PROVIDER === 'iaedu') {
 			let aiResult: AiGenerateResult;
 			try {
 				aiResult = await withTimeout(
@@ -599,6 +558,8 @@ export const POST: RequestHandler = async ({ request }) => {
 						proposalId: validated.proposalId,
 						round: validated.round,
 						agentRole: validated.agentRole,
+						userId: validated.userId ?? null,
+						inputSource,
 						proposalPoint: proposalPoint || validated.proposalPoint || undefined,
 						chatHistory: validated.chatHistory,
 						latestUserMessage: validated.latestUserMessage ?? null
@@ -821,7 +782,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						? 'Rate limit exceeded. Please wait before retrying.'
 						: 'Failed to generate message.',
 			details: errorMessage,
-			provider: ACTIVE_PROVIDER === 'openai' ? 'openai' : 'gemini'
+			provider: ACTIVE_PROVIDER
 		});
 
 		return json(response, { status: statusCode });
