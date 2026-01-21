@@ -670,6 +670,7 @@
 			gameId={data.game.id}
 			proposalId={data.proposalId ?? null}
 			round={gameState.currentRound}
+			userId={data.userId}
 			disabled={!tourCompleted}
 		/>
 	{/if}

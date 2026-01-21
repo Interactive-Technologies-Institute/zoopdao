@@ -9,6 +9,7 @@
 		gameId: number;
 		proposalId: number | null;
 		round: number;
+		userId?: string | null;
 		disabled?: boolean;
 	}
 
@@ -18,6 +19,7 @@
 		gameId,
 		proposalId,
 		round,
+		userId = null,
 		disabled = false
 	}: DiscussionInputBarProps = $props();
 
@@ -104,6 +106,28 @@
 						? { ...attachment, status: 'uploaded' }
 						: attachment
 				);
+
+				const ingestResponse = await fetch('/api/documents/ingest', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						proposalId,
+						round,
+						userId,
+						files: [
+							{
+								storagePath,
+								filename: file.name,
+								mimeType: file.type,
+								sizeBytes: file.size
+							}
+						]
+					})
+				});
+
+				if (!ingestResponse.ok) {
+					uploadError = m.upload_failed();
+				}
 			}
 		}
 

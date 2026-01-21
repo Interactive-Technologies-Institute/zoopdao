@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS public.document_chunks (
 	round INT NOT NULL CHECK (round >= 0 AND round <= 7),
 	chunk_index INT NOT NULL,
 	content TEXT NOT NULL CHECK (char_length(content) > 0),
-	embedding extensions.vector(1536),
+	embedding extensions.vector(1024),
 	metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
 	CONSTRAINT document_chunks_unique_idx UNIQUE (document_id, chunk_index)
 );
@@ -45,7 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_document_chunks_embedding
 
 -- LangChain-compatible similarity search function.
 CREATE OR REPLACE FUNCTION public.match_documents(
-	query_embedding extensions.vector(1536),
+	query_embedding extensions.vector(1024),
 	match_count INT DEFAULT NULL,
 	filter JSONB DEFAULT '{}'::jsonb
 ) RETURNS TABLE (

@@ -1446,18 +1446,18 @@ c) Print status code and a short response preview.
 
 ---
 
-## ZD-181: Epic — Documents upload (Round 7) + RAG using Supabase (pgvector) + LangChain.js
+## ZD-181: Epic — Documents upload (Round 7) + RAG using Supabase (pgvector) + LangChain.js + OpenRouter (bge-m3 OpenAI-compatible)
 
 **Overview:**
-Enable document uploads from the last round input bar and use those documents for retrieval-augmented generation (RAG). Store embeddings in Supabase Postgres with `pgvector` and implement ingestion/retrieval via LangChain.js `SupabaseVectorStore`.
+Enable document uploads from the last round input bar and use those documents for retrieval-augmented generation (RAG). Store embeddings in Supabase Postgres with `pgvector`, implement ingestion/retrieval via LangChain.js, and use OpenRouter (bge-m3, OpenAI-compatible) for embeddings.
 
 **Goal:**
 Allow participants to ground final-round discussion with uploaded documents that can be searched and injected into AI prompts.
 
 **Description:**
 a) Activate the existing “add documents” UI button (from ZD-161) in the last round input bar.
-b) Persist uploaded documents and derived chunks/embeddings in Supabase using `pgvector`.
-c) Implement RAG ingestion (extract text → chunk → embed → store) in TypeScript.
+b) Persist uploaded documents and derived chunks/embeddings in Supabase using `pgvector` (1024-dim for bge-m3).
+c) Implement RAG ingestion (extract text → chunk → embed → store) in TypeScript using OpenRouter embeddings.
 d) Implement RAG retrieval using LangChain.js `SupabaseVectorStore` with metadata filters (proposal/round).
 e) Inject retrieved context into AI generation in a safe, token-bounded format with citations/metadata.
 
@@ -1505,7 +1505,7 @@ Create a DB foundation compatible with `SupabaseVectorStore` (table + `match_doc
 **Description:**
 a) Enable `vector` extension in the `extensions` schema.
 b) Create `documents` for file metadata and `document_chunks` for chunk content + embeddings.
-c) Add `embedding extensions.vector(1536)` and an `ivfflat` cosine index.
+c) Add `embedding extensions.vector(1024)` (bge-m3) and an `ivfflat` cosine index.
 d) Add `match_documents` RPC with `query_embedding`, `match_count`, and `filter` JSONB.
 e) Define baseline RLS expectations for documents/chunks.
 
@@ -1518,7 +1518,7 @@ e) Define baseline RLS expectations for documents/chunks.
 
 ---
 
-## ZD-181c: Implement ingestion pipeline in TypeScript (extract → chunk → embed → store)
+## ZD-181c: Implement LangChain ingestion pipeline (load → split → embed → store)
 
 **Overview:**
 Implement the ingestion pipeline that turns uploaded documents into searchable embeddings stored in Supabase.
@@ -1527,22 +1527,23 @@ Implement the ingestion pipeline that turns uploaded documents into searchable e
 Prepare uploaded documents for retrieval by chunking and embedding them.
 
 **Description:**
-a) Extract text from supported types (`.txt`/`.md`/`.pdf`).
-b) Chunk text with deterministic size/overlap.
-c) Generate embeddings and insert into `documents` + `document_chunks`.
-d) Store chunk metadata for filtering: `proposal_id`, `round`, `document_id`, `filename`, `storage_path`.
-e) Track ingestion status in `documents.metadata` (pending/indexed/failed).
+a) Define the supported file types for ingestion (expected: `.txt`, `.md`, `.pdf`, `.xlsx`, `.docx`, `.pptx`).
+b) Use LangChain loaders to extract text for supported types (where available).
+c) Chunk text with `RecursiveCharacterTextSplitter` (deterministic size/overlap).
+d) Build LangChain `Document` objects (pageContent + metadata) with `proposal_id`, `round`, `document_id`, `filename`, `storage_path`.
+e) Embed with OpenRouter (bge-m3) and insert into `document_chunks` directly (schema matches docs: `content`, `metadata`, `embedding`).
+f) Track ingestion status in `documents.metadata` (pending/indexed/failed).
 
 **Acceptance Criteria:**
 1) Uploading a document results in stored chunks with embeddings in Supabase.
 2) Ingestion status is visible for troubleshooting.
 
 **Completion Criteria:**
-1) Manual verification confirms at least one document becomes retrievable via similarity search.
+1) Unit tests validate ingestion: document record, chunk inserts, embeddings call, and indexed status updates.
 
 ---
 
-## ZD-181d: Implement retrieval via LangChain.js `SupabaseVectorStore` (top-k + metadata filters)
+## ZD-181d: Implement LangChain retrieval via `SupabaseVectorStore` (top-k + metadata filters)
 
 **Overview:**
 Implement retrieval using LangChain.js to return the most relevant chunks for a user/AI query.
@@ -1552,15 +1553,16 @@ Retrieve high-signal context scoped to the active proposal/round.
 
 **Description:**
 a) Use `SupabaseVectorStore` with `tableName: 'document_chunks'` and `queryName: 'match_documents'`.
-b) Apply metadata filters (`proposal_id`, `round`) via the filter JSONB.
-c) Return chunks with citations from metadata (doc id/name, chunk id, similarity).
+b) Apply metadata filters (`proposal_id`, `round`) via the filter JSONB (`metadata @> filter`).
+c) Use `SupabaseFilterRPCCall` when advanced filters are needed.
+d) Return chunks with citations from metadata (doc id/name, chunk id, similarity).
 
 **Acceptance Criteria:**
 1) Retrieval returns top-k relevant chunks for a query.
 2) Retrieval is correctly scoped to the proposal/round and does not leak other proposals’ docs.
 
 **Completion Criteria:**
-1) Manual testing confirms retrieved chunks match uploaded content.
+1) Unit tests confirm retrieved chunks match uploaded content and scope (proposal/round).
 
 ---
 
@@ -1575,14 +1577,14 @@ Improve AI responses by grounding them in participant-provided documents.
 **Description:**
 a) Fetch retrieved chunks for the Round 7 query using LangChain retrieval.
 b) Add context blocks with `source` metadata (filename, chunk id, similarity).
-c) Enforce a strict token/length budget for injected context.
+c) Enforce a strict token/length budget for injected context and strip low-signal chunks.
 
 **Acceptance Criteria:**
 1) AI responses can reference uploaded documents using retrieved chunks.
 2) Context injection respects a fixed token/length budget.
 
 **Completion Criteria:**
-1) Manual verification shows AI uses RAG context without breaking UI or exceeding limits.
+1) Unit tests confirm AI prompt payload includes bounded RAG context and metadata.
 
 ---
 
@@ -1596,6 +1598,7 @@ Ensure documents and embeddings are only accessible within the correct proposal 
 
 **Description:**
 a) Enforce proposal/round scoping in `match_documents` filter.
+c) Ensure storage bucket policies match DB scoping rules.
 b) Harden Supabase RLS for `documents` and `document_chunks`.
 c) Define behavior for public vs private proposals (if applicable).
 
@@ -1604,7 +1607,7 @@ c) Define behavior for public vs private proposals (if applicable).
 2) Document reads/writes follow the project’s access rules.
 
 **Completion Criteria:**
-1) Manual verification confirms no cross-proposal retrieval is possible.
+1) Unit tests confirm no cross-proposal retrieval is possible.
 
 ---
 
@@ -1618,15 +1621,17 @@ Make document uploads safe, manageable, and debuggable.
 
 **Description:**
 a) Enforce file size/type limits with friendly UI errors.
-b) Add delete document (cascade delete chunks/embeddings).
-c) Add reindex/retry for failed ingestions.
+b) Decide soft delete vs hard delete and document the choice.
+c) Add delete document (cascade delete chunks/embeddings).
+d) Add reindex/retry for failed ingestions.
+e) Add limits per proposal/round to prevent runaway storage costs.
 
 **Acceptance Criteria:**
 1) Unsupported files are rejected with clear messaging.
 2) Deleting a document removes its chunks/embeddings from retrieval results.
 
 **Completion Criteria:**
-1) Manual verification covers upload limits and delete/reindex flows.
+1) Unit tests cover upload limits and delete/reindex flows.
 
 ---
 
