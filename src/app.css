@@ -10,12 +10,15 @@ body {
 
 @supports (font-variation-settings: normal) {
 	:root {
-		font-family: RobotoSlabVariable, serif;
+		font-family: var(--zd-font-body, RobotoSlabVariable), serif;
 	}
 }
 
 :root {
-	font-family: RobotoSlabVariable, serif;
+	font-family: var(--zd-font-body, RobotoSlabVariable), serif;
+	--zd-font-body: RobotoSlabVariable;
+	--zd-font-heading: RobotoSlabVariable;
+	--zd-font-sans: Barlow;
 	/* AVG palette (assembly_table.svg) */
 	--zd-bg: 200 251 255;
 	--zd-bg-deep: 15 23 23;
@@ -63,6 +66,37 @@ body {
 	--zd-tertiary-active: 0 0 0;
 	--zd-accent: 60 160 60;
 	--zd-focus: 60 165 230;
+}
+
+:root[data-font='arial'] {
+	--zd-font-body: Arial;
+	--zd-font-heading: Arial;
+	--zd-font-sans: Arial;
+}
+
+@layer base {
+	body {
+		@apply text-text bg-background;
+		font-family: var(--zd-font-body, RobotoSlabVariable);
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply text-text;
+		font-family: var(--zd-font-heading, RobotoSlabVariable);
+	}
+
+	label {
+		@apply text-text;
+	}
+
+	small {
+		@apply text-text-muted;
+	}
 }
 
 @font-face {

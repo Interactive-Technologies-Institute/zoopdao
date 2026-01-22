@@ -50,8 +50,8 @@ export default {
 				glow: withAlpha('--zd-focus')
 			},
 			fontFamily: {
-				sans: ['Barlow', 'sans-serif'],
-				serif: ['RobotoSlabVariable', 'serif']
+				sans: ['var(--zd-font-sans)', 'Barlow', 'sans-serif'],
+				serif: ['var(--zd-font-heading)', 'RobotoSlabVariable', 'serif']
 			},
 			animation: {
 				'caret-blink': 'caret-blink 1.25s ease-out infinite',
