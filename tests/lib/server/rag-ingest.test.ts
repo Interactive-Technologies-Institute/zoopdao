@@ -27,17 +27,21 @@ vi.mock('@langchain/textsplitters', () => ({
 }));
 
 const embedDocumentsMock = vi.fn(async (texts: string[]) =>
-	texts.map(() => Array.from({ length: 1536 }, () => 0.01))
+	texts.map(() => Array.from({ length: 1024 }, () => 0.01))
 );
 
-vi.mock('@langchain/openai', () => ({
-	OpenAIEmbeddings: class {
-		embedDocuments = embedDocumentsMock;
-	}
+vi.mock('../../../src/lib/server/openrouter-embeddings', () => ({
+	createOpenRouterEmbeddings: () => ({
+		embedDocuments: embedDocumentsMock
+	})
 }));
 
 const fromInsertMock = vi.fn(async () => ({
 	data: { id: 123 },
+	error: null
+}));
+const fromCountMock = vi.fn(async () => ({
+	count: 0,
 	error: null
 }));
 const fromUpdateMock = vi.fn(async () => ({
@@ -50,6 +54,11 @@ const fromChunksInsertMock = vi.fn(async () => ({
 const fromMock = vi.fn((table: string) => {
 	if (table === 'documents') {
 		return {
+			select: () => ({
+				eq: () => ({
+					eq: fromCountMock
+				})
+			}),
 			insert: () => ({
 				select: () => ({
 					single: fromInsertMock
@@ -125,5 +134,25 @@ describe('ingestDocuments', () => {
 		expect(fromChunksInsertMock).toHaveBeenCalled();
 		expect(fromUpdateMock).toHaveBeenCalled();
 		expect(embedDocumentsMock).toHaveBeenCalled();
+	});
+
+	it('rejects uploads that exceed the per-round limit', async () => {
+		fromCountMock.mockResolvedValueOnce({ count: 5, error: null });
+		const { ingestDocuments } = await import('../../../src/lib/server/rag-ingest');
+		const payload: IngestRequestPayload = {
+			proposalId: 9,
+			round: 7,
+			userId: 'user-1',
+			files: [
+				{
+					storagePath: 'proposal-9/round-7/test.pdf',
+					filename: 'test.pdf',
+					mimeType: 'application/pdf',
+					sizeBytes: 12
+				}
+			]
+		};
+
+		await expect(ingestDocuments(payload)).rejects.toThrow('upload-limit-exceeded');
 	});
 });

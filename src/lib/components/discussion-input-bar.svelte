@@ -2,6 +2,11 @@
 	import { FileText, MessageSquare, Send } from 'lucide-svelte';
 	import { m } from '@src/paraglide/messages';
 	import { supabase } from '@/supabase';
+	import {
+		RAG_ALLOWED_EXTENSIONS,
+		RAG_MAX_FILE_SIZE_BYTES,
+		RAG_MAX_FILES_PER_ROUND
+	} from '$lib/rag/constants';
 
 	interface DiscussionInputBarProps {
 		onSend: (message: string) => void;
@@ -25,10 +30,18 @@
 
 	let message = $state('');
 	let attachments = $state<
-		{ id: string; name: string; size: number | null; status: 'uploading' | 'uploaded' | 'error' }[]
+		{
+			id: string;
+			name: string;
+			size: number | null;
+			status: 'uploading' | 'uploaded' | 'pending' | 'indexed' | 'error';
+			storagePath: string;
+			documentId?: number | null;
+		}[]
 	>([]);
 	let uploadError = $state<string | null>(null);
 	let fileInput: HTMLInputElement | null = null;
+	let actionInProgress = $state<Record<string, 'deleting' | 'reindexing'>>({});
 
 	const DOCUMENTS_BUCKET = 'discussion-documents';
 
@@ -50,6 +63,31 @@
 		return `${mb.toFixed(1)} MB`;
 	}
 
+	function formatMaxFileSizeMb() {
+		return Math.round(RAG_MAX_FILE_SIZE_BYTES / 1024 / 1024);
+	}
+
+	function formatAttachmentStatus(status: typeof attachments[number]['status']) {
+		if (status === 'uploading') return m.uploading();
+		if (status === 'pending') return m.upload_pending();
+		if (status === 'indexed') return m.upload_indexed();
+		if (status === 'error') return m.upload_failed();
+		return '';
+	}
+
+	function mapIngestError(code: string | undefined) {
+		switch (code) {
+			case 'upload-limit-exceeded':
+				return `${m.upload_limit_exceeded()} (${RAG_MAX_FILES_PER_ROUND})`;
+			case 'unsupported-file-type':
+				return m.upload_invalid_type();
+			case 'file-too-large':
+				return `${m.upload_too_large()} (${formatMaxFileSizeMb()} MB)`;
+			default:
+				return m.upload_failed();
+		}
+	}
+
 	async function refreshAttachments() {
 		if (!proposalId || round !== 7) {
 			attachments = [];
@@ -67,24 +105,79 @@
 			return;
 		}
 
+		const { data: documentRows, error: documentsError } = await supabase
+			.from('documents')
+			.select('id, storage_path, metadata')
+			.eq('proposal_id', proposalId)
+			.eq('round', round);
+
+		if (documentsError) {
+			uploadError = documentsError.message;
+			return;
+		}
+
+		const docByPath = new Map(
+			(documentRows ?? []).map((doc) => [doc.storage_path as string, doc])
+		);
+
 		attachments =
 			data?.map((item) => ({
 				id: item.id ?? `${path}/${item.name}`,
 				name: item.name,
 				size: (item.metadata as { size?: number } | null)?.size ?? null,
-				status: 'uploaded'
+				status: (() => {
+					const storagePath = `${path}/${item.name}`;
+					const doc = docByPath.get(storagePath) as { metadata?: { status?: string } } | undefined;
+					switch (doc?.metadata?.status) {
+						case 'indexed':
+							return 'indexed';
+						case 'pending':
+							return 'pending';
+						case 'failed':
+							return 'error';
+						default:
+							return 'uploaded';
+					}
+				})(),
+				storagePath: `${path}/${item.name}`,
+				documentId: (docByPath.get(`${path}/${item.name}`) as { id?: number } | undefined)?.id
 			})) ?? [];
 	}
 
 	async function uploadFiles(files: File[]) {
-		if (!proposalId || round !== 7) return;
+		if (!proposalId || round !== 7 || !userId) return;
 		uploadError = null;
+
+		const existingCount = attachments.length;
+		if (existingCount + files.length > RAG_MAX_FILES_PER_ROUND) {
+			uploadError = `${m.upload_limit_exceeded()} (${RAG_MAX_FILES_PER_ROUND})`;
+			return;
+		}
+
+		for (const file of files) {
+			const extension = `.${file.name.split('.').pop() ?? ''}`.toLowerCase();
+			if (!RAG_ALLOWED_EXTENSIONS.includes(extension as (typeof RAG_ALLOWED_EXTENSIONS)[number])) {
+				uploadError = m.upload_invalid_type();
+				return;
+			}
+
+			if (file.size > RAG_MAX_FILE_SIZE_BYTES) {
+				uploadError = `${m.upload_too_large()} (${formatMaxFileSizeMb()} MB)`;
+				return;
+			}
+		}
 
 		const path = buildStoragePath();
 		for (const file of files) {
 			const attachmentId = `${Date.now()}-${file.name}`;
 			attachments = [
-				{ id: attachmentId, name: file.name, size: file.size, status: 'uploading' },
+				{
+					id: attachmentId,
+					name: file.name,
+					size: file.size,
+					status: 'uploading',
+					storagePath: ''
+				},
 				...attachments
 			];
 
@@ -96,14 +189,14 @@
 			if (error) {
 				attachments = attachments.map((attachment) =>
 					attachment.id === attachmentId
-						? { ...attachment, status: 'error' }
+						? { ...attachment, status: 'error', storagePath }
 						: attachment
 				);
 				uploadError = error.message;
 			} else {
 				attachments = attachments.map((attachment) =>
 					attachment.id === attachmentId
-						? { ...attachment, status: 'uploaded' }
+						? { ...attachment, status: 'uploaded', storagePath }
 						: attachment
 				);
 
@@ -125,12 +218,74 @@
 					})
 				});
 
-				if (!ingestResponse.ok) {
-					uploadError = m.upload_failed();
+				const ingestBody = await ingestResponse.json().catch(() => null);
+				const failedResult =
+					ingestBody?.results?.find?.(
+						(result: { storagePath: string; status: string; error?: string }) =>
+							result.storagePath === storagePath && result.status === 'failed'
+					) ?? null;
+
+				if (!ingestResponse.ok || ingestBody?.success === false || failedResult) {
+					const errorCode = failedResult?.error ?? ingestBody?.error;
+					uploadError = mapIngestError(errorCode);
+					attachments = attachments.map((attachment) =>
+						attachment.id === attachmentId
+							? { ...attachment, status: 'error' }
+							: attachment
+					);
 				}
 			}
 		}
 
+		await refreshAttachments();
+	}
+
+	async function handleDelete(attachment: typeof attachments[number]) {
+		if (!proposalId || !attachment.storagePath || !userId) return;
+		actionInProgress = { ...actionInProgress, [attachment.id]: 'deleting' };
+		uploadError = null;
+
+		const response = await fetch('/api/documents/delete', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				documentId: attachment.documentId ?? undefined,
+				storagePath: attachment.storagePath,
+				userId
+			})
+		});
+
+		if (!response.ok) {
+			uploadError = m.upload_delete_failed();
+		}
+
+		const next = { ...actionInProgress };
+		delete next[attachment.id];
+		actionInProgress = next;
+		await refreshAttachments();
+	}
+
+	async function handleRetry(attachment: typeof attachments[number]) {
+		if (!attachment.documentId || !userId) return;
+		actionInProgress = { ...actionInProgress, [attachment.id]: 'reindexing' };
+		uploadError = null;
+
+		const response = await fetch('/api/documents/reindex', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				documentId: attachment.documentId,
+				userId
+			})
+		});
+
+		if (!response.ok) {
+			uploadError = m.upload_reindex_failed();
+		}
+
+		const next = { ...actionInProgress };
+		delete next[attachment.id];
+		actionInProgress = next;
 		await refreshAttachments();
 	}
 
@@ -173,23 +328,43 @@
 				<div class="flex items-center justify-between">
 					<span class="font-semibold">{m.attachments()}</span>
 					{#if uploadError}
-						<span class="text-red-300">{m.upload_failed()}</span>
+						<span class="text-red-300">{uploadError}</span>
 					{/if}
 				</div>
 				{#if attachments.length > 0}
 					<ul class="mt-2 space-y-1">
 						{#each attachments as attachment}
 							<li class="flex items-center justify-between gap-2">
-								<span class="truncate">{attachment.name}</span>
-								<span class="flex-shrink-0 text-[11px] text-white/70">
-									{#if attachment.status === 'uploading'}
-										{m.uploading()}
-									{:else if attachment.status === 'error'}
-										{m.upload_failed()}
-									{:else}
-										{formatFileSize(attachment.size)}
+								<div class="min-w-0">
+									<span class="block truncate">{attachment.name}</span>
+									<span class="block text-[11px] text-white/70">
+										{formatAttachmentStatus(attachment.status) || formatFileSize(attachment.size)}
+									</span>
+								</div>
+								<div class="flex flex-shrink-0 items-center gap-2 text-[11px]">
+									{#if attachment.status === 'error' && attachment.documentId}
+										<button
+											type="button"
+											class="rounded-full border border-white/20 px-2 py-1 text-white/80 hover:text-white"
+											disabled={actionInProgress[attachment.id] === 'reindexing'}
+											onclick={() => handleRetry(attachment)}
+										>
+											{actionInProgress[attachment.id] === 'reindexing'
+												? m.upload_reindexing()
+												: m.upload_retry()}
+										</button>
 									{/if}
-								</span>
+									<button
+										type="button"
+										class="rounded-full border border-white/20 px-2 py-1 text-white/80 hover:text-white"
+										disabled={actionInProgress[attachment.id] === 'deleting'}
+										onclick={() => handleDelete(attachment)}
+									>
+										{actionInProgress[attachment.id] === 'deleting'
+											? m.upload_deleting()
+											: m.upload_delete()}
+									</button>
+								</div>
 							</li>
 						{/each}
 					</ul>
@@ -219,13 +394,19 @@
 					type="file"
 					class="hidden"
 					multiple
+					accept={RAG_ALLOWED_EXTENSIONS.join(',')}
 					onchange={handleFileSelect}
 					disabled={disabled}
 				/>
 				<button
 					type="button"
 					onclick={() => fileInput?.click()}
-					disabled={disabled || !proposalId}
+					disabled={
+						disabled ||
+						!proposalId ||
+						!userId ||
+						attachments.length >= RAG_MAX_FILES_PER_ROUND
+					}
 					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#3f3f3f] hover:bg-[#4a4a4a] transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
 					aria-label={m.add_documents()}
 					title={m.add_documents()}
