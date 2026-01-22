@@ -634,6 +634,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						query,
 						proposalId: validated.proposalId,
 						round: validated.round,
+						userId: validated.userId ?? null,
 						topK: RAG_CONTEXT_MAX_CHUNKS
 					});
 					ragContextCount = chunks.length;

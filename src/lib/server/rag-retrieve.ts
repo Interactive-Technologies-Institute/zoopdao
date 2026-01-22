@@ -7,6 +7,7 @@ export type RagRetrieveRequest = {
 	query: string;
 	proposalId: number;
 	round: number;
+	userId?: string | null;
 	topK?: number;
 };
 
@@ -27,12 +28,14 @@ export async function retrieveRagChunks({
 	query,
 	proposalId,
 	round,
+	userId,
 	topK = 6
 }: RagRetrieveRequest): Promise<RagChunkResult[]> {
 	const startedAt = Date.now();
 	console.log('[rag-retrieve] start', {
 		proposalId,
 		round,
+		userId,
 		topK,
 		queryLength: query.length
 	});
@@ -44,7 +47,11 @@ export async function retrieveRagChunks({
 		queryName: 'match_documents'
 	});
 
-	const filter = { proposal_id: proposalId, round };
+	const filter = {
+		proposal_id: proposalId,
+		round,
+		...(userId ? { user_id: userId } : {})
+	};
 	console.log('[rag-retrieve] similarity search', { filter });
 	const results = await store.similaritySearchWithScore(query, topK, filter);
 	console.log('[rag-retrieve] done', {

@@ -146,8 +146,9 @@ async function buildChunksFromBuffer(params: {
 	round: number;
 	documentId: number;
 	storagePath: string;
+	userId?: string | null;
 }): Promise<ChunkBuildResult> {
-	const { buffer, filename, proposalId, round, documentId, storagePath } = params;
+	const { buffer, filename, proposalId, round, documentId, storagePath, userId } = params;
 	const extension = extname(filename).toLowerCase();
 	const rawDocs = await loadDocumentsFromBuffer(buffer, filename, extension);
 	const splitter = new RecursiveCharacterTextSplitter({
@@ -164,6 +165,7 @@ async function buildChunksFromBuffer(params: {
 				proposal_id: proposalId,
 				round,
 				document_id: documentId,
+				user_id: userId ?? null,
 				filename,
 				storage_path: storagePath,
 				chunk_index: index
@@ -277,7 +279,8 @@ export async function ingestDocuments(payload: IngestRequestPayload): Promise<In
 				proposalId: payload.proposalId,
 				round: payload.round,
 				documentId: docRow.id,
-				storagePath: file.storagePath
+				storagePath: file.storagePath,
+				userId: payload.userId
 			});
 
 			console.log('[rag-ingest] chunks built', {
@@ -355,7 +358,8 @@ export async function reindexDocument(documentId: number) {
 			proposalId: docRow.proposal_id,
 			round: docRow.round,
 			documentId: docRow.id,
-			storagePath: docRow.storage_path
+			storagePath: docRow.storage_path,
+			userId: docRow.user_id
 		});
 
 		const { error: deleteError } = await supabaseAdmin

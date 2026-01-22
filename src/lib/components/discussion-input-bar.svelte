@@ -89,7 +89,7 @@
 	}
 
 	async function refreshAttachments() {
-		if (!proposalId || round !== 7) {
+		if (!proposalId || round !== 7 || !userId) {
 			attachments = [];
 			return;
 		}
@@ -109,7 +109,8 @@
 			.from('documents')
 			.select('id, storage_path, metadata')
 			.eq('proposal_id', proposalId)
-			.eq('round', round);
+			.eq('round', round)
+			.eq('user_id', userId);
 
 		if (documentsError) {
 			uploadError = documentsError.message;
@@ -121,7 +122,9 @@
 		);
 
 		attachments =
-			data?.map((item) => ({
+			data
+				?.filter((item) => docByPath.has(`${path}/${item.name}`))
+				.map((item) => ({
 				id: item.id ?? `${path}/${item.name}`,
 				name: item.name,
 				size: (item.metadata as { size?: number } | null)?.size ?? null,
