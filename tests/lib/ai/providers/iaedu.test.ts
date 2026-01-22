@@ -8,6 +8,7 @@ const baseRequest: AiGenerateRequest = {
 	round: 1,
 	agentRole: 'research',
 	proposalPoint: 'Test proposal point',
+	ragContext: 'RAG context chunk',
 	chatHistory: [],
 	latestUserMessage: 'Hello',
 	userId: 'user-123',
@@ -53,10 +54,12 @@ describe('generateAIMessageIaedu', () => {
 	it('returns success with parsed message and user_info', async () => {
 		const { generateAIMessageIaedu } = await loadModule({ apiKey: 'test-key' });
 		let capturedUserInfo: string | null = null;
+		let capturedMessage: string | null = null;
 
 		globalThis.fetch = vi.fn(async (_url, init) => {
 			const formData = init?.body as FormData;
 			capturedUserInfo = formData?.get('user_info') as string;
+			capturedMessage = formData?.get('message') as string;
 			return {
 				ok: true,
 				text: async () => JSON.stringify({ type: 'message', content: 'Hello from IAEDU.' })
@@ -76,6 +79,7 @@ describe('generateAIMessageIaedu', () => {
 		const expectedHash = createHash('sha256').update('user-123').digest('hex');
 		expect(parsed.user_id).toBe(`zoopdao${expectedHash}`);
 		expect(parsed.input_source).toBe('manual');
+		expect(capturedMessage).toContain('RAG context:');
 	});
 
 	it('uses token stream output when no final message is present', async () => {

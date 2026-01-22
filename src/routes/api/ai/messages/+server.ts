@@ -15,6 +15,7 @@ import {
 	type AiGenerateSuccess
 } from '@/lib/ai/llm-types';
 import { generateAIMessageIaedu } from '@/lib/ai/providers/iaedu';
+import { retrieveRagChunks } from '$lib/server/rag-retrieve';
 
 // #region agent log
 if (!GEMINI_API_KEY) {
@@ -126,6 +127,9 @@ You contribute insights on hospitality, service quality, and business operations
 You emphasize the importance of cleanliness, hygiene, and health standards. Your comments focus on practical cleaning operations, health considerations, and maintaining high cleanliness standards throughout the facility.`
 };
 
+const RAG_CONTEXT_MAX_CHARS = 1200;
+const RAG_CONTEXT_MAX_CHUNKS = 6;
+
 // Zod schemas for validation
 const generateMessageSchema = z.object({
 	gameId: z.number().int().positive(),
@@ -147,6 +151,38 @@ const generateMessageSchema = z.object({
 const messageResponseSchema = z.object({
 	content: z.string().min(1).max(AI_MESSAGE_MAX_CHARS)
 });
+
+function buildRagContext(
+	chunks: Array<{ content: string; similarity: number; metadata: Record<string, unknown> }>,
+	maxChars: number
+): string {
+	let used = 0;
+	const lines: string[] = [];
+
+	for (let index = 0; index < chunks.length; index += 1) {
+		const chunk = chunks[index];
+		const filename =
+			typeof chunk.metadata.filename === 'string' ? chunk.metadata.filename : 'document';
+		const similarity = Number.isFinite(chunk.similarity)
+			? chunk.similarity.toFixed(3)
+			: 'n/a';
+		const header = `[${index + 1}] ${filename} (similarity ${similarity})`;
+		const content = chunk.content.trim();
+		const entry = `${header}\n${content}`;
+
+		if (used + entry.length > maxChars) {
+			const remaining = Math.max(maxChars - used - header.length - 1, 0);
+			if (remaining <= 0) break;
+			lines.push(`${header}\n${content.slice(0, remaining)}`.trim());
+			break;
+		}
+
+		lines.push(entry);
+		used += entry.length + 1;
+	}
+
+	return lines.join('\n\n');
+}
 
 /**
  * Get proposal point content for a specific round
@@ -306,6 +342,7 @@ async function generateAIMessageGemini(
 	agentRole: AiAgentRole,
 	round: number,
 	proposalPoint: string | null,
+	ragContext: string | null,
 	chatHistory: Array<{ content: string; senderType: string; senderName: string; round: number }> = [],
 	latestUserMessage: string | null = null
 ): Promise<string> {
@@ -354,13 +391,18 @@ async function generateAIMessageGemini(
 		proposalContext = `\n\nCurrent Proposal Point (Round ${round}):\n${proposalPoint}`;
 	}
 
+	let ragContextBlock = '';
+	if (ragContext) {
+		ragContextBlock = `\n\nRAG Context (Round ${round}):\n${ragContext}`;
+	}
+
 	// Determine message count based on round
 	const messageCount = round === 7 ? 3 : Math.floor(Math.random() * 3) + 1; // 1-3 messages, 3 for round 7
 
 	const prompt = `You are participating in a governance assembly discussion at Aquário Vasco da Gama.
 
 Round: ${round}${round === 7 ? ' (Final Discussion Round - Full Debate)' : ''}
-${proposalContext}${chatHistoryContext}${latestUserContext}
+${proposalContext}${ragContextBlock}${chatHistoryContext}${latestUserContext}
 
 IMPORTANT: Your response MUST directly address and engage with the most recent user input(s) shown above. Do not just comment generically on the proposal point - respond specifically to what the participant(s) just said.
 
@@ -510,6 +552,34 @@ export const POST: RequestHandler = async ({ request }) => {
 			proposalPoint = await getProposalPoint(supabase, validated.proposalId, validated.round);
 		}
 
+		let ragContext: string | null = null;
+		let ragContextCount = 0;
+		if (validated.proposalId && validated.round === 7) {
+			const query =
+				validated.latestUserMessage?.trim() ||
+				proposalPoint?.trim() ||
+				validated.proposalPoint?.trim();
+			if (query) {
+				try {
+					const chunks = await retrieveRagChunks({
+						query,
+						proposalId: validated.proposalId,
+						round: validated.round,
+						topK: RAG_CONTEXT_MAX_CHUNKS
+					});
+					ragContextCount = chunks.length;
+					if (chunks.length > 0) {
+						ragContext = buildRagContext(chunks, RAG_CONTEXT_MAX_CHARS);
+					}
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error);
+					// #region agent log
+					fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:rag',message:'RAG retrieval failed',data:{errorMessage:message,proposalId:validated.proposalId,round:validated.round},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'RAG'})}).catch(()=>{});
+					// #endregion
+				}
+			}
+		}
+
 		// Generate AI message
 		// Check if message already exists for this agent in this round
 		// Type assertion needed because discussion_messages table not in generated types yet
@@ -561,6 +631,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						userId: validated.userId ?? null,
 						inputSource,
 						proposalPoint: proposalPoint || validated.proposalPoint || undefined,
+						ragContext: ragContext || undefined,
 						chatHistory: validated.chatHistory,
 						latestUserMessage: validated.latestUserMessage ?? null
 					}),
@@ -620,6 +691,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						validated.agentRole,
 						validated.round,
 						proposalPoint || validated.proposalPoint || null,
+						ragContext,
 						validated.chatHistory || [],
 						validated.latestUserMessage || null
 					),
@@ -679,7 +751,9 @@ export const POST: RequestHandler = async ({ request }) => {
 				content: messageContent,
 				metadata: {
 					proposal_point: proposalPoint,
-					chat_history_count: validated.chatHistory?.length || 0
+					chat_history_count: validated.chatHistory?.length || 0,
+					rag_context_count: ragContextCount,
+					rag_context_chars: ragContext?.length ?? 0
 				}
 			})
 			.select()

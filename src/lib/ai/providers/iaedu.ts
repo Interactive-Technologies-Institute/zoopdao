@@ -30,6 +30,7 @@ function buildPrompt(request: AiGenerateRequest): string {
 		roleSystemPrompts[request.agentRole] ?? roleSystemPrompts.administration,
 		`Round: ${request.round}`,
 		request.proposalPoint ? `Proposal point:\n${request.proposalPoint}` : null,
+		request.ragContext ? `RAG context:\n${request.ragContext}` : null,
 		request.latestUserMessage ? `Latest user message:\n${request.latestUserMessage}` : null
 	].filter(Boolean);
 

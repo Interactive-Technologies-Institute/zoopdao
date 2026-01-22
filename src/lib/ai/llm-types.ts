@@ -27,6 +27,7 @@ export interface AiGenerateRequest {
 	proposalPoint?: string;
 	chatHistory?: AiChatMessage[];
 	latestUserMessage?: string | null;
+	ragContext?: string;
 	mode?: 'pedagogic' | 'decision_making' | 'unknown';
 }
 
