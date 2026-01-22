@@ -327,11 +327,11 @@
 <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto">
 	<div class="relative">
 		{#if attachments.length > 0 || uploadError}
-			<div class="mb-2 rounded-2xl border border-ice/15 bg-dark-deep/90 px-4 py-3 text-xs text-white shadow-lg">
+			<div class="mb-2 rounded-2xl border border-border/40 bg-surface px-4 py-3 text-xs text-text shadow-lg">
 				<div class="flex items-center justify-between">
 					<span class="font-semibold">{m.attachments()}</span>
 					{#if uploadError}
-						<span class="text-red-300">{uploadError}</span>
+						<span class="text-primary">{uploadError}</span>
 					{/if}
 				</div>
 				{#if attachments.length > 0}
@@ -340,7 +340,7 @@
 							<li class="flex items-center justify-between gap-2">
 								<div class="min-w-0">
 									<span class="block truncate">{attachment.name}</span>
-									<span class="block text-[11px] text-white/70">
+									<span class="block text-[11px] text-text-muted">
 										{formatAttachmentStatus(attachment.status) || formatFileSize(attachment.size)}
 									</span>
 								</div>
@@ -348,7 +348,7 @@
 									{#if attachment.status === 'error' && attachment.documentId}
 										<button
 											type="button"
-											class="rounded-full border border-white/20 px-2 py-1 text-white/80 hover:text-white"
+											class="rounded-full border border-border/60 px-2 py-1 text-text-muted hover:text-text hover:border-border"
 											disabled={actionInProgress[attachment.id] === 'reindexing'}
 											onclick={() => handleRetry(attachment)}
 										>
@@ -359,7 +359,7 @@
 									{/if}
 									<button
 										type="button"
-										class="rounded-full border border-white/20 px-2 py-1 text-white/80 hover:text-white"
+										class="rounded-full border border-border/60 px-2 py-1 text-text-muted hover:text-text hover:border-border"
 										disabled={actionInProgress[attachment.id] === 'deleting'}
 										onclick={() => handleDelete(attachment)}
 									>
@@ -375,21 +375,21 @@
 			</div>
 		{/if}
 		<!-- Background bar with shadow -->
-		<div class="bg-gradient-to-b from-dark-deep to-midnight rounded-full px-4 py-3 sm:px-5 sm:py-4 shadow-2xl border border-ice/15">
+		<div class="bg-surface rounded-full px-4 py-3 sm:px-5 sm:py-4 shadow-2xl border border-border/40">
 			<div class="flex items-center gap-3 sm:gap-4">
 				<!-- History Button -->
 				<button
 					onclick={onOpenHistory}
 					disabled={disabled}
-					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-charcoal hover:bg-slate transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-tertiary hover:bg-tertiary-hover active:bg-tertiary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
 					aria-label={m.open_message_history()}
 					title={m.open_message_history()}
 				>
-					<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+					<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-text" />
 				</button>
 
 				<!-- Divider -->
-				<div class="h-8 sm:h-10 w-px bg-ice/10"></div>
+				<div class="h-8 sm:h-10 w-px bg-border/30"></div>
 
 				<!-- Add Documents Button -->
 				<input
@@ -410,15 +410,15 @@
 						!userId ||
 						attachments.length >= RAG_MAX_FILES_PER_ROUND
 					}
-					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-charcoal hover:bg-slate transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-tertiary hover:bg-tertiary-hover active:bg-tertiary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
 					aria-label={m.add_documents()}
 					title={m.add_documents()}
 				>
-					<FileText class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+					<FileText class="w-5 h-5 sm:w-6 sm:h-6 text-text" />
 				</button>
 
 				<!-- Divider -->
-				<div class="h-8 sm:h-10 w-px bg-ice/10"></div>
+				<div class="h-8 sm:h-10 w-px bg-border/30"></div>
 
 				<!-- Input Field -->
 				<input
@@ -427,18 +427,18 @@
 					onkeydown={handleKeydown}
 					disabled={disabled}
 					placeholder={m.discussion_input_placeholder()}
-					class="flex-1 bg-transparent text-white text-base sm:text-lg placeholder:text-ice/60 outline-none disabled:opacity-50"
+					class="flex-1 bg-transparent text-text text-base sm:text-lg placeholder:text-text-muted outline-none disabled:opacity-50"
 				/>
 
 				<!-- Send Button -->
 				<button
 					onclick={handleSend}
 					disabled={disabled || !message.trim()}
-					class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white hover:bg-white transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+					class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary hover:bg-primary-hover active:bg-primary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
 					aria-label={m.send_message()}
 					title={m.send_message()}
 				>
-					<Send class="w-5 h-5 sm:w-6 sm:h-6 text-dark-deep" />
+					<Send class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
 				</button>
 			</div>
 		</div>

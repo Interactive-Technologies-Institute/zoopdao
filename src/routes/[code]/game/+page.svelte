@@ -687,7 +687,7 @@
 	/>
 	<Button
 		size="lg"
-		class="absolute right-4 -translate-y-1/2 top-1/2 images z-50 pointer-events-auto"
+		class="absolute right-4 -translate-y-1/2 top-1/2 images z-50 pointer-events-auto hover:bg-tertiary/40"
 		disabled={!tourCompleted}
 		onclick={() => (openProposalDialog = true)}
 	>

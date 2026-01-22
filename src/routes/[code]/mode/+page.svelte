@@ -56,7 +56,7 @@
 	</div>
 
 	<div class="flex flex-col items-center justify-center max-w-2xl w-full">
-		<h2 class="text-deep-teal text-2xl font-bold mb-8">{m.select_mode()}</h2>
+		<h2 class="bos-title text-deep-teal text-2xl font-bold mb-8">{m.select_mode()}</h2>
 		
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
 			<!-- Pedagogic Mode -->
@@ -68,7 +68,7 @@
 				<div class="mb-4">
 					<Clock class="h-12 w-12 text-deep-teal" />
 				</div>
-				<h3 class="text-xl font-bold text-deep-teal mb-2">{m.pedagogic_mode()}</h3>
+				<h3 class="bos-title text-xl font-bold text-deep-teal mb-2">{m.pedagogic_mode()}</h3>
 				<p class="text-gray-700 text-sm">{m.pedagogic_mode_description()}</p>
 			</button>
 
@@ -81,7 +81,7 @@
 				<div class="mb-4">
 					<Users class="h-12 w-12 text-deep-teal" />
 				</div>
-				<h3 class="text-xl font-bold text-deep-teal mb-2">{m.decision_making_mode()}</h3>
+				<h3 class="bos-title text-xl font-bold text-deep-teal mb-2">{m.decision_making_mode()}</h3>
 				<p class="text-gray-700 text-sm">{m.decision_making_mode_description()}</p>
 			</button>
 		</div>

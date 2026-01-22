@@ -4,14 +4,17 @@
 	import { type VariantProps, tv } from 'tailwind-variants';
 
 	export const buttonVariants = tv({
-		base: 'ring-offset-white focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+		base: 'ring-offset-background focus-visible:ring-focus inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
 		variants: {
 			variant: {
-				default: 'bg-deep-teal text-white hover:opacity-90',
-				destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-				outline: 'border-deep-teal text-deep-teal bg-white hover:bg-deep-teal hover:bg-opacity-10 border',
-				secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-				ghost: 'hover:bg-accent hover:text-accent-foreground',
+				default:
+					'bg-primary text-white hover:bg-primary-hover active:bg-primary-active disabled:bg-primary-disabled',
+				destructive:
+					'bg-primary text-white hover:bg-primary-hover active:bg-primary-active disabled:bg-primary-disabled',
+				outline: 'border-primary text-primary bg-transparent hover:bg-primary/10 border',
+				secondary:
+					'bg-secondary text-white hover:bg-secondary-hover active:bg-secondary-active disabled:bg-primary-disabled',
+				ghost: 'text-text hover:bg-tertiary/40',
 				link: 'text-primary underline-offset-4 hover:underline'
 			},
 			size: {

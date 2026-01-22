@@ -25,7 +25,7 @@
 	}
 </script>
 
-<div class="min-h-screen bg-[#efe7e2] p-4">
+<div class="min-h-screen bg-[#efe7e2] bos-bg p-4">
 	<div class="max-w-4xl mx-auto">
 		<!-- Back Button -->
 		<div class="mb-4">
@@ -36,15 +36,15 @@
 
 		<!-- Proposal View -->
 		<div class="bg-white rounded-lg border-2 border-deep-teal border-opacity-20 p-6 md:p-8">
-			<h1 class="text-3xl font-bold text-deep-teal mb-6">{proposal.title}</h1>
+			<h1 class="bos-title text-3xl font-bold text-deep-teal mb-6">{proposal.title}</h1>
 
 			<!-- Theory of Change Section -->
 			<div class="space-y-6">
-				<h2 class="text-2xl font-bold text-deep-teal">{m.theory_of_change()}</h2>
+				<h2 class="bos-title text-2xl font-bold text-deep-teal">{m.theory_of_change()}</h2>
 				
 				<!-- Long-term Objectives -->
 				<div class="space-y-4">
-					<div class="block text-lg font-semibold text-deep-teal">
+					<div class="bos-title block text-lg font-semibold text-deep-teal">
 						{m.long_term_objectives()}
 						<span class="text-sm font-normal text-gray-600 ml-2">({m.long_term_objectives_description()})</span>
 					</div>
@@ -52,7 +52,7 @@
 					{#each proposal.objectives as objective, objectiveIndex}
 						<div class="border-2 border-deep-teal border-opacity-20 rounded-lg p-4 bg-gray-50">
 							<div class="mb-3">
-								<span class="text-sm font-medium text-deep-teal">
+								<span class="bos-title text-sm font-medium text-deep-teal">
 									{m.objective()} {objectiveIndex + 1}:
 								</span>
 								<p class="text-gray-700 mt-1">{objective.value}</p>
@@ -60,7 +60,7 @@
 							
 							<!-- Preconditions -->
 							<div class="ml-4 space-y-3 mt-4">
-								<div class="block text-sm font-semibold text-deep-teal">
+								<div class="bos-title block text-sm font-semibold text-deep-teal">
 									{m.preconditions_and_goals()}
 									<span class="text-xs font-normal text-gray-600 ml-2">({m.preconditions_and_goals_description()})</span>
 								</div>
@@ -68,7 +68,7 @@
 								{#each objective.preconditions as precondition, preconditionIndex}
 									<div class="border border-deep-teal border-opacity-10 rounded p-3 bg-white">
 										<div class="mb-2">
-											<span class="text-xs font-medium text-deep-teal">
+											<span class="bos-title text-xs font-medium text-deep-teal">
 												{m.precondition()} {preconditionIndex + 1}:
 											</span>
 											<p class="text-gray-700 mt-1 text-sm">{precondition.value}</p>
@@ -76,7 +76,7 @@
 										
 										<!-- Indicative Steps -->
 										<div class="ml-4 space-y-2 mt-3">
-											<div class="block text-xs font-semibold text-deep-teal">
+											<div class="bos-title block text-xs font-semibold text-deep-teal">
 												{m.indicative_steps()}
 											</div>
 											{#each precondition.indicativeSteps as step}
@@ -86,7 +86,7 @@
 										
 										<!-- Key Indicators -->
 										<div class="ml-4 space-y-2 mt-3">
-											<div class="block text-xs font-semibold text-deep-teal">
+											<div class="bos-title block text-xs font-semibold text-deep-teal">
 												{m.key_indicators()}
 												<span class="text-xs font-normal text-gray-600 ml-2">({m.key_indicators_description()})</span>
 											</div>
@@ -103,7 +103,7 @@
 				
 				<!-- Functionalities -->
 				<div>
-					<label class="block text-lg font-semibold text-deep-teal mb-2">
+					<label class="bos-title block text-lg font-semibold text-deep-teal mb-2">
 						{m.functionalities()}
 					</label>
 					<div class="bg-gray-50 border border-deep-teal border-opacity-10 rounded p-4">

@@ -13,6 +13,7 @@
 	import { Textarea } from './ui/textarea';
 	import { supabase } from '@/supabase';
 	import { getDiscussionMessages } from '@/utils/discussion-messages';
+	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 
 	let audio: HTMLAudioElement;
 	onMount(() => {
@@ -44,8 +45,8 @@
 
 	function getBadgeSrc(characterType: string | null | undefined) {
 		const type = characterType ?? 'custom';
-		if (roleSet.has(type)) return `/images/characters/badges/roles/${type}.svg`;
-		return `/images/characters/badges/${type}.svg`;
+		if (roleSet.has(type)) return `${ZOOP_THEME_ASSET_PREFIX}/characters/badges/roles/${type}.svg`;
+		return `${ZOOP_THEME_ASSET_PREFIX}/characters/badges/${type}.svg`;
 	}
 
 	async function fetchProposal() {
@@ -474,7 +475,11 @@
 												></Textarea>
 
 												<div class="flex justify-end gap-2 mt-2">
-													<Button variant="outline" size="default" onclick={cancelEdit}
+													<Button
+														variant="outline"
+														size="default"
+														class="hover:bg-tertiary/40"
+														onclick={cancelEdit}
 														>{m.cancel()}</Button
 													>
 													<Button

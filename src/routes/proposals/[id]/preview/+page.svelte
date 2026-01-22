@@ -101,7 +101,7 @@
 	}
 </script>
 
-<div class="min-h-screen bg-[#efe7e2] p-4">
+<div class="min-h-screen bg-[#efe7e2] bos-bg p-4">
 	<div class="max-w-3xl mx-auto">
 		<!-- Back Button -->
 		<div class="mb-4">
@@ -114,7 +114,7 @@
 		<div class="bg-white rounded-lg border-2 border-deep-teal border-opacity-20 p-6 md:p-8 shadow-lg">
 			<!-- Header -->
 			<div class="mb-6">
-				<h1 class="text-3xl font-bold text-deep-teal mb-4">{proposal.title}</h1>
+				<h1 class="bos-title text-3xl font-bold text-deep-teal mb-4">{proposal.title}</h1>
 				
 				<div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
 					<div class="flex items-center gap-2">
@@ -134,7 +134,7 @@
 			<div class="space-y-4 mb-6">
 				<!-- Objectives Preview -->
 				<div>
-					<h3 class="text-lg font-semibold text-deep-teal mb-2">{m.long_term_objectives()}</h3>
+					<h3 class="bos-title text-lg font-semibold text-deep-teal mb-2">{m.long_term_objectives()}</h3>
 					<ul class="list-disc list-inside space-y-1 text-gray-700">
 						{#each proposal.objectives.slice(0, 2) as objective}
 							<li>{objective.value}</li>
@@ -144,7 +144,7 @@
 
 				<!-- Functionalities Preview -->
 				<div>
-					<h3 class="text-lg font-semibold text-deep-teal mb-2">{m.functionalities()}</h3>
+					<h3 class="bos-title text-lg font-semibold text-deep-teal mb-2">{m.functionalities()}</h3>
 					<p class="text-gray-700 line-clamp-3">{proposal.functionalities}</p>
 				</div>
 
@@ -165,7 +165,7 @@
 						variant="outline" 
 						size="lg"
 						onclick={handleViewFullProposal}
-						class="flex-1"
+						class="flex-1 hover:bg-tertiary/40"
 					>
 						{m.view_full_proposal()}
 					</Button>
@@ -173,7 +173,7 @@
 					<Button 
 						size="lg" 
 						onclick={handleViewFullProposal}
-						class="w-full"
+						class="w-full hover:bg-tertiary/40"
 					>
 						{m.view_full_proposal()}
 					</Button>
