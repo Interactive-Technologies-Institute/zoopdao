@@ -3,6 +3,11 @@
 	import { Button } from './ui/button';
 	import { m } from '@src/paraglide/messages.js';
 	import { Flag } from 'lucide-svelte';
+	import {
+		ORGANIZATION_NAME,
+		PEDAGOGIC_FINAL_TIMER_MINUTES,
+		PEDAGOGIC_ROUNDS_TIMER_MINUTES
+	} from '$lib/config/organization';
 
 	interface HelpDialogProps {
 		open: boolean;
@@ -19,17 +24,17 @@
 				<h3 class="text-2xl font-bold text-deep-teal">{m.about_the_game()}</h3>
 
 				<p>
-					{m.about_the_game_description()}
+					{m.about_the_game_description({ organization_name: ORGANIZATION_NAME })}
 				</p>
 			</section>
 
 			<section class="space-y-4">
-				<h3 class="text-2xl font-bold text-sand">{m.how_to_play()}</h3>
+				<h3 class="text-2xl font-bold text-deep-teal">{m.how_to_play()}</h3>
 				<p>{m.individual_or_group()}</p>
 				{#each Array.from({ length: 5 }, (_, i) => i + 1) as step}
 					<div class="flex gap-4 items-start">
 						<div
-							class="w-8 h-8 rounded-full bg-sea-green bg-opacity-30 grid place-items-center text-sea-green font-bold flex-shrink-0"
+							class="w-8 h-8 rounded-full bg-deep-teal/15 grid place-items-center text-deep-teal font-bold flex-shrink-0"
 						>
 							{step}
 						</div>
@@ -52,7 +57,12 @@
 							</div>
 						{:else if step === 3}
 							<div class="flex flex-1 flex-col gap-1">
-								<p>{m.how_to_play_step_3()}</p>
+				<p>
+					{m.how_to_play_step_3({
+						pedagogic_rounds_minutes: PEDAGOGIC_ROUNDS_TIMER_MINUTES,
+						pedagogic_final_minutes: PEDAGOGIC_FINAL_TIMER_MINUTES
+					})}
+				</p>
 							</div>
 						{:else if step === 4}
 							<div class="flex flex-1 flex-col gap-1">

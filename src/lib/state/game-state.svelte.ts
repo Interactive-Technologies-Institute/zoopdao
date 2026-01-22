@@ -1,5 +1,9 @@
 import { goto } from '$app/navigation';
 import { supabase } from '@/supabase';
+import {
+	PEDAGOGIC_FINAL_TIMER_MINUTES,
+	PEDAGOGIC_ROUNDS_TIMER_MINUTES
+} from '$lib/config/organization';
 import { getCharacterCategory } from '../types';
 import type {
 	Card,
@@ -534,9 +538,12 @@ export class GameState {
 		}
 
 		// Determine duration based on round:
-		// Rounds 1-6: 1 minute (60 seconds)
-		// Round 7: 2 minutes (120 seconds)
-		const durationSeconds = this.currentRound === 7 ? 2 * 60 : 1 * 60;
+		// Rounds 1-6 and round 7 durations are configurable.
+		const durationMinutes =
+			this.currentRound === 7
+				? PEDAGOGIC_FINAL_TIMER_MINUTES
+				: PEDAGOGIC_ROUNDS_TIMER_MINUTES;
+		const durationSeconds = durationMinutes * 60;
 
 		const currentGameRound = this.gameRounds.find((r) => r.round === this.currentRound);
 		if (!currentGameRound) {
@@ -564,8 +571,9 @@ export class GameState {
 		if (this.mode !== 'pedagogic') {
 			return 0;
 		}
-		// Rounds 1-6: 1 minute, Round 7: 2 minutes
-		return round === 7 ? 2 * 60 : 1 * 60;
+		const durationMinutes =
+			round === 7 ? PEDAGOGIC_FINAL_TIMER_MINUTES : PEDAGOGIC_ROUNDS_TIMER_MINUTES;
+		return durationMinutes * 60;
 	}
 
 	async subscribeRoundTimer() {

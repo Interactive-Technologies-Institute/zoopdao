@@ -1727,3 +1727,56 @@ c) Ensure the final output is still exactly one sentence question.
 
 **Completion Criteria:**
 1) Manual verification confirms improved relevance without breaking constraints.
+
+---
+
+## ZD-142 Review text and colors of Instruction pop-up
+
+**Overview:**
+Review the text and colors used inside the instruction pop-up to ensure they match the ZoopDAO palette, remain readable, and reflect the current flow copy.
+
+**Goal:**
+Improve visual consistency, readability, and instruction copy without changing behavior.
+
+**Description:**
+a) Identify the instruction pop-up opened by the instruction/help button and confirm its component entry point.
+b) Review the instruction copy for current flow accuracy (no legacy map references).
+c) Audit background, text, border, and button colors inside the pop-up.
+d) Align pop-up colors with the ZoopDAO palette and verify contrast for readability.
+e) Verify hover/focus states for interactive elements within the pop-up.
+f) Update the relevant module styles, copy, and color tokens as needed.
+g) Modules/scripts to review: `src/routes/[code]/game/+page.svelte`, `src/lib/components/help-dialog.svelte`, `src/app.css`, `tailwind.config.ts` (and `src/lib/components/ui/shepherd/custom-css.css` if the instruction flow uses the Shepherd tour).
+
+**Acceptance Criteria:**
+1) Instruction copy reflects the current discussion flow (no map references).
+2) Pop-up colors align with the ZoopDAO palette and are visually consistent with surrounding UI.
+3) Text and buttons meet readable contrast levels against the pop-up background.
+4) Hover/focus states remain clear and accessible.
+
+**Completion Criteria:**
+1) Updated copy and colors are applied and visually verified on desktop and mobile.
+
+---
+
+## ZD-143: Review card title colors and set last-round chat history text bar to white
+
+**Overview:**
+Review the colors used for card titles and the chat history area in the last-round input bar, and update the chat history text bar background to white for clarity.
+
+**Goal:**
+Improve readability and consistency for card titles and the last-round chat history UI.
+
+**Description:**
+a) Audit card title colors across relevant views and align them with the ZoopDAO palette.
+b) Identify the chat history text bar in the Round 7 input UI and set its background to white.
+c) Verify contrast for text and icons inside the chat history area.
+d) Confirm hover/focus states remain readable and consistent.
+e) Modules/scripts to review: `src/routes/[code]/game/+page.svelte`, `src/lib/components/discussion-input-bar.svelte` (or equivalent), `src/app.css`, `tailwind.config.ts`.
+
+**Acceptance Criteria:**
+1) Card titles use palette-aligned colors with readable contrast.
+2) Chat history text bar background in Round 7 is white.
+3) Text/icon contrast inside the chat history area remains readable.
+
+**Completion Criteria:**
+1) Updated colors are visually verified in Round 7 and on card views.
