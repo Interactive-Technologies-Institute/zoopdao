@@ -64,7 +64,7 @@
 					id="step-{index}"
 					class="rounded-full w-12 h-12 flex-shrink-0 flex items-center justify-center relative transition-all duration-200 snap-center {index ===
 					0
-						? 'bg-[#FF6157]'
+						? 'bg-[#FF6157] bos-accent-bg'
 						: index <= currentRound
 							? 'bg-deep-teal'
 							: 'bg-white'}"

@@ -31,7 +31,7 @@
 
 <!-- Aquarium Assembly Table Container -->
 <div
-	class="bg-[#b3e4eb] w-full h-full overflow-hidden touch-none relative flex items-center justify-center"
+	class="bg-[#b3e4eb] bos-bg w-full h-full overflow-hidden touch-none relative flex items-center justify-center"
 	bind:this={mapContainer}
 	role="region"
 	aria-label="Assembly aquarium table"

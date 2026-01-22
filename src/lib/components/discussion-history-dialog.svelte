@@ -75,37 +75,37 @@
 	>
 		<!-- Dialog Panel -->
 		<div
-			class="w-full max-w-[860px] max-h-[700px] bg-gradient-to-b from-dark-deep to-midnight rounded-3xl shadow-2xl border border-ice/15 flex flex-col"
+			class="w-full max-w-[860px] max-h-[700px] bg-gradient-to-b from-dark-deep to-midnight bos-surface rounded-3xl shadow-2xl border border-ice/15 bos-border flex flex-col"
 			on:click={(e) => e.stopPropagation()}
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="history-title"
 		>
 			<!-- Header -->
-			<div class="bg-gradient-to-r from-charcoal to-graphite rounded-t-3xl px-8 py-6 border-b border-ice/15 flex items-center justify-between">
-				<h2 id="history-title" class="text-2xl font-semibold text-white">
+			<div class="bg-gradient-to-r from-charcoal to-graphite bos-surface rounded-t-3xl px-8 py-6 border-b border-ice/15 bos-border flex items-center justify-between">
+				<h2 id="history-title" class="text-2xl font-semibold text-white bos-text">
 					{m.message_history()}
 				</h2>
 				
 				<!-- Close Button -->
 				<button
 					on:click={handleClose}
-					class="w-11 h-11 rounded-full bg-charcoal hover:bg-slate transition-colors flex items-center justify-center border border-ice/20"
+					class="w-11 h-11 rounded-full bg-charcoal hover:bg-tertiary/40 transition-colors flex items-center justify-center border border-ice/20 bos-surface bos-border bos-text"
 					aria-label={m.close()}
 				>
-					<X class="w-6 h-6 text-white" />
+					<X class="w-6 h-6 text-white bos-text" />
 				</button>
 			</div>
 
 			<!-- Scrollable Content Area -->
 			<div class="flex-1 p-8 overflow-y-auto">
-				<div class="bg-dark-deep/70 rounded-2xl p-6 border border-ice/10 min-h-[520px]">
+				<div class="bg-dark-deep/70 bos-surface rounded-2xl p-6 border border-ice/10 bos-border min-h-[520px]">
 					{#if isLoading}
-						<div class="flex items-center justify-center h-full text-ice/70">
+						<div class="flex items-center justify-center h-full text-ice/70 bos-muted">
 							<p class="text-lg">Loading messages...</p>
 						</div>
 					{:else if messages.length === 0}
-						<div class="flex items-center justify-center h-full text-ice/70">
+						<div class="flex items-center justify-center h-full text-ice/70 bos-muted">
 							<p class="text-lg">{m.no_messages_yet()}</p>
 						</div>
 					{:else}
@@ -113,25 +113,25 @@
 							{#each messages as message (message.id)}
 								<div
 									class="rounded-2xl p-6 shadow-lg {message.senderType === 'human'
-										? 'bg-charcoal border border-ice/10 ml-0 mr-12'
-										: 'bg-ink/60 border border-ice/12 ml-12 mr-0'}"
+										? 'bg-charcoal border border-ice/10 ml-0 mr-12 bos-surface bos-border'
+										: 'bg-ink/60 border border-ice/12 ml-12 mr-0 bos-surface bos-border'}"
 								>
 									<!-- Sender Info -->
 									<div class="flex items-center justify-between mb-2">
 										<span
 											class="text-sm font-medium {message.senderType === 'human'
-												? 'text-white/85'
-												: 'text-ice/85'}"
+												? 'text-white/85 bos-text'
+												: 'text-ice/85 bos-text'}"
 										>
 											{message.senderName}
 										</span>
-										<span class="text-xs text-ice/60">
+										<span class="text-xs text-ice/60 bos-muted">
 											Round {message.round} • {formatTime(message.timestamp)}
 										</span>
 									</div>
 
 									<!-- Message Content -->
-									<p class="text-white text-lg leading-relaxed">
+									<p class="text-white bos-text text-lg leading-relaxed">
 										{message.content}
 									</p>
 								</div>

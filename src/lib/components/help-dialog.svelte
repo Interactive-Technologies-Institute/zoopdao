@@ -45,7 +45,7 @@
 									{m.how_to_play_step_1_1()}<span
 										class="inline-flex items-center justify-center mx-1"
 									>
-										<span class="w-5 h-5 rounded-full bg-[#FF6157] grid place-items-center">
+										<span class="w-5 h-5 rounded-full bg-[#FF6157] bos-accent-bg grid place-items-center">
 											<Flag class="w-3 h-3 text-white" />
 										</span>
 									</span>{m.how_to_play_step_1_2()}
