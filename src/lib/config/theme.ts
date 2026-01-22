@@ -1,6 +1,6 @@
 export type ZoopTheme = 'avg' | 'bos';
 
-export const ZOOP_THEME: ZoopTheme = 'avg';
+export const ZOOP_THEME: ZoopTheme = 'bos';
 export type ZoopFontProfile = 'loga' | 'arial';
 
 export const ZOOP_FONT_PROFILE: ZoopFontProfile = 'loga';
@@ -14,6 +14,8 @@ export function resolveZoopFontProfile(value?: string | null): ZoopFontProfile {
 	if (!value) return ZOOP_FONT_PROFILE;
 	return value.toLowerCase() === 'arial' ? 'arial' : ZOOP_FONT_PROFILE;
 }
+
+export const ZOOP_THEME_ASSET_PREFIX = `/images/themes/${resolveZoopTheme(ZOOP_THEME)}`;
 
 export function applyZoopTheme(target: HTMLElement | null = null) {
 	const theme = resolveZoopTheme(ZOOP_THEME);

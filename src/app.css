@@ -29,6 +29,7 @@ body {
 	--zd-text: 10 31 34;
 	--zd-text-muted: 47 58 58;
 	--zd-text-subtle: 91 100 100;
+	--zd-heading: var(--zd-text);
 	--zd-primary: 12 107 120;
 	--zd-primary-hover: 35 193 210;
 	--zd-primary-active: 5 54 61;
@@ -49,21 +50,22 @@ body {
 	--zd-bg-deep: 0 0 0;
 	--zd-surface: 255 255 255;
 	--zd-surface-muted: 230 200 0;
-	--zd-border: 0 0 0;
-	--zd-border-strong: 0 0 0;
+	--zd-border: 210 10 10;
+	--zd-border-strong: 210 10 10;
 	--zd-text: 0 0 0;
 	--zd-text-muted: 0 0 0;
 	--zd-text-subtle: 0 0 0;
-	--zd-primary: 210 10 10;
-	--zd-primary-hover: 210 10 10;
-	--zd-primary-active: 0 0 0;
-	--zd-primary-disabled: 0 0 0;
+	--zd-heading: 60 165 230;
+	--zd-primary: 0 0 0;
+	--zd-primary-hover: 0 0 0;
+	--zd-primary-active: 210 10 10;
+	--zd-primary-disabled: 210 10 10;
 	--zd-secondary: 60 165 230;
 	--zd-secondary-hover: 60 165 230;
 	--zd-secondary-active: 60 160 60;
 	--zd-tertiary: 230 200 0;
 	--zd-tertiary-hover: 230 200 0;
-	--zd-tertiary-active: 0 0 0;
+	--zd-tertiary-active: 210 10 10;
 	--zd-accent: 60 160 60;
 	--zd-focus: 60 165 230;
 }
@@ -75,27 +77,47 @@ body {
 }
 
 @layer base {
-	body {
+	[data-theme='bos'] body {
 		@apply text-text bg-background;
-		font-family: var(--zd-font-body, RobotoSlabVariable);
 	}
 
-	h1,
-	h2,
-	h3,
-	h4,
-	h5,
-	h6 {
-		@apply text-text;
-		font-family: var(--zd-font-heading, RobotoSlabVariable);
-	}
-
-	label {
+	[data-theme='bos'] label {
 		@apply text-text;
 	}
 
-	small {
+	[data-theme='bos'] small {
 		@apply text-text-muted;
+	}
+}
+
+@layer utilities {
+	[data-theme='bos'] .bos-title {
+		color: rgb(var(--zd-text)) !important;
+	}
+	[data-theme='bos'] .bos-bg {
+		background-color: rgb(var(--zd-bg)) !important;
+		background-image: none !important;
+	}
+	[data-theme='bos'] .bos-surface {
+		background-color: rgb(var(--zd-surface)) !important;
+		background-image: none !important;
+	}
+	[data-theme='bos'] .bos-overlay {
+		background-color: rgb(var(--zd-bg-deep)) !important;
+		background-image: none !important;
+	}
+	[data-theme='bos'] .bos-accent-bg {
+		background-color: rgb(var(--zd-primary-active)) !important;
+		background-image: none !important;
+	}
+	[data-theme='bos'] .bos-border {
+		border-color: rgb(var(--zd-border)) !important;
+	}
+	[data-theme='bos'] .bos-text {
+		color: rgb(var(--zd-text)) !important;
+	}
+	[data-theme='bos'] .bos-muted {
+		color: rgb(var(--zd-text-muted)) !important;
 	}
 }
 
