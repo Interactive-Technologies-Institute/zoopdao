@@ -308,6 +308,7 @@
 	"upload_delete_failed": "Delete failed",
 	"upload_reindexing": "Reindexing...",
 	"upload_reindex_failed": "Reindex failed",
+	"message_limit_reached": "You have reached the maximum number of messages for this round.",
 	"message_history": "Message history",
 	"close": "Close",
 	"no_messages_yet": "No messages yet. Start the discussion!",

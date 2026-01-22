@@ -100,8 +100,10 @@ function parseIaeduResponse(text: string): { content: string | null; error?: unk
 }
 
 export async function generateAIMessageIaedu(
-	request: AiGenerateRequest
+	request: AiGenerateRequest,
+	options?: { signal?: AbortSignal }
 ): Promise<AiGenerateResult> {
+	const startedAt = Date.now();
 	const apiKey = IAEDU_API_KEY;
 	if (!apiKey) {
 		return {
@@ -141,10 +143,21 @@ export async function generateAIMessageIaedu(
 	}
 
 	const formData = new FormData();
+	const prompt = buildPrompt(request);
+	const userInfo = buildUserInfo(request);
 	formData.append('channel_id', channelId);
 	formData.append('thread_id', threadId);
-	formData.append('user_info', buildUserInfo(request));
-	formData.append('message', buildPrompt(request));
+	formData.append('user_info', userInfo);
+	formData.append('message', prompt);
+
+	console.log('[iaedu] request', {
+		agentRole: request.agentRole,
+		round: request.round,
+		inputSource: resolveInputSource(request),
+		promptLength: prompt.length,
+		hasRagContext: Boolean(request.ragContext),
+		endpoint
+	});
 
 	try {
 		const response = await fetch(endpoint, {
@@ -153,11 +166,16 @@ export async function generateAIMessageIaedu(
 				'x-api-key': apiKey
 			},
 			// Let fetch set multipart boundaries when using FormData.
-			body: formData
+			body: formData,
+			signal: options?.signal
 		});
 
 		if (!response.ok) {
 			const details = await response.text();
+			console.log('[iaedu] response error', {
+				status: response.status,
+				elapsedMs: Date.now() - startedAt
+			});
 			return {
 				success: false,
 				error: {
@@ -170,9 +188,17 @@ export async function generateAIMessageIaedu(
 		}
 
 		const rawText = await response.text();
+		console.log('[iaedu] response ok', {
+			status: response.status,
+			elapsedMs: Date.now() - startedAt,
+			rawLength: rawText.length
+		});
 		const { content, error } = parseIaeduResponse(rawText);
 
 		if (error) {
+			console.log('[iaedu] response parse error', {
+				elapsedMs: Date.now() - startedAt
+			});
 			return {
 				success: false,
 				error: {
@@ -185,6 +211,9 @@ export async function generateAIMessageIaedu(
 		}
 
 		if (!content) {
+			console.log('[iaedu] empty content', {
+				elapsedMs: Date.now() - startedAt
+			});
 			return {
 				success: false,
 				error: {
@@ -207,8 +236,29 @@ export async function generateAIMessageIaedu(
 			}
 		};
 
+		console.log('[iaedu] success', {
+			elapsedMs: Date.now() - startedAt,
+			contentLength: content.length
+		});
 		return success;
 	} catch (error) {
+		if (error instanceof Error && error.name === 'AbortError') {
+			console.log('[iaedu] request aborted', {
+				elapsedMs: Date.now() - startedAt
+			});
+			return {
+				success: false,
+				error: {
+					code: 'timeout',
+					message: 'IAEDU request timed out.',
+					provider: 'iaedu'
+				}
+			};
+		}
+		console.log('[iaedu] request failed', {
+			elapsedMs: Date.now() - startedAt,
+			error: error instanceof Error ? error.message : String(error)
+		});
 		return {
 			success: false,
 			error: {

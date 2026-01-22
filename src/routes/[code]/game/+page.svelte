@@ -133,11 +133,21 @@
 	
 	const enableDiscussionChat = true;
 	const chatRound = $derived.by(() => gameState.currentRound === 7);
+	const SINGLE_AI_MODE_ROUND7 = true;
+	const MAX_USER_MESSAGES_ROUND7 = 5;
+	const MAX_AI_MESSAGES_ROUND7 = 5;
+	const SINGLE_AI_AGENT: AIAgent = {
+		id: 'ai-agent-sam',
+		name: 'Sam',
+		role: 'research'
+	};
 	
 	// Configurable variable for number of discussion rounds with message exchanges
 	// This controls how many rounds of messages are exchanged between user and AIs
 	// before showing the save history popup
-	const DISCUSSION_ROUNDS_COUNT = 1; // Can be changed to allow more rounds of discussion
+	const DISCUSSION_ROUNDS_COUNT = $derived.by(() =>
+		SINGLE_AI_MODE_ROUND7 ? MAX_USER_MESSAGES_ROUND7 : 1
+	);
 	
 	let hasUserChattedThisRound = $state(false);
 	let lastChatRound = $state(-1);
@@ -154,6 +164,10 @@
 			aiAgents = [];
 			aiMessages = [];
 			typingAgents = new Set();
+			return;
+		}
+		if (chatRound && SINGLE_AI_MODE_ROUND7) {
+			aiAgents = [SINGLE_AI_AGENT];
 			return;
 		}
 		const humanPlayers = gameState.players.filter(p => p.is_active !== false);
@@ -309,15 +323,31 @@
 			// Check if all agents have responded (each agent should have at least one message)
 			const allAgentsResponded = aiAgents.every(agent => agentsWhoResponded.has(agent.id));
 			const noAgentsTyping = typingAgents.size === 0;
+			const userMessageCount = discussionMessages.filter(
+				(msg) => msg.senderType === 'human' && msg.round === gameState.currentRound
+			).length;
+			const aiMessageCount = currentRoundMessages.length;
 			
 			// If all agents have responded and none are typing, discussion round is complete
+			if (SINGLE_AI_MODE_ROUND7) {
+				if (
+					allAgentsResponded &&
+					noAgentsTyping &&
+					userMessageCount >= MAX_USER_MESSAGES_ROUND7 &&
+					aiMessageCount >= MAX_AI_MESSAGES_ROUND7
+				) {
+					fanfareAudio?.play();
+					openEndDialog = true;
+				}
+				return;
+			}
+
 			if (allAgentsResponded && noAgentsTyping && discussionRoundCount < DISCUSSION_ROUNDS_COUNT) {
 				discussionRoundCount++;
-				
 				// If we've reached the configured number of discussion rounds, show save dialog
 				if (discussionRoundCount >= DISCUSSION_ROUNDS_COUNT) {
-			fanfareAudio?.play();
-			openEndDialog = true;
+					fanfareAudio?.play();
+					openEndDialog = true;
 				}
 			}
 		}
@@ -332,6 +362,19 @@
 			const proposalId = data.proposalId || null; // Get proposal_id from loader
 			const currentRound = gameState.currentRound;
 			const playerId = data.playerId;
+			const userMessageCount = discussionMessages.filter(
+				(msg) => msg.senderType === 'human' && msg.round === currentRound
+			).length;
+			const aiMessageCount = aiMessages.filter((msg) => msg.round === currentRound).length;
+
+			if (
+				chatRound &&
+				SINGLE_AI_MODE_ROUND7 &&
+				userMessageCount >= MAX_USER_MESSAGES_ROUND7
+			) {
+				alert(m.message_limit_reached());
+				return;
+			}
 
 			// Save human message to database
 			const savedMessage = await storeHumanMessage(
@@ -363,8 +406,16 @@
 			// Get chat history for AI context (including current round)
 			const chatHistory = await getChatHistoryForAI(supabase, gameId, currentRound); // Includes current round messages
 
+			const waitForAiDelay = (ms: number) =>
+				SINGLE_AI_MODE_ROUND7
+					? Promise.resolve()
+					: new Promise((resolve) => setTimeout(resolve, ms));
+
 			// Generate AI agent responses sequentially with delays
-			if (aiAgents.length > 0) {
+			if (
+				aiAgents.length > 0 &&
+				(!SINGLE_AI_MODE_ROUND7 || aiMessageCount < MAX_AI_MESSAGES_ROUND7)
+			) {
 				const clearTyping = (agentId: string) => {
 					if (typingAgents.has(agentId)) {
 						typingAgents.delete(agentId);
@@ -380,7 +431,7 @@
 						return false;
 					}
 
-					await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000)); // 2-4 seconds
+					await waitForAiDelay(2000 + Math.random() * 2000); // 2-4 seconds
 
 					const localId = `fallback-${agent.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 					const now = new Date();
@@ -409,6 +460,9 @@
 
 					// Best-effort persistence after UI update
 					try {
+						const fallbackTurnIndex = aiMessages.filter(
+							(msg) => msg.round === currentRound && msg.agent_id === agent.id
+						).length;
 						await storeAIMessage(
 							supabase,
 							gameId,
@@ -416,7 +470,10 @@
 							currentRound,
 							agent.id,
 							agent.role,
-							fallbackContent
+							fallbackContent,
+							{
+								turnIndex: SINGLE_AI_MODE_ROUND7 ? fallbackTurnIndex : null
+							}
 						);
 					} catch (fallbackError) {
 						console.error(`Failed to store fallback message for ${agent.name}:`, fallbackError);
@@ -439,7 +496,7 @@
 
 					// Small gap before showing next typing bubble
 					if (i > 0) {
-						await new Promise(resolve => setTimeout(resolve, 200));
+						await waitForAiDelay(200);
 					}
 					
 					// Only show the current agent typing
@@ -450,11 +507,14 @@
 					
 					// Wait before processing next agent (except for first agent)
 					if (i > 0) {
-						await new Promise(resolve => setTimeout(resolve, delay));
+						await waitForAiDelay(delay);
 					}
 					
 					try {
 						const inputSource = message.trim() ? 'manual' : 'auto';
+						const allowMultipleAiReplies =
+							chatRound &&
+							MAX_AI_MESSAGES_ROUND7 > 1;
 
 						// Generate message in backend first (respects rate limit)
 						const response = await fetch('/api/ai/messages', {
@@ -469,6 +529,7 @@
 								agentRole: agent.role,
 								userId: data.userId,
 								inputSource,
+								allowMultipleAiReplies,
 								chatHistory: chatHistory,
 								latestUserMessage: message // Pass the most recent user message
 							})
@@ -488,7 +549,7 @@
 							// Message was successfully generated - typing indicator already shown
 							try {
 								// Wait a bit before showing the actual message (simulate typing)
-								await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000)); // 2-4 seconds
+								await waitForAiDelay(2000 + Math.random() * 2000); // 2-4 seconds
 								
 								// Split content if it contains multiple messages (separated by \n\n)
 								const messageContents = result.message.content

@@ -308,6 +308,7 @@
 	"upload_delete_failed": "Falha ao eliminar",
 	"upload_reindexing": "A reindexar...",
 	"upload_reindex_failed": "Falha ao reindexar",
+	"message_limit_reached": "Atingiste o número máximo de mensagens nesta ronda.",
 	"message_history": "Histórico de mensagens",
 	"close": "Fechar",
 	"no_messages_yet": "Ainda não há mensagens. Inicia a discussão!",

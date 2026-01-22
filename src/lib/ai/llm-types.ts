@@ -71,4 +71,5 @@ export type AiGenerateResult = AiGenerateSuccess | AiGenerateError;
 export const AI_MESSAGE_MIN_CHARS = 1;
 export const AI_MESSAGE_MAX_CHARS = 500;
 export const AI_DEFAULT_TIMEOUT_MS = 20_000;
+export const AI_IAEDU_TIMEOUT_MS = 45_000;
 export const AI_MAX_RETRIES = 3;

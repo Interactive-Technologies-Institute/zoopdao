@@ -5,6 +5,7 @@ import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, extname } from 'node:path';
 import { createOpenRouterEmbeddings } from './openrouter-embeddings';
+import { read, utils } from 'xlsx';
 import {
 	RAG_ALLOWED_EXTENSIONS,
 	RAG_MAX_FILE_SIZE_BYTES,
@@ -113,15 +114,21 @@ async function loadDocumentsFromBuffer(
 	}
 
 	if (extension === '.xlsx') {
-		return loadWithTempFile(buffer, extension, async (filePath) => {
-			const module = await import('@langchain/community/document_loaders/fs/xlsx');
-			const Loader = (module as any).XLSXLoader ?? (module as any).XlsxLoader;
-			if (!Loader) {
-				throw new Error('XLSXLoader is not available.');
-			}
-			const loader = new Loader(filePath);
-			return loader.load();
-		});
+		const workbook = read(buffer, { type: 'buffer' });
+		const docs: Document[] = [];
+
+		for (const sheetName of workbook.SheetNames) {
+			const sheet = workbook.Sheets[sheetName];
+			const csv = utils.sheet_to_csv(sheet);
+			docs.push(
+				new Document({
+					pageContent: csv,
+					metadata: { source: filename, sheet: sheetName }
+				})
+			);
+		}
+
+		return docs;
 	}
 
 	throw new Error(`Unsupported file type: ${extension}`);

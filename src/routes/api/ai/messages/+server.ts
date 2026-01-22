@@ -8,13 +8,14 @@ import { supabase } from '@/supabase';
 import {
 	AI_AGENT_ROLES,
 	AI_DEFAULT_TIMEOUT_MS,
+	AI_IAEDU_TIMEOUT_MS,
 	AI_MAX_RETRIES,
 	AI_MESSAGE_MAX_CHARS,
 	type AiAgentRole,
 	type AiGenerateResult,
 	type AiGenerateSuccess
-} from '@/lib/ai/llm-types';
-import { generateAIMessageIaedu } from '@/lib/ai/providers/iaedu';
+} from '$lib/ai/llm-types';
+import { generateAIMessageIaedu } from '$lib/ai/providers/iaedu';
 import { retrieveRagChunks } from '$lib/server/rag-retrieve';
 
 // #region agent log
@@ -138,6 +139,7 @@ const generateMessageSchema = z.object({
 	agentRole: z.enum(AI_AGENT_ROLES),
 	userId: z.string().min(1).optional(),
 	inputSource: z.enum(['manual', 'auto']).optional(),
+	allowMultipleAiReplies: z.boolean().optional(),
 	proposalPoint: z.string().optional(), // Current round's proposal section content
 	chatHistory: z.array(z.object({
 		content: z.string(),
@@ -279,6 +281,27 @@ async function validateGameProposal(
 
 	if (error || !data) return false;
 	return data.proposal_id === proposalId;
+}
+
+async function getNextAiTurnIndex(
+	supabaseClient: typeof supabase,
+	gameId: number,
+	round: number,
+	agentRole: AiAgentRole
+): Promise<number> {
+	const { count, error } = await supabaseClient
+		.from('discussion_messages')
+		.select('id', { count: 'exact', head: true })
+		.eq('game_id', gameId)
+		.eq('round', round)
+		.eq('participant_type', 'ai_agent')
+		.eq('agent_role', agentRole);
+
+	if (error) {
+		throw new Error(error.message);
+	}
+
+	return (count ?? 0) + 1;
 }
 
 /**
@@ -526,6 +549,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	// #region agent log
 	fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:296',message:'POST handler START',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
 	// #endregion
+	const startedAt = Date.now();
+	console.log('[ai-messages] request start');
 
 	// Ensure anonymous session exists
 	let { data: { session } } = await supabase.auth.getSession();
@@ -556,6 +581,15 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const validated = generateMessageSchema.parse(body);
 	const inputSource = validated.inputSource ?? (validated.latestUserMessage ? 'manual' : 'auto');
+	console.log('[ai-messages] validated', {
+		gameId: validated.gameId,
+		proposalId: validated.proposalId,
+		round: validated.round,
+		agentRole: validated.agentRole,
+		inputSource,
+		chatHistoryCount: validated.chatHistory?.length ?? 0,
+		hasLatestUserMessage: Boolean(validated.latestUserMessage)
+	});
 		
 		// #region agent log
 		fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:270',message:'Request validated',data:{validated},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'F'})}).catch(()=>{});
@@ -590,6 +624,12 @@ export const POST: RequestHandler = async ({ request }) => {
 				validated.proposalPoint?.trim();
 			if (query) {
 				try {
+					const ragStartedAt = Date.now();
+					console.log('[ai-messages] rag retrieve start', {
+						proposalId: validated.proposalId,
+						round: validated.round,
+						queryLength: query.length
+					});
 					const chunks = await retrieveRagChunks({
 						query,
 						proposalId: validated.proposalId,
@@ -600,11 +640,17 @@ export const POST: RequestHandler = async ({ request }) => {
 					if (chunks.length > 0) {
 						ragContext = buildRagContext(chunks, RAG_CONTEXT_MAX_CHARS);
 					}
+					console.log('[ai-messages] rag retrieve done', {
+						chunkCount: chunks.length,
+						ragContextChars: ragContext?.length ?? 0,
+						elapsedMs: Date.now() - ragStartedAt
+					});
 				} catch (error) {
 					const message = error instanceof Error ? error.message : String(error);
 					// #region agent log
 					fetch('http://127.0.0.1:7242/ingest/37357ea7-fbc2-42a4-91b4-62ceeaddd590',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'messages/+server.ts:rag',message:'RAG retrieval failed',data:{errorMessage:message,proposalId:validated.proposalId,round:validated.round},timestamp:Date.now(),sessionId:'debug-session',runId:'initial',hypothesisId:'RAG'})}).catch(()=>{});
 					// #endregion
+					console.log('[ai-messages] rag retrieve failed', { error: message });
 				}
 			}
 		}
@@ -613,14 +659,28 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Check if message already exists for this agent in this round
 		// Type assertion needed because discussion_messages table not in generated types yet
 		const supabaseAny = supabase as any;
-		const { data: existingMessage } = await supabaseAny
-			.from('discussion_messages')
-			.select('id, content, agent_role, round, created_at')
-			.eq('game_id', validated.gameId)
-			.eq('round', validated.round)
-			.eq('participant_type', 'ai_agent')
-			.eq('agent_role', validated.agentRole)
-			.single();
+		const allowMultipleAiReplies = validated.allowMultipleAiReplies === true;
+		let existingMessage = null as
+			| {
+					id: number;
+					content: string;
+					agent_role: string;
+					round: number;
+					created_at: string;
+			  }
+			| null;
+
+		if (!allowMultipleAiReplies) {
+			const { data } = await supabaseAny
+				.from('discussion_messages')
+				.select('id, content, agent_role, round, created_at')
+				.eq('game_id', validated.gameId)
+				.eq('round', validated.round)
+				.eq('participant_type', 'ai_agent')
+				.eq('agent_role', validated.agentRole)
+				.single();
+			existingMessage = data;
+		}
 
 		// If message already exists, return it instead of generating a new one
 		if (existingMessage) {
@@ -647,12 +707,39 @@ export const POST: RequestHandler = async ({ request }) => {
 		let messageContent: string;
 		let provider: 'gemini' | 'iaedu' = 'gemini';
 		let model = 'gemini-2.5-flash';
+		const turnIndex = allowMultipleAiReplies
+			? await getNextAiTurnIndex(
+					supabase,
+					validated.gameId,
+					validated.round,
+					validated.agentRole
+			  )
+			: null;
 
 		if (ACTIVE_PROVIDER === 'iaedu') {
 			let aiResult: AiGenerateResult;
+			const aiStartedAt = Date.now();
+			const timeoutMs = AI_IAEDU_TIMEOUT_MS;
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => {
+				controller.abort();
+				console.log('[ai-messages] iaedu timeout abort', {
+					elapsedMs: Date.now() - aiStartedAt,
+					timeoutMs
+				});
+			}, timeoutMs);
+
+			console.log('[ai-messages] iaedu start', {
+				agentRole: validated.agentRole,
+				round: validated.round,
+				hasRagContext: Boolean(ragContext),
+				ragContextChars: ragContext?.length ?? 0,
+				timeoutMs
+			});
+
 			try {
-				aiResult = await withTimeout(
-					generateAIMessageIaedu({
+				aiResult = await generateAIMessageIaedu(
+					{
 						gameId: validated.gameId,
 						proposalId: validated.proposalId,
 						round: validated.round,
@@ -663,10 +750,11 @@ export const POST: RequestHandler = async ({ request }) => {
 						ragContext: ragContext || undefined,
 						chatHistory: validated.chatHistory,
 						latestUserMessage: validated.latestUserMessage ?? null
-					}),
-					AI_DEFAULT_TIMEOUT_MS
+					},
+					{ signal: controller.signal }
 				);
 			} catch (error) {
+				clearTimeout(timeoutId);
 				const reason = error instanceof Error ? error.message : String(error);
 				const code = reason === 'timeout' ? 'timeout' : 'provider_error';
 				const response = buildErrorResponse({
@@ -676,7 +764,14 @@ export const POST: RequestHandler = async ({ request }) => {
 					provider: 'iaedu'
 				});
 				return json(response, { status: code === 'timeout' ? 504 : 500 });
+			} finally {
+				clearTimeout(timeoutId);
 			}
+
+			console.log('[ai-messages] iaedu done', {
+				success: aiResult.success,
+				elapsedMs: Date.now() - aiStartedAt
+			});
 
 			if (!aiResult.success) {
 				const status =
@@ -686,7 +781,9 @@ export const POST: RequestHandler = async ({ request }) => {
 							? 401
 							: aiResult.error.code === 'provider_unavailable'
 								? 503
-								: 500;
+								: aiResult.error.code === 'timeout'
+									? 504
+									: 500;
 
 				return json(aiResult, { status });
 			}
@@ -769,6 +866,14 @@ export const POST: RequestHandler = async ({ request }) => {
 		// #endregion
 
 		// Store message in database
+		console.log('[ai-messages] db insert', {
+			gameId: validated.gameId,
+			proposalId: validated.proposalId,
+			round: validated.round,
+			agentRole: validated.agentRole,
+			turnIndex,
+			elapsedMs: Date.now() - startedAt
+		});
 		const { data: message, error: insertError } = await supabaseAny
 			.from('discussion_messages')
 			.insert({
@@ -777,6 +882,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				round: validated.round,
 				participant_type: 'ai_agent',
 				agent_role: validated.agentRole,
+				turn_index: turnIndex,
 				content: messageContent,
 				metadata: {
 					proposal_point: proposalPoint,
@@ -805,13 +911,13 @@ export const POST: RequestHandler = async ({ request }) => {
 					.eq('agent_role', validated.agentRole)
 					.single();
 
-				if (existingMsg) {
-					const response: AiGenerateSuccess = {
-						success: true,
-						provider: 'gemini',
-						model: 'gemini-2.5-flash',
-						message: {
-							id: existingMsg.id,
+			if (existingMsg) {
+				const response: AiGenerateSuccess = {
+					success: true,
+					provider: 'gemini',
+					model: 'gemini-2.5-flash',
+					message: {
+						id: existingMsg.id,
 							content: existingMsg.content,
 							agentRole: existingMsg.agent_role as AiAgentRole,
 							round: existingMsg.round,
@@ -826,6 +932,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			console.error('Database insert error:', insertError);
 			return json({ error: 'Failed to store message' }, { status: 500 });
 		}
+		console.log('[ai-messages] response success', {
+			elapsedMs: Date.now() - startedAt
+		});
 
 		const response: AiGenerateSuccess = {
 			success: true,

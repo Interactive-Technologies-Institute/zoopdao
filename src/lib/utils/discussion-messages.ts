@@ -173,7 +173,10 @@ export async function storeAIMessage(
 	round: number,
 	agentId: string,
 	agentRole: 'administration' | 'research' | 'reception' | 'operations' | 'bar' | 'cleaning',
-	content: string
+	content: string,
+	options?: {
+		turnIndex?: number | null;
+	}
 ): Promise<DiscussionMessage | null> {
 	const { data, error } = await supabase
 		.from('discussion_messages')
@@ -184,6 +187,7 @@ export async function storeAIMessage(
 			participant_type: 'ai_agent',
 			participant_id: null,
 			agent_role: agentRole,
+			turn_index: options?.turnIndex ?? null,
 			content: content,
 			metadata: { agent_id: agentId }
 		})
@@ -234,4 +238,3 @@ export async function getChatHistoryForAI(
 			round: msg.round
 		}));
 }
-

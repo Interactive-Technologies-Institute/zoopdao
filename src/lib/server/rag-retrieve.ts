@@ -29,6 +29,13 @@ export async function retrieveRagChunks({
 	round,
 	topK = 6
 }: RagRetrieveRequest): Promise<RagChunkResult[]> {
+	const startedAt = Date.now();
+	console.log('[rag-retrieve] start', {
+		proposalId,
+		round,
+		topK,
+		queryLength: query.length
+	});
 	const supabaseAdmin = getSupabaseAdmin();
 	const embeddings = createOpenRouterEmbeddings();
 	const store = new SupabaseVectorStore(embeddings, {
@@ -38,7 +45,12 @@ export async function retrieveRagChunks({
 	});
 
 	const filter = { proposal_id: proposalId, round };
+	console.log('[rag-retrieve] similarity search', { filter });
 	const results = await store.similaritySearchWithScore(query, topK, filter);
+	console.log('[rag-retrieve] done', {
+		resultCount: results.length,
+		elapsedMs: Date.now() - startedAt
+	});
 
 	return results.map(([doc, score]) => ({
 		content: doc.pageContent,
