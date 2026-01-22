@@ -24,7 +24,7 @@
 	style="background-image: url('/images/cards/{card.type}.svg');"
 >
 	<div class="h-1/4 w-full flex items-center pl-24">
-		<h3 class=" text-seafoam font-bold leading-snug text-xl">
+		<h3 class="text-white font-bold leading-snug text-xl">
 			{card.title}
 		</h3>
 	</div>

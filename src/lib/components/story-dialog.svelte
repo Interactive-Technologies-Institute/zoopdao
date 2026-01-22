@@ -158,6 +158,7 @@
 	function getFallbackCardType(roundIndex: number): CardData['type'] {
 		// Keep both long-term objectives visually consistent.
 		// Round 1 and 2 correspond to long-term objective 1 and 2.
+		if (roundIndex <= 0) return 'nature';
 		if (roundIndex === 1) return 'sense';
 		const types: CardData['type'][] = ['nature', 'sense', 'history', 'action', 'landmark'];
 		return types[(roundIndex - 1) % types.length];
@@ -320,7 +321,11 @@
 			>
 				<div class="shrink-0 flex flex-col items-stretch">
 					{#if round.index === 0}
-						<CharacterCard character={player?.character ?? 'child'} />
+						{#if displayCard}
+							<Card card={displayCard} />
+						{:else}
+							<CharacterCard character={player?.character ?? 'child'} />
+						{/if}
 						{#if player && isNonHumanCharacter(player.character)}
 							<Button variant="outline" class="mt-2" onclick={() => (showSpeciesDialog = true)}
 								>{getLocale() === 'pt'
