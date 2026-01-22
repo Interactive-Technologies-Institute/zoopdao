@@ -266,6 +266,21 @@ async function getProposalPoint(
 	}
 }
 
+async function validateGameProposal(
+	supabaseClient: typeof supabase,
+	gameId: number,
+	proposalId: number
+): Promise<boolean> {
+	const { data, error } = await supabaseClient
+		.from('games')
+		.select('proposal_id')
+		.eq('id', gameId)
+		.single();
+
+	if (error || !data) return false;
+	return data.proposal_id === proposalId;
+}
+
 /**
  * Retry helper with exponential backoff for API calls
  */
@@ -549,6 +564,20 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Get proposal point content
 		let proposalPoint: string | null = null;
 		if (validated.proposalId) {
+			const proposalMatchesGame = await validateGameProposal(
+				supabase,
+				validated.gameId,
+				validated.proposalId
+			);
+			if (!proposalMatchesGame) {
+				const response = buildErrorResponse({
+					code: 'invalid_request',
+					message: 'Proposal does not match game.',
+					provider: ACTIVE_PROVIDER
+				});
+				return json(response, { status: 400 });
+			}
+
 			proposalPoint = await getProposalPoint(supabase, validated.proposalId, validated.round);
 		}
 
