@@ -8,6 +8,7 @@
 	import type { StoryRound } from '$lib/types';
 	import ProposalDialog from '@/components/proposal-dialog.svelte';
 	import { ROLES } from '@/types';
+	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 
 	let { data } = $props();
 	const buttonColor = {
@@ -37,8 +38,8 @@
 
 	function getBadgeSrc(characterType: string | null | undefined) {
 		const type = characterType ?? 'custom';
-		if (roleSet.has(type)) return `/images/characters/badges/roles/${type}.svg`;
-		return `/images/characters/badges/${type}.svg`;
+		if (roleSet.has(type)) return `${ZOOP_THEME_ASSET_PREFIX}/characters/badges/roles/${type}.svg`;
+		return `${ZOOP_THEME_ASSET_PREFIX}/characters/badges/${type}.svg`;
 	}
 
 	async function copyToClipboard() {
@@ -117,12 +118,12 @@
 				<Button href={localizeHref(`/stories/${data.story_id}`)}>{m.read_more()}</Button>
 			</div>
 		</div>
-		<button
-			class="w-full mt-2 px-4 py-3 text-left rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-gray-50 transition-colors text-deep-teal font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-			onclick={() => (openProposalDialog = true)}
-			disabled={!hasProposal}
-			aria-disabled={!hasProposal}
-		>
+	<button
+		class="w-full mt-2 px-4 py-3 text-left rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-tertiary/40 transition-colors text-deep-teal font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+		onclick={() => (openProposalDialog = true)}
+		disabled={!hasProposal}
+		aria-disabled={!hasProposal}
+	>
 			<FileText class="h-4 w-4" />
 			{m.view_full_proposal()}
 		</button>

@@ -17,6 +17,8 @@
 	import { getCharacterCategory, type Card as CardData, type Character } from '@src/lib/types';
 	import SpeciesInfoDialog from './species-info-dialog.svelte';
 	import ProposalDialog from '@/components/proposal-dialog.svelte';
+	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
+	import { getProposalCardType } from '$lib/utils/proposal-cards';
 
 	let audio: HTMLAudioElement;
 	let click_sound: HTMLAudioElement;
@@ -156,20 +158,16 @@
 	}
 
 	function getFallbackCardType(roundIndex: number): CardData['type'] {
-		// Keep both long-term objectives visually consistent.
-		// Round 1 and 2 correspond to long-term objective 1 and 2.
-		if (roundIndex <= 0) return 'nature';
-		if (roundIndex === 1) return 'sense';
-		const types: CardData['type'][] = ['nature', 'sense', 'history', 'action', 'landmark'];
-		return types[(roundIndex - 1) % types.length];
+		return getProposalCardType(roundIndex);
 	}
 
-	function buildProposalCard(roundIndex: number, text: string): CardData {
+	function buildProposalCard(roundIndex: number, text: string): CardData & { assetType?: string } {
 		return {
 			id: -roundIndex,
 			type: getFallbackCardType(roundIndex),
 			title: getTranslation(ROUNDS[roundIndex]?.title),
 			text,
+			assetType: roundIndex === 6 ? 'functionality' : undefined,
 			hero_steps: [],
 			character_category: ['human']
 		};
@@ -312,6 +310,7 @@
 			{@const proposalText = getProposalTextForRound(round.index)}
 			{@const displayCard = proposalText ? buildProposalCard(round.index, proposalText) : null}
 			{@const isCurrentRound = round.index === currentRound}
+			{@const isFutureRound = round.index > (currentRound ?? -1)}
 			<div
 				id={`round-${round.index}`}
 				class="flex flex-col items-center lg:flex-row lg:items-stretch gap-8 w-full {round.index >
@@ -340,7 +339,7 @@
 					{:else if round.index === 7}
 						<div
 							class="w-64 h-96 bg-white rounded-xl bg-center border-2 border-gray-400/50 relative"
-							style="background-image: url('/images/cards/post-story.svg');"
+							style={`background-image: url('${ZOOP_THEME_ASSET_PREFIX}/cards/post-story.svg');`}
 						>
 							<div class="absolute inset-0 pb-32 px-4 flex flex-col justify-end text-center gap-3">
 								<h3 class={`text-2xl font-bold text-white`}>{m.post_story()}</h3>
@@ -359,7 +358,7 @@
 					{#if isCurrentRound}
 						<Button
 							variant="outline"
-							class="mt-2 w-full flex items-center justify-center gap-2"
+							class="mt-2 w-full flex items-center justify-center gap-2 hover:bg-tertiary/40"
 							onclick={() => (openProposalDialog = true)}
 							disabled={!proposalId}
 						>
@@ -371,17 +370,21 @@
 				<div class="flex flex-col items-stretch w-full">
 					<div class="flex items-center gap-2">
 						{#if round.index === 0}
-							<div class="w-8 h-8 rounded-full bg-[#FF6157] grid place-items-center">
+							<div class="w-8 h-8 rounded-full bg-[#FF6157] bos-accent-bg grid place-items-center">
 								<Flag class="w-4 h-4 text-white flex items-center justify-center" />
 							</div>
 						{:else if round.index === 7}
-							<div class="w-8 h-8 rounded-full bg-deep-teal grid place-items-center">
+							<div
+								class="w-8 h-8 rounded-full grid place-items-center {isFutureRound ? 'bg-red-500' : 'bg-deep-teal'}"
+							>
 								<div class="w-4 h-4 flex items-center justify-center">
 									<PostStory color={'white'} />
 								</div>
 							</div>
 						{:else}
-							<div class="w-8 h-8 rounded-full bg-deep-teal grid place-items-center">
+							<div
+								class="w-8 h-8 rounded-full grid place-items-center {isFutureRound ? 'bg-red-500' : 'bg-deep-teal'}"
+							>
 								<span
 									class="text-white font-medium text-center text-base flex items-center justify-center"
 									>{round.index}</span
