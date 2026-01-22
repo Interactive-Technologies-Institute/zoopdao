@@ -1,33 +1,12 @@
 import { Document } from '@langchain/core/documents';
-import { OpenAIEmbeddings } from '@langchain/openai';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
-import {
-	OPENROUTER_API_KEY,
-	OPENROUTER_BASE_URL,
-	OPENROUTER_EMBEDDING_MODEL,
-	OPENROUTER_SITE_URL,
-	OPENROUTER_APP_NAME
-} from '$env/static/private';
 import { getSupabaseAdmin } from './supabase-admin';
 import { mkdtemp, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, extname } from 'node:path';
+import { createOpenRouterEmbeddings } from './openrouter-embeddings';
 
 const DOCUMENTS_BUCKET = 'discussion-documents';
-const DEFAULT_EMBEDDING_MODEL = OPENROUTER_EMBEDDING_MODEL || 'baai/bge-m3';
-const DEFAULT_BASE_URL = OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-
-function buildOpenRouterHeaders() {
-	const headers: Record<string, string> = {};
-	if (OPENROUTER_SITE_URL) {
-		headers['HTTP-Referer'] = OPENROUTER_SITE_URL;
-	}
-	if (OPENROUTER_APP_NAME) {
-		headers['X-Title'] = OPENROUTER_APP_NAME;
-	}
-	return headers;
-}
-
 export interface IngestFilePayload {
 	storagePath: string;
 	filename: string;
@@ -132,20 +111,7 @@ async function loadDocumentsFromBuffer(
 
 export async function ingestDocuments(payload: IngestRequestPayload): Promise<IngestResult[]> {
 	const supabaseAdmin = getSupabaseAdmin();
-	if (!OPENROUTER_API_KEY) {
-		throw new Error('OPENROUTER_API_KEY is not configured.');
-	}
-
-	const embeddings = new OpenAIEmbeddings(
-		{
-			model: DEFAULT_EMBEDDING_MODEL,
-			apiKey: OPENROUTER_API_KEY
-		},
-		{
-			baseURL: DEFAULT_BASE_URL,
-			defaultHeaders: buildOpenRouterHeaders()
-		}
-	);
+	const embeddings = createOpenRouterEmbeddings();
 	const splitter = new RecursiveCharacterTextSplitter({
 		chunkSize: 1000,
 		chunkOverlap: 200
