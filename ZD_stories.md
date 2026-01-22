@@ -1806,3 +1806,167 @@ e) Modules/scripts to review: `src/routes/[code]/game/+page.svelte`, `src/lib/co
 
 **Completion Criteria:**
 1) Updated colors are visually verified in Round 7.
+
+---
+
+## ZD-145: Epic — BoS colors palette and font
+
+**Overview:**
+Create a configuration-driven theme system to switch between AVG and BoS/project-chuva. Make the global font configurable (defaulting to Arial). The BoS palette must follow the provided colors and the reference in `static/images/bos_logos.png`.
+
+**Goal:**
+Enable fast palette and font switching without code edits, and make BoS visually consistent across core UI screens.
+
+**Description:**
+a) Add/confirm config variables for theme and font (e.g., `PUBLIC_ZOOP_THEME=avg|bos`, `PUBLIC_ZOOP_FONT_FAMILY=Arial`).
+b) Define theme token maps for AVG and BoS in `src/app.css`, and map Tailwind colors to CSS variables in `tailwind.config.ts`.
+c) Implement BoS palette tokens using HEX: `#D20A0A`, `#3CA5E6`, `#E6C800`, `#3CA03C`, `#000000`, aligned to the BoS visual reference.
+d) Apply the configured font globally via `--zd-font-family` and ensure safe fallbacks.
+e) De-hardcode UI colors so components read from theme tokens (buttons, dialogs, cards, input bars).
+f) Use `static/images/bos_logos.png` as the visual reference and add a themeable SVG variant for UI usage.
+g) Modules/scripts to review: `src/lib/config/theme.ts`, `src/app.css`, `tailwind.config.ts`, `src/lib/components/ui/button/button.svelte`, `src/lib/components/discussion-input-bar.svelte`, `src/lib/components/discussion-history-dialog.svelte`, `src/routes/[code]/game/+page.svelte`.
+
+**Acceptance Criteria:**
+1) A single config variable switches between AVG and BoS themes at runtime.
+2) BoS palette uses the provided HEX colors and matches the reference image.
+3) Global font switches to Arial when configured without layout breakage.
+4) Core UI components use theme tokens instead of hardcoded colors.
+
+**Completion Criteria:**
+1) Theme and font switching are documented and visually verified on at least two core screens.
+2) BoS theme renders consistently across buttons, cards, dialogs, and input bars.
+
+---
+
+## ZD-145a: Theme config + token map
+
+**Overview:**
+Implement theme selection and color token maps so the app can switch between AVG and BoS palettes at runtime.
+
+**Goal:**
+Centralize theme configuration and expose a consistent set of tokens to the UI.
+
+**Description:**
+a) Update `src/lib/config/theme.ts` to support `avg|bos` and apply `data-theme` at runtime.
+b) Define CSS variables for each theme in `src/app.css` (primary, secondary, accent, background, surface, text, border).
+c) Map Tailwind colors to CSS variables in `tailwind.config.ts` so components use tokens by default.
+d) Document the theme switch variables and expected values.
+
+**Acceptance Criteria:**
+1) Theme switching works by changing `PUBLIC_ZOOP_THEME` only.
+2) All theme tokens are defined for AVG and BoS.
+3) Tailwind color utilities reflect the active theme tokens.
+
+**Completion Criteria:**
+1) Runtime theme switching is verified for both themes.
+
+---
+
+## ZD-145b: Typography + font configuration
+
+**Overview:**
+Apply a configurable global font and ensure text colors use theme tokens with readable contrast.
+
+**Goal:**
+Make typography consistent and theme-aware, with Arial as the default configured font.
+
+**Description:**
+a) Apply `--zd-font-family` to `body` and core typography styles in `src/app.css`.
+b) Map Tailwind `fontFamily` to the CSS variable in `tailwind.config.ts`.
+c) Ensure headings, body text, labels, and hints use theme text tokens (including BoS black).
+d) Verify fallback fonts are present if Arial is unavailable.
+
+**Acceptance Criteria:**
+1) Setting `PUBLIC_ZOOP_FONT_FAMILY=Arial` applies Arial across the app.
+2) Text colors come from theme tokens and remain readable in BoS.
+
+**Completion Criteria:**
+1) Typography is visually verified on at least two core screens.
+
+---
+
+## ZD-145c: Buttons + interactive controls
+
+**Overview:**
+Align buttons and interactive controls with theme tokens, including hover/active/disabled states.
+
+**Goal:**
+Ensure interactive elements reflect the active palette consistently.
+
+**Description:**
+a) Update `src/lib/components/ui/button/button.svelte` to use theme tokens for background, text, and borders.
+b) Apply token-based styles to inputs and controls in `src/lib/components/discussion-input-bar.svelte`.
+c) Define hover/active/disabled states for primary and secondary controls using BoS colors.
+
+**Acceptance Criteria:**
+1) Buttons and controls reflect the active theme across states.
+2) BoS theme buttons use the BoS palette with readable contrast.
+
+**Completion Criteria:**
+1) Controls are visually verified in lobby and game views.
+
+---
+
+## ZD-145d: Surfaces + backgrounds
+
+**Overview:**
+Update cards, dialogs, panels, and backgrounds to use theme surface tokens.
+
+**Goal:**
+Remove hardcoded colors from major UI surfaces and ensure consistent contrast.
+
+**Description:**
+a) Apply surface/background tokens in dialogs and cards (e.g., `src/lib/components/discussion-history-dialog.svelte`, `src/lib/components/help-dialog.svelte`).
+b) Update page-level backgrounds where necessary (e.g., `src/routes/[code]/game/+page.svelte`).
+c) Ensure borders and overlays use theme border/overlay tokens.
+
+**Acceptance Criteria:**
+1) Core surfaces use theme tokens in all three themes.
+2) BoS surfaces maintain readable contrast and hierarchy.
+
+**Completion Criteria:**
+1) Dialogs and cards are visually validated under BoS.
+
+---
+
+## ZD-145e: BoS SVG assets
+
+**Overview:**
+Add a themeable SVG version of the BoS logo so colors can be swapped via CSS tokens.
+
+**Goal:**
+Make BoS visual assets adaptable to the active theme.
+
+**Description:**
+a) Create `static/images/bos_logos.svg` as a single-color vector version of `static/images/bos_logos.png`.
+b) Ensure the SVG uses a CSS-controlled fill (e.g., `currentColor` or a CSS variable).
+c) Document how to use the SVG in components that need theme-aware logo colors.
+
+**Acceptance Criteria:**
+1) SVG renders correctly and can be recolored via CSS tokens.
+2) SVG matches the visual style of the PNG reference.
+
+**Completion Criteria:**
+1) SVG is verified in at least one UI location.
+
+---
+
+## ZD-145f: Component audit + de-hardcode
+
+**Overview:**
+Audit components for hardcoded colors and replace them with theme tokens.
+
+**Goal:**
+Ensure the theme system fully controls color across UI components.
+
+**Description:**
+a) Scan for hardcoded HEX/RGB colors in `src` and replace with CSS variable tokens.
+b) Prioritize dialogs, cards, input bars, headers, and buttons.
+c) Validate that theme switching no longer leaves legacy colors behind.
+
+**Acceptance Criteria:**
+1) No hardcoded palette colors remain in themeable UI components.
+2) Theme changes update colors consistently across targeted components.
+
+**Completion Criteria:**
+1) Visual sweep completed on lobby, game, and discussion screens.
