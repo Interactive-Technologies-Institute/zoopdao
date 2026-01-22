@@ -8,6 +8,7 @@
 	import { onMount } from 'svelte';
 	import { getVotingPeriods, getExceptionalVotingPeriods, getProposalStatus } from '$lib/data/voting-periods';
 	import { Circle, CheckCircle2 } from 'lucide-svelte';
+	import { ZOOP_THEME, resolveZoopTheme, ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 
 	let { data } = $props();
 
@@ -81,26 +82,31 @@
 		selectedLanguage = lang;
 		setLocale(lang); // Update the locale using the Paraglide runtime
 	}
+
+	const activeTheme = resolveZoopTheme(ZOOP_THEME);
+	function getHomeIllustrationSrc(name: string) {
+		return activeTheme === 'bos'
+			? `${ZOOP_THEME_ASSET_PREFIX}/illustrations/${name}_blop.svg`
+			: `/images/illustrations/${name}.png`;
+	}
 </script>
 
-<div class="h-screen flex flex-col items-center justify-center bg-[#efe7e2] relative p-4">
+<div class="h-screen flex flex-col items-center justify-center bg-[#efe7e2] bos-bg relative p-4">
 	<div class="z-10 flex flex-col items-center justify-center max-w-md relative">
 		<div
 			class="absolute -left-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
 		>
-			<img src="/images/illustrations/step_5_1_home.png" alt="" class="w-full h-full object-contain" />
+			<img src={getHomeIllustrationSrc('step_5_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
 		<div
 			class="absolute -right-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
 		>
-			<img src="/images/illustrations/step_2_1_home.png" alt="" class="w-full h-full object-contain" />
+			<img src={getHomeIllustrationSrc('step_2_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
-		<h1 class="flex items-center justify-center text-deep-teal font-black text-5xl md:text-7xl">
+		<h1 class="bos-title flex items-center justify-center text-deep-teal font-black text-5xl md:text-7xl">
 			ZoopDAO
 		</h1>
-		<p class="text-deep-teal text-center text-lg mb-5 px-4 italic">
-			"Participate on the multispecies governance in Aquário Vasco da Gama"
-		</p>
+		<p class="text-deep-teal text-center text-lg mb-5 px-4 italic">{m.home_tagline()}</p>
 		<div
 			class="w-full flex flex-col items-stretch justify-center gap-6 mt-4 p-4 rounded-lg border-2"
 		>
@@ -167,12 +173,12 @@
 		<div
 			class="absolute -right-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
 		>
-			<img src="/images/illustrations/step_4_1_home.png" alt="" class="w-full h-full object-contain" />
+			<img src={getHomeIllustrationSrc('step_4_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
 		<div
 			class="absolute -left-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
 		>
-			<img src="/images/illustrations/step_6_1_home.png" alt="" class="w-full h-full object-contain" />
+			<img src={getHomeIllustrationSrc('step_6_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
 	</div>
 	<div class="absolute top-4 right-4">

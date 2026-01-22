@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.08 226.77" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0F1717" />
+      <stop offset="0.55" stop-color="#05363D" />
+      <stop offset="1" stop-color="#7F8A8A" />
+    </linearGradient>
+    <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.8" fill="#D7D2C3" opacity="0.10" />
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="170.08" height="226.77" fill="url(#bg)" />
+  <rect x="0" y="0" width="170.08" height="226.77" fill="url(#dots)" />
+
+  <path
+    d="M-18 168 C 14 142, 46 190, 82 164 S 140 152, 210 186"
+    stroke="#B8B09C"
+    stroke-width="12"
+    opacity="0.16"
+    stroke-linecap="round"
+  />
+  <path
+    d="M-12 198 C 20 172, 56 214, 92 184 S 148 174, 214 210"
+    stroke="#23C1D2"
+    stroke-width="7"
+    opacity="0.10"
+    stroke-linecap="round"
+  />
+
+  <rect x="8" y="8" width="154.08" height="210.77" rx="10" stroke="#7F8A8A" opacity="0.30" />
+
+  <circle cx="30" cy="34" r="17" fill="#0A1F22" opacity="0.55" />
+  <circle cx="30" cy="34" r="15" fill="#7F8A8A" opacity="0.95" />
+  <path
+    d="M23 24.8h14c2.2 0 4 1.8 4 4v14.4c0 2.2-1.8 4-4 4H23c-2.2 0-4-1.8-4-4V28.8c0-2.2 1.8-4 4-4Z"
+    fill="#0F1717"
+    opacity="0.7"
+  />
+  <path d="M25 33.2h10.8" stroke="#C8FBFF" stroke-width="1.6" opacity="0.85" stroke-linecap="round" />
+  <path d="M30.4 27.8v10.8" stroke="#C8FBFF" stroke-width="1.6" opacity="0.85" stroke-linecap="round" />
+  <path d="M24.8 41.4h10.8" stroke="#C8FBFF" stroke-width="1.6" opacity="0.65" stroke-linecap="round" />
+
+  <path d="M92 88l18 10-18 10" stroke="#D7D2C3" stroke-width="2" opacity="0.20" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M142 108l-18-10 18-10" stroke="#D7D2C3" stroke-width="2" opacity="0.20" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M106 98h24" stroke="#D7D2C3" stroke-width="2" opacity="0.18" stroke-linecap="round" />
+</svg>

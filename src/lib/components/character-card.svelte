@@ -3,6 +3,7 @@
 	import { ROLES } from '@/types';
 	import { m } from '@src/paraglide/messages';
 	import { CHARACTER } from '../data/characters';
+	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 
 	interface CharacterCardProps {
 		character: Character;
@@ -26,7 +27,7 @@
 
 <div
 	class="w-64 h-96 bg-white rounded-xl bg-cover bg-center border-2 border-gray-400/50 relative {className}"
-	style="background-image: url('/images/characters/cards/{roleSet.has(character as unknown as string) ? `roles/${character}` : character}.svg');"
+	style={`background-image: url('${ZOOP_THEME_ASSET_PREFIX}/characters/cards/${roleSet.has(character as unknown as string) ? `roles/${character}` : character}.svg');`}
 >
 	<div class="absolute inset-0 mb-2 px-1 pb-2 flex flex-col justify-end text-center gap-2">
 		<h3 class={`text-sm lg:text-2xl font-bold text-deep-teal`}>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000000" />
+      <stop offset="1" stop-color="#000000" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="64" cy="64" r="62" fill="#000000" />
+  <circle cx="64" cy="64" r="58" fill="url(#bg)" />
+  <circle cx="64" cy="64" r="58" stroke="#3CA5E6" opacity="0.25" stroke-width="2" />
+
+  <!-- gear (simplified) -->
+  <circle cx="64" cy="64" r="20" stroke="#E6C800" stroke-width="8" opacity="0.9" />
+  <circle cx="64" cy="64" r="6" fill="#E6C800" opacity="0.9" />
+  <path d="M64 34v10" stroke="#E6C800" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <path d="M64 84v10" stroke="#E6C800" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <path d="M34 64h10" stroke="#E6C800" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <path d="M84 64h10" stroke="#E6C800" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <path d="M44 44l7 7" stroke="#3CA03C" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+  <path d="M84 84l-7-7" stroke="#3CA03C" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+  <path d="M84 44l-7 7" stroke="#3CA03C" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+  <path d="M44 84l7-7" stroke="#3CA03C" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.08 226.77" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A1F22" />
+      <stop offset="0.55" stop-color="#05363D" />
+      <stop offset="1" stop-color="#23C1D2" />
+    </linearGradient>
+    <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.8" fill="#7FE3F2" opacity="0.12" />
+    </pattern>
+  </defs>
+
+  <rect width="170.08" height="226.77" fill="url(#bg)" />
+  <rect width="170.08" height="226.77" fill="url(#dots)" />
+  <rect x="10" y="10" width="150.08" height="206.77" rx="14" stroke="#7F8A8A" opacity="0.28" />
+
+  <circle cx="85.04" cy="54" r="26" fill="#0F1717" opacity="0.55" />
+  <circle cx="85.04" cy="54" r="22" fill="#23C1D2" opacity="0.95" />
+
+  <!-- goggles + flask -->
+  <circle cx="77" cy="52" r="7" stroke="#C8FBFF" stroke-width="4" opacity="0.9" />
+  <circle cx="93" cy="52" r="7" stroke="#C8FBFF" stroke-width="4" opacity="0.9" />
+  <path d="M83 52h4" stroke="#C8FBFF" stroke-width="4" stroke-linecap="round" opacity="0.9" />
+  <path d="M80 40v8l-10 17c-1.5 2.5.2 6 3.2 6h24c3 0 4.7-3.5 3.2-6L93 48v-8" stroke="#C8FBFF" stroke-width="4" stroke-linejoin="round" opacity="0.75" />
+  <path d="M78 62h14" stroke="#7FE3F2" stroke-width="4" stroke-linecap="round" opacity="0.25" />
+
+  <path d="M-10 170 C 18 146, 52 190, 88 166 S 142 154, 214 188" stroke="#7FE3F2" stroke-width="12" opacity="0.16" stroke-linecap="round" />
+  <path d="M-10 198 C 20 172, 56 214, 92 184 S 148 174, 214 210" stroke="#D7D2C3" stroke-width="7" opacity="0.10" stroke-linecap="round" />
+</svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.08 226.77" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000000" />
+      <stop offset="0.60" stop-color="#000000" />
+      <stop offset="1" stop-color="#3CA5E6" />
+    </linearGradient>
+    <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.8" fill="#3CA5E6" opacity="0.12" />
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="170.08" height="226.77" fill="url(#bg)" />
+  <rect x="0" y="0" width="170.08" height="226.77" fill="url(#dots)" />
+
+  <path
+    d="M-18 166 C 12 140, 44 186, 80 160 S 138 150, 210 182"
+    stroke="#3CA5E6"
+    stroke-width="12"
+    opacity="0.14"
+    stroke-linecap="round"
+  />
+  <path
+    d="M-10 196 C 22 170, 56 214, 92 184 S 146 174, 214 210"
+    stroke="#3CA5E6"
+    stroke-width="7"
+    opacity="0.10"
+    stroke-linecap="round"
+  />
+
+  <rect x="8" y="8" width="154.08" height="210.77" rx="10" stroke="#000000" opacity="0.30" />
+
+  <circle cx="30" cy="34" r="17" fill="#000000" opacity="0.55" />
+  <circle cx="30" cy="34" r="15" fill="#3CA5E6" opacity="0.95" />
+  <circle cx="30" cy="34" r="11" stroke="#000000" stroke-width="2" opacity="0.9" />
+  <circle cx="30" cy="34" r="6" fill="#000000" opacity="0.9" />
+  <rect x="28" y="20" width="4" height="6" fill="#000000" opacity="0.9" />
+  <rect x="28" y="42" width="4" height="6" fill="#000000" opacity="0.9" />
+  <rect x="20" y="32" width="6" height="4" fill="#000000" opacity="0.9" />
+  <rect x="38" y="32" width="6" height="4" fill="#000000" opacity="0.9" />
+
+  <path d="M96 78h56" stroke="#000000" stroke-width="1.5" opacity="0.20" stroke-linecap="round" />
+  <path d="M88 92h64" stroke="#000000" stroke-width="1.5" opacity="0.18" stroke-linecap="round" />
+  <path d="M84 106h68" stroke="#000000" stroke-width="1.5" opacity="0.16" stroke-linecap="round" />
+</svg>

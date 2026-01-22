@@ -1,31 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0f1717" />
-      <stop offset="1" stop-color="#0c6b78" />
+      <stop offset="0" stop-color="rgb(var(--zd-bg-deep))" />
+      <stop offset="1" stop-color="rgb(var(--zd-primary))" />
     </linearGradient>
   </defs>
 
-  <circle cx="64" cy="64" r="62" fill="#0a1f22" />
+  <circle cx="64" cy="64" r="62" fill="rgb(var(--zd-text))" />
   <circle cx="64" cy="64" r="58" fill="url(#bg)" />
-  <circle cx="64" cy="64" r="58" stroke="#d7d2c3" opacity="0.25" stroke-width="2" />
+  <circle cx="64" cy="64" r="58" stroke="rgb(var(--zd-surface))" opacity="0.25" stroke-width="2" />
 
-  <rect x="38" y="34" width="52" height="68" rx="10" fill="#0a1f22" opacity="0.28" />
+  <rect x="38" y="34" width="52" height="68" rx="10" fill="rgb(var(--zd-text))" opacity="0.28" />
   <rect
     x="40"
     y="38"
     width="48"
     height="62"
     rx="9"
-    stroke="#c8fbff"
+    stroke="rgb(var(--zd-bg))"
     stroke-width="6"
     opacity="0.9"
   />
-  <path d="M50 56h28" stroke="#c8fbff" stroke-width="6" stroke-linecap="round" opacity="0.6" />
-  <path d="M50 70h22" stroke="#c8fbff" stroke-width="6" stroke-linecap="round" opacity="0.6" />
+  <path d="M50 56h28" stroke="rgb(var(--zd-bg))" stroke-width="6" stroke-linecap="round" opacity="0.6" />
+  <path d="M50 70h22" stroke="rgb(var(--zd-bg))" stroke-width="6" stroke-linecap="round" opacity="0.6" />
   <path
     d="M52 84l8 8 18-20"
-    stroke="#7fe3f2"
+    stroke="rgb(var(--zd-focus))"
     stroke-width="6"
     stroke-linecap="round"
     stroke-linejoin="round"

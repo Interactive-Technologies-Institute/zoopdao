@@ -1,0 +1,26 @@
+<svg viewBox="0 0 170.08 226.77" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3CA5E6" />
+      <stop offset="0.55" stop-color="#3CA5E6" />
+      <stop offset="1" stop-color="#3CA5E6" />
+    </linearGradient>
+    <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.8" fill="#3CA5E6" opacity="0.08" />
+    </pattern>
+  </defs>
+
+  <rect width="170.08" height="226.77" fill="url(#bg)" />
+  <rect width="170.08" height="226.77" fill="url(#dots)" />
+  <rect x="10" y="10" width="150.08" height="206.77" rx="14" stroke="#000000" opacity="0.28" />
+
+  <circle cx="85.04" cy="54" r="26" fill="#000000" opacity="0.55" />
+  <circle cx="85.04" cy="54" r="22" fill="#000000" opacity="0.95" />
+
+  
+  <path d="M98 39c-18 6-28 20-30 32 16-2 30-14 36-26 3-6 2-9-6-9Z" stroke="#000000" stroke-width="4" stroke-linejoin="round" opacity="0.9" />
+  <path d="M75 71c8-8 16-14 25-19" stroke="#000000" stroke-width="3.5" stroke-linecap="round" opacity="0.35" />
+
+  <path d="M-10 170 C 10 150, 50 196, 88 170 S 144 160, 214 194" stroke="#000000" stroke-width="12" opacity="0.16" stroke-linecap="round" />
+  <path d="M-10 198 C 20 172, 56 214, 92 184 S 148 174, 214 210" stroke="#000000" stroke-width="7" opacity="0.10" stroke-linecap="round" />
+</svg>

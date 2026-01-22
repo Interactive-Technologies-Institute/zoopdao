@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="264" height="397" viewBox="0 0 264 397" fill="none">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0f1717" />
-      <stop offset="0.55" stop-color="#05363d" />
-      <stop offset="1" stop-color="#0c6b78" />
+      <stop offset="0" stop-color="rgb(var(--zd-bg-deep))" />
+      <stop offset="0.55" stop-color="rgb(var(--zd-primary-active))" />
+      <stop offset="1" stop-color="rgb(var(--zd-primary))" />
     </linearGradient>
     <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse">
-      <circle cx="2.5" cy="2.5" r="1" fill="#7fe3f2" opacity="0.10" />
+      <circle cx="2.5" cy="2.5" r="1" fill="rgb(var(--zd-focus))" opacity="0.10" />
     </pattern>
   </defs>
 
@@ -15,40 +15,40 @@
 
   <path
     d="M-30 290C30 250 70 340 130 300S220 280 320 340"
-    stroke="#23c1d2"
+    stroke="rgb(var(--zd-primary-hover))"
     stroke-width="18"
     opacity="0.14"
     stroke-linecap="round"
   />
   <path
     d="M-20 340C34 300 84 370 150 330S236 310 330 380"
-    stroke="#d7d2c3"
+    stroke="rgb(var(--zd-surface))"
     stroke-width="10"
     opacity="0.10"
     stroke-linecap="round"
   />
 
-  <rect x="16" y="18.6201" width="232" height="360" rx="18" stroke="#7f8a8a" opacity="0.30" />
+  <rect x="16" y="18.6201" width="232" height="360" rx="18" stroke="rgb(var(--zd-border))" opacity="0.30" />
 
-  <rect x="62" y="84.6201" width="140" height="200" rx="14" fill="#d7d2c3" opacity="0.18" />
+  <rect x="62" y="84.6201" width="140" height="200" rx="14" fill="rgb(var(--zd-surface))" opacity="0.18" />
   <path
     d="M84 124.62h96M84 144.62h96M84 164.62h74M84 184.62h96M84 204.62h88"
-    stroke="#c8fbff"
+    stroke="rgb(var(--zd-bg))"
     stroke-width="4"
     opacity="0.35"
     stroke-linecap="round"
   />
 
-  <circle cx="132" cy="88.6201" r="32" fill="#0a1f22" opacity="0.55" />
-  <circle cx="132" cy="88.6201" r="28" fill="#0c6b78" opacity="0.95" />
-  <path d="M119 95.62h26" stroke="#c8fbff" stroke-width="4" stroke-linecap="round" opacity="0.9" />
-  <path d="M119 83.62h26" stroke="#c8fbff" stroke-width="4" stroke-linecap="round" opacity="0.65" />
-  <path d="M120 77.62l8-8 16 16-8 8-16-16Z" fill="#c8fbff" opacity="0.9" />
+  <circle cx="132" cy="88.6201" r="32" fill="rgb(var(--zd-text))" opacity="0.55" />
+  <circle cx="132" cy="88.6201" r="28" fill="rgb(var(--zd-primary))" opacity="0.95" />
+  <path d="M119 95.62h26" stroke="rgb(var(--zd-bg))" stroke-width="4" stroke-linecap="round" opacity="0.9" />
+  <path d="M119 83.62h26" stroke="rgb(var(--zd-bg))" stroke-width="4" stroke-linecap="round" opacity="0.65" />
+  <path d="M120 77.62l8-8 16 16-8 8-16-16Z" fill="rgb(var(--zd-bg))" opacity="0.9" />
 
-  <circle cx="204" cy="260.62" r="18" fill="#b8b09c" opacity="0.45" />
+  <circle cx="204" cy="260.62" r="18" fill="rgb(var(--zd-surface-muted))" opacity="0.45" />
   <path
     d="M195 260.62l7 7 13-15"
-    stroke="#c8fbff"
+    stroke="rgb(var(--zd-bg))"
     stroke-width="4"
     stroke-linecap="round"
     stroke-linejoin="round"

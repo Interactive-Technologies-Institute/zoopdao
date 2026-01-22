@@ -1,24 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0f1717" />
-      <stop offset="1" stop-color="#7f8a8a" />
+      <stop offset="0" stop-color="rgb(var(--zd-bg-deep))" />
+      <stop offset="1" stop-color="rgb(var(--zd-border))" />
     </linearGradient>
   </defs>
 
-  <circle cx="64" cy="64" r="62" fill="#0a1f22" />
+  <circle cx="64" cy="64" r="62" fill="rgb(var(--zd-text))" />
   <circle cx="64" cy="64" r="58" fill="url(#bg)" />
-  <circle cx="64" cy="64" r="58" stroke="#d7d2c3" opacity="0.25" stroke-width="2" />
+  <circle cx="64" cy="64" r="58" stroke="rgb(var(--zd-surface))" opacity="0.25" stroke-width="2" />
 
   <!-- gear (simplified) -->
-  <circle cx="64" cy="64" r="20" stroke="#c8fbff" stroke-width="8" opacity="0.9" />
-  <circle cx="64" cy="64" r="6" fill="#c8fbff" opacity="0.9" />
-  <path d="M64 34v10" stroke="#c8fbff" stroke-width="6" stroke-linecap="round" opacity="0.9" />
-  <path d="M64 84v10" stroke="#c8fbff" stroke-width="6" stroke-linecap="round" opacity="0.9" />
-  <path d="M34 64h10" stroke="#c8fbff" stroke-width="6" stroke-linecap="round" opacity="0.9" />
-  <path d="M84 64h10" stroke="#c8fbff" stroke-width="6" stroke-linecap="round" opacity="0.9" />
-  <path d="M44 44l7 7" stroke="#7fe3f2" stroke-width="6" stroke-linecap="round" opacity="0.35" />
-  <path d="M84 84l-7-7" stroke="#7fe3f2" stroke-width="6" stroke-linecap="round" opacity="0.35" />
-  <path d="M84 44l-7 7" stroke="#7fe3f2" stroke-width="6" stroke-linecap="round" opacity="0.35" />
-  <path d="M44 84l7-7" stroke="#7fe3f2" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+  <circle cx="64" cy="64" r="20" stroke="rgb(var(--zd-bg))" stroke-width="8" opacity="0.9" />
+  <circle cx="64" cy="64" r="6" fill="rgb(var(--zd-bg))" opacity="0.9" />
+  <path d="M64 34v10" stroke="rgb(var(--zd-bg))" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <path d="M64 84v10" stroke="rgb(var(--zd-bg))" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <path d="M34 64h10" stroke="rgb(var(--zd-bg))" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <path d="M84 64h10" stroke="rgb(var(--zd-bg))" stroke-width="6" stroke-linecap="round" opacity="0.9" />
+  <path d="M44 44l7 7" stroke="rgb(var(--zd-focus))" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+  <path d="M84 84l-7-7" stroke="rgb(var(--zd-focus))" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+  <path d="M84 44l-7 7" stroke="rgb(var(--zd-focus))" stroke-width="6" stroke-linecap="round" opacity="0.35" />
+  <path d="M44 84l7-7" stroke="rgb(var(--zd-focus))" stroke-width="6" stroke-linecap="round" opacity="0.35" />
 </svg>

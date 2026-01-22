@@ -5,6 +5,7 @@
 	import { LANDMARKS } from '@/data/landmarks';
 	import { derived } from 'svelte/store';
 	import { getLocale } from '@src/paraglide/runtime';
+	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 
 	interface SpeciesInfoDialogProps {
 		open: boolean;
@@ -28,7 +29,7 @@
 				{:else}
 					<div class="w-full h-full grid place-items-center bg-sand/30">
 						<img
-							src="/images/cards/landmark.svg"
+							src={`${ZOOP_THEME_ASSET_PREFIX}/cards/landmark.svg`}
 							alt=""
 							class="w-full h-full object-contain opacity-80"
 						/>

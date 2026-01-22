@@ -1812,28 +1812,26 @@ e) Modules/scripts to review: `src/routes/[code]/game/+page.svelte`, `src/lib/co
 ## ZD-145: Epic — BoS colors palette and font
 
 **Overview:**
-Create a configuration-driven theme system to switch between AVG and BoS/project-chuva. Make the global font configurable (defaulting to Arial). The BoS palette must follow the provided colors and the reference in `static/images/bos_logos.png`.
+Create a configuration-driven theme system to switch between AVG and BoS/project-chuva. The BoS palette must follow the provided colors and the reference in `static/images/bos_logos.png`. Font switching is tracked but not wired yet.
 
 **Goal:**
 Enable fast palette and font switching without code edits, and make BoS visually consistent across core UI screens.
 
 **Description:**
-a) Add/confirm config variables for theme and font (e.g., `PUBLIC_ZOOP_THEME=avg|bos`, `PUBLIC_ZOOP_FONT_FAMILY=Arial`).
+a) Add/confirm config variables for theme and font in `src/lib/config/theme.ts` (`ZOOP_THEME`, `ZOOP_FONT_PROFILE`).
 b) Define theme token maps for AVG and BoS in `src/app.css`, and map Tailwind colors to CSS variables in `tailwind.config.ts`.
 c) Implement BoS palette tokens using HEX: `#D20A0A`, `#3CA5E6`, `#E6C800`, `#3CA03C`, `#000000`, aligned to the BoS visual reference.
-d) Apply the configured font globally via `--zd-font-family` and ensure safe fallbacks.
-e) De-hardcode UI colors so components read from theme tokens (buttons, dialogs, cards, input bars).
-f) Use `static/images/bos_logos.png` as the visual reference and add a themeable SVG variant for UI usage.
+ d) De-hardcode UI colors so components read from theme tokens (buttons, dialogs, cards, input bars).
+ e) Use `static/images/bos_logos.png` as the visual reference and add theme-ready SVG variants for UI usage.
 g) Modules/scripts to review: `src/lib/config/theme.ts`, `src/app.css`, `tailwind.config.ts`, `src/lib/components/ui/button/button.svelte`, `src/lib/components/discussion-input-bar.svelte`, `src/lib/components/discussion-history-dialog.svelte`, `src/routes/[code]/game/+page.svelte`.
 
 **Acceptance Criteria:**
 1) A single config variable switches between AVG and BoS themes at runtime.
 2) BoS palette uses the provided HEX colors and matches the reference image.
-3) Global font switches to Arial when configured without layout breakage.
-4) Core UI components use theme tokens instead of hardcoded colors.
+3) Core UI components use theme tokens instead of hardcoded colors.
 
 **Completion Criteria:**
-1) Theme and font switching are documented and visually verified on at least two core screens.
+1) Theme switching is documented and visually verified on at least two core screens.
 2) BoS theme renders consistently across buttons, cards, dialogs, and input bars.
 
 ---
@@ -1847,13 +1845,13 @@ Implement theme selection and color token maps so the app can switch between AVG
 Centralize theme configuration and expose a consistent set of tokens to the UI.
 
 **Description:**
-a) Update `src/lib/config/theme.ts` to support `avg|bos` and apply `data-theme` at runtime.
-b) Define CSS variables for each theme in `src/app.css` (primary, secondary, accent, background, surface, text, border).
+a) Update `src/lib/config/theme.ts` to support `avg|bos`, resolve theme values, and apply `data-theme` at runtime.
+b) Define CSS variables for each theme in `src/app.css` (primary, secondary, accent, background, surface, text, border, heading).
 c) Map Tailwind colors to CSS variables in `tailwind.config.ts` so components use tokens by default.
-d) Document the theme switch variables and expected values.
+d) Add `ZOOP_THEME_ASSET_PREFIX` to route theme-specific SVGs.
 
 **Acceptance Criteria:**
-1) Theme switching works by changing `PUBLIC_ZOOP_THEME` only.
+1) Theme switching works by changing `ZOOP_THEME` in `src/lib/config/theme.ts` (env wiring pending).
 2) All theme tokens are defined for AVG and BoS.
 3) Tailwind color utilities reflect the active theme tokens.
 
@@ -1865,23 +1863,22 @@ d) Document the theme switch variables and expected values.
 ## ZD-145b: Typography + font configuration
 
 **Overview:**
-Apply a configurable global font and ensure text colors use theme tokens with readable contrast.
+Apply a configurable global font and ensure text colors use theme tokens with readable contrast. (Pending)
 
 **Goal:**
-Make typography consistent and theme-aware, with Arial as the default configured font.
+Make typography consistent and theme-aware. (Font switching not implemented yet.)
 
 **Description:**
-a) Apply `--zd-font-family` to `body` and core typography styles in `src/app.css`.
-b) Map Tailwind `fontFamily` to the CSS variable in `tailwind.config.ts`.
+a) Pending: Apply `--zd-font-family` to `body` and core typography styles in `src/app.css`.
+b) Pending: Map Tailwind `fontFamily` to the CSS variable in `tailwind.config.ts`.
 c) Ensure headings, body text, labels, and hints use theme text tokens (including BoS black).
 d) Verify fallback fonts are present if Arial is unavailable.
 
 **Acceptance Criteria:**
-1) Setting `PUBLIC_ZOOP_FONT_FAMILY=Arial` applies Arial across the app.
-2) Text colors come from theme tokens and remain readable in BoS.
+1) Text colors come from theme tokens and remain readable in BoS.
 
 **Completion Criteria:**
-1) Typography is visually verified on at least two core screens.
+1) Typography changes are verified once font switching is implemented.
 
 ---
 
@@ -1929,25 +1926,27 @@ c) Ensure borders and overlays use theme border/overlay tokens.
 
 ---
 
-## ZD-145e: BoS SVG assets
+## ZD-145e: Update SVG assets for AVG/BoS theming
 
 **Overview:**
-Add a themeable SVG version of the BoS logo so colors can be swapped via CSS tokens.
+Ensure existing SVG illustrations support AVG and BoS themes via theme-specific SVG variants. The `bos_logos.png` file is only a visual inspiration, not a required conversion target.
 
 **Goal:**
-Make BoS visual assets adaptable to the active theme.
+Make all SVG-based illustrations theme-adaptive so they switch cleanly between AVG and BoS.
 
 **Description:**
-a) Create `static/images/bos_logos.svg` as a single-color vector version of `static/images/bos_logos.png`.
-b) Ensure the SVG uses a CSS-controlled fill (e.g., `currentColor` or a CSS variable).
-c) Document how to use the SVG in components that need theme-aware logo colors.
+a) Add theme-specific SVG asset folders under `static/images/themes/{avg,bos}`.
+b) Route components to themed assets using `ZOOP_THEME_ASSET_PREFIX`.
+c) Introduce a dedicated functionality card SVG and allow cards to override asset type.
+d) Add BoS-specific home illustration variants (`*_blop.svg`).
+e) Verify SVGs render correctly under both AVG and BoS themes.
 
 **Acceptance Criteria:**
-1) SVG renders correctly and can be recolored via CSS tokens.
-2) SVG matches the visual style of the PNG reference.
+1) Themed SVG assets exist for AVG and BoS and are routed via `ZOOP_THEME_ASSET_PREFIX`.
+2) SVGs render correctly under both AVG and BoS themes without visual regressions.
 
 **Completion Criteria:**
-1) SVG is verified in at least one UI location.
+1) SVGs are verified in the UI across at least two screens for both themes.
 
 ---
 
@@ -1962,7 +1961,8 @@ Ensure the theme system fully controls color across UI components.
 **Description:**
 a) Scan for hardcoded HEX/RGB colors in `src` and replace with CSS variable tokens.
 b) Prioritize dialogs, cards, input bars, headers, and buttons.
-c) Validate that theme switching no longer leaves legacy colors behind.
+c) Update proposal CTA copy strings (`cards_drawn`, `try_for_yourself`) to match the new UI language.
+d) Validate that theme switching no longer leaves legacy colors behind.
 
 **Acceptance Criteria:**
 1) No hardcoded palette colors remain in themeable UI components.

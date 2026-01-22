@@ -1,26 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.08 226.77" fill="none">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0a1f22" />
-      <stop offset="0.55" stop-color="#05363d" />
-      <stop offset="1" stop-color="#23c1d2" />
+      <stop offset="0" stop-color="rgb(var(--zd-text))" />
+      <stop offset="0.55" stop-color="rgb(var(--zd-primary-active))" />
+      <stop offset="1" stop-color="rgb(var(--zd-primary-hover))" />
     </linearGradient>
     <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
-      <circle cx="2" cy="2" r="0.8" fill="#7fe3f2" opacity="0.12" />
+      <circle cx="2" cy="2" r="0.8" fill="rgb(var(--zd-focus))" opacity="0.12" />
     </pattern>
   </defs>
 
   <rect width="170.08" height="226.77" fill="url(#bg)" />
   <rect width="170.08" height="226.77" fill="url(#dots)" />
-  <rect x="10" y="10" width="150.08" height="206.77" rx="14" stroke="#7f8a8a" opacity="0.28" />
+  <rect x="10" y="10" width="150.08" height="206.77" rx="14" stroke="rgb(var(--zd-border))" opacity="0.28" />
 
-  <circle cx="85.04" cy="54" r="26" fill="#0f1717" opacity="0.55" />
-  <circle cx="85.04" cy="54" r="22" fill="#23c1d2" opacity="0.95" />
+  <circle cx="85.04" cy="54" r="26" fill="rgb(var(--zd-bg-deep))" opacity="0.55" />
+  <circle cx="85.04" cy="54" r="22" fill="rgb(var(--zd-primary-hover))" opacity="0.95" />
 
   <!-- droplet -->
-  <path d="M85.04 38c10 13 14.5 20 14.5 27 0 6-6.2 10-14.5 8.5S70.54 69.5 70.54 65c0-7 4.5-14 14.5-27Z" stroke="#c8fbff" stroke-width="4" stroke-linejoin="round" opacity="0.9" />
-  <path d="M74 68c4-2.5 8-2.5 11 0s7 2.5 11 0" stroke="#7fe3f2" stroke-width="3.5" stroke-linecap="round" opacity="0.25" />
+  <path d="M85.04 38c10 13 14.5 20 14.5 27 0 6-6.2 10-14.5 8.5S70.54 69.5 70.54 65c0-7 4.5-14 14.5-27Z" stroke="rgb(var(--zd-bg))" stroke-width="4" stroke-linejoin="round" opacity="0.9" />
+  <path d="M74 68c4-2.5 8-2.5 11 0s7 2.5 11 0" stroke="rgb(var(--zd-focus))" stroke-width="3.5" stroke-linecap="round" opacity="0.25" />
 
-  <path d="M-10 170 C 18 146, 52 190, 88 166 S 142 154, 214 188" stroke="#7fe3f2" stroke-width="12" opacity="0.16" stroke-linecap="round" />
-  <path d="M-10 198 C 20 172, 56 214, 92 184 S 148 174, 214 210" stroke="#d7d2c3" stroke-width="7" opacity="0.10" stroke-linecap="round" />
+  <path d="M-10 170 C 18 146, 52 190, 88 166 S 142 154, 214 188" stroke="rgb(var(--zd-focus))" stroke-width="12" opacity="0.16" stroke-linecap="round" />
+  <path d="M-10 198 C 20 172, 56 214, 92 184 S 148 174, 214 210" stroke="rgb(var(--zd-surface))" stroke-width="7" opacity="0.10" stroke-linecap="round" />
 </svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.08 226.77" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0A1F22" />
+      <stop offset="0.60" stop-color="#05363D" />
+      <stop offset="1" stop-color="#B8B09C" />
+    </linearGradient>
+    <pattern id="dots" width="12" height="12" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.8" fill="#D7D2C3" opacity="0.12" />
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="170.08" height="226.77" fill="url(#bg)" />
+  <rect x="0" y="0" width="170.08" height="226.77" fill="url(#dots)" />
+
+  <path
+    d="M-18 166 C 12 140, 44 186, 80 160 S 138 150, 210 182"
+    stroke="#D7D2C3"
+    stroke-width="12"
+    opacity="0.14"
+    stroke-linecap="round"
+  />
+  <path
+    d="M-10 196 C 22 170, 56 214, 92 184 S 146 174, 214 210"
+    stroke="#23C1D2"
+    stroke-width="7"
+    opacity="0.10"
+    stroke-linecap="round"
+  />
+
+  <rect x="8" y="8" width="154.08" height="210.77" rx="10" stroke="#7F8A8A" opacity="0.30" />
+
+  <circle cx="30" cy="34" r="17" fill="#0F1717" opacity="0.55" />
+  <circle cx="30" cy="34" r="15" fill="#B8B09C" opacity="0.95" />
+  <path
+    d="M22.5 27.5h15c2.3 0 4.2 1.9 4.2 4.2v13.4c0 2.3-1.9 4.2-4.2 4.2h-15c-2.3 0-4.2-1.9-4.2-4.2V31.7c0-2.3 1.9-4.2 4.2-4.2Z"
+    fill="#0A1F22"
+    opacity="0.75"
+  />
+  <path d="M23.6 33.2h12.9M23.6 37.8h12.9M23.6 42.4h9.5" stroke="#C8FBFF" stroke-width="1.6" opacity="0.9" stroke-linecap="round" />
+
+  <path d="M96 78h56" stroke="#7F8A8A" stroke-width="1.5" opacity="0.20" stroke-linecap="round" />
+  <path d="M88 92h64" stroke="#7F8A8A" stroke-width="1.5" opacity="0.18" stroke-linecap="round" />
+  <path d="M84 106h68" stroke="#7F8A8A" stroke-width="1.5" opacity="0.16" stroke-linecap="round" />
+</svg>

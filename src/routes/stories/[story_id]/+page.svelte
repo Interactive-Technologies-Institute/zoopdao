@@ -15,6 +15,7 @@
 	import { Share2, Check } from 'lucide-svelte';
 	import { onDestroy } from 'svelte';
 	import { localizeHref } from '@src/paraglide/runtime';
+	import { getProposalCardType } from '$lib/utils/proposal-cards';
 
 	let isCopied = $state(false);
 	let copyTimeout: ReturnType<typeof setTimeout>;
@@ -217,7 +218,7 @@ function getProposalTextForRound(roundNumber: number): string {
 
 					<div class="flex-shrink-0">
 						{#if round.round === 0}
-							<div class="w-8 h-8 rounded-full bg-[#FF6157] grid place-items-center self-start">
+							<div class="w-8 h-8 rounded-full bg-[#FF6157] bos-accent-bg grid place-items-center self-start">
 								<Flag class="w-4 h-4 text-white" />
 							</div>
 						{:else if round.round === 7}
@@ -266,7 +267,7 @@ function getProposalTextForRound(roundNumber: number): string {
 					<div class="flex-shrink-0">
 						<div class="group/char flex gap-4 flex-col w-fit">
 							<div class="flex snap-center items-center gap-2 justify-center">
-								<div class="w-8 h-8 rounded-full bg-[#FF6157] grid place-items-center">
+								<div class="w-8 h-8 rounded-full bg-[#FF6157] bos-accent-bg grid place-items-center">
 									<Flag class="w-4 h-4 text-white flex items-center justify-center" />
 								</div>
 								<span class="font-medium text-center text-base flex items-center justify-center">
@@ -298,18 +299,21 @@ function getProposalTextForRound(roundNumber: number): string {
 									{@const card = getCardDetails(round.card_id)}
 									{@const roundDetails = getRoundDetails(round.round)}
 									{@const proposalText = getProposalTextForRound(round.roundNumber)}
+									{@const functionalityAsset =
+										proposalText && round.roundNumber === 6 ? 'functionality' : undefined}
 									{@const displayCard = card
-										? { ...card, text: proposalText || card.text }
+										? {
+												...card,
+												text: proposalText || card.text,
+												assetType: functionalityAsset
+											}
 										: proposalText
 											? {
 													id: -round.roundNumber,
-													type:
-														round.type ??
-														(round.roundNumber === 1 || round.roundNumber === 2
-															? 'sense'
-															: 'nature'),
+													type: round.type ?? getProposalCardType(round.roundNumber),
 													title: getTranslation(roundDetails?.title),
 													text: proposalText,
+													assetType: functionalityAsset,
 													hero_steps: [],
 													character_category: ['human']
 												}

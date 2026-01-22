@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170.08 226.77" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0F1717" />
+      <stop offset="0.55" stop-color="#05363D" />
+      <stop offset="1" stop-color="#0C6B78" />
+    </linearGradient>
+    <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="0.8" fill="#7FE3F2" opacity="0.12" />
+    </pattern>
+  </defs>
+
+  <rect width="170.08" height="226.77" fill="url(#bg)" />
+  <rect width="170.08" height="226.77" fill="url(#dots)" />
+  <rect x="10" y="10" width="150.08" height="206.77" rx="14" stroke="#7F8A8A" opacity="0.30" />
+
+  <!-- top emblem -->
+  <circle cx="85.04" cy="54" r="26" fill="#0A1F22" opacity="0.55" />
+  <circle cx="85.04" cy="54" r="22" fill="#0C6B78" opacity="0.95" />
+  <rect x="74" y="40" width="22" height="30" rx="6" stroke="#C8FBFF" stroke-width="3" opacity="0.9" />
+  <path
+    d="M79 50h12M79 58h9"
+    stroke="#C8FBFF"
+    stroke-width="3"
+    stroke-linecap="round"
+    opacity="0.65"
+  />
+  <path
+    d="M78.5 63.5l3.5 3.5 9-9"
+    stroke="#7FE3F2"
+    stroke-width="3.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.9"
+  />
+
+  <!-- bottom waves -->
+  <path d="M-10 170 C 28 142, 56 198, 92 170 S 140 160, 210 192" stroke="#23C1D2" stroke-width="12" opacity="0.14" stroke-linecap="round" />
+  <path d="M-10 198 C 26 172, 64 214, 102 186 S 152 176, 214 212" stroke="#D7D2C3" stroke-width="7" opacity="0.10" stroke-linecap="round" />
+</svg>
