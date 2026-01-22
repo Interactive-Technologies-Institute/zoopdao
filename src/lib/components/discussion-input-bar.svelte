@@ -327,7 +327,7 @@
 <div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto">
 	<div class="relative">
 		{#if attachments.length > 0 || uploadError}
-			<div class="mb-2 rounded-2xl border border-white/10 bg-black/70 px-4 py-3 text-xs text-white shadow-lg">
+			<div class="mb-2 rounded-2xl border border-ice/15 bg-dark-deep/90 px-4 py-3 text-xs text-white shadow-lg">
 				<div class="flex items-center justify-between">
 					<span class="font-semibold">{m.attachments()}</span>
 					{#if uploadError}
@@ -375,13 +375,13 @@
 			</div>
 		{/if}
 		<!-- Background bar with shadow -->
-		<div class="bg-gradient-to-b from-[#3a3a3a] to-[#2f2f2f] rounded-full px-4 py-3 sm:px-5 sm:py-4 shadow-2xl border border-white/10">
+		<div class="bg-gradient-to-b from-dark-deep to-midnight rounded-full px-4 py-3 sm:px-5 sm:py-4 shadow-2xl border border-ice/15">
 			<div class="flex items-center gap-3 sm:gap-4">
 				<!-- History Button -->
 				<button
 					onclick={onOpenHistory}
 					disabled={disabled}
-					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#3f3f3f] hover:bg-[#4a4a4a] transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-charcoal hover:bg-slate transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
 					aria-label={m.open_message_history()}
 					title={m.open_message_history()}
 				>
@@ -389,7 +389,7 @@
 				</button>
 
 				<!-- Divider -->
-				<div class="h-8 sm:h-10 w-px bg-white/10"></div>
+				<div class="h-8 sm:h-10 w-px bg-ice/10"></div>
 
 				<!-- Add Documents Button -->
 				<input
@@ -410,7 +410,7 @@
 						!userId ||
 						attachments.length >= RAG_MAX_FILES_PER_ROUND
 					}
-					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#3f3f3f] hover:bg-[#4a4a4a] transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-charcoal hover:bg-slate transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
 					aria-label={m.add_documents()}
 					title={m.add_documents()}
 				>
@@ -418,7 +418,7 @@
 				</button>
 
 				<!-- Divider -->
-				<div class="h-8 sm:h-10 w-px bg-white/10"></div>
+				<div class="h-8 sm:h-10 w-px bg-ice/10"></div>
 
 				<!-- Input Field -->
 				<input
@@ -427,18 +427,18 @@
 					onkeydown={handleKeydown}
 					disabled={disabled}
 					placeholder={m.discussion_input_placeholder()}
-					class="flex-1 bg-transparent text-white text-base sm:text-lg placeholder:text-[#d8d8d8]/65 outline-none disabled:opacity-50"
+					class="flex-1 bg-transparent text-white text-base sm:text-lg placeholder:text-ice/60 outline-none disabled:opacity-50"
 				/>
 
 				<!-- Send Button -->
 				<button
 					onclick={handleSend}
 					disabled={disabled || !message.trim()}
-					class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white hover:bg-gray-100 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+					class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white hover:bg-white transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
 					aria-label={m.send_message()}
 					title={m.send_message()}
 				>
-					<Send class="w-5 h-5 sm:w-6 sm:h-6 text-[#1f1f1f]" />
+					<Send class="w-5 h-5 sm:w-6 sm:h-6 text-dark-deep" />
 				</button>
 			</div>
 		</div>
