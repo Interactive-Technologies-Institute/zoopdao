@@ -16,27 +16,53 @@ body {
 
 :root {
 	font-family: RobotoSlabVariable, serif;
-	/* ZD-14 palette (assembly_table.svg) */
-	--zd-bg: #c8fbff;
-	--zd-bg-deep: #0f1717;
-	--zd-surface: #d7d2c3;
-	--zd-surface-muted: #b8b09c;
-	--zd-border: #7f8a8a;
-	--zd-border-strong: #5b6464;
-	--zd-text: #0a1f22;
-	--zd-text-muted: #2f3a3a;
-	--zd-text-subtle: #5b6464;
-	--zd-primary: #0c6b78;
-	--zd-primary-hover: #23c1d2;
-	--zd-primary-active: #05363d;
-	--zd-primary-disabled: #a8b3b3;
-	--zd-secondary: #6aa85a;
-	--zd-secondary-hover: #7fb56b;
-	--zd-secondary-active: #1a3f43;
-	--zd-tertiary: #b8b09c;
-	--zd-tertiary-hover: #d7d2c3;
-	--zd-tertiary-active: #7f8a8a;
-	--zd-focus: #7fe3f2;
+	/* AVG palette (assembly_table.svg) */
+	--zd-bg: 200 251 255;
+	--zd-bg-deep: 15 23 23;
+	--zd-surface: 215 210 195;
+	--zd-surface-muted: 184 176 156;
+	--zd-border: 127 138 138;
+	--zd-border-strong: 91 100 100;
+	--zd-text: 10 31 34;
+	--zd-text-muted: 47 58 58;
+	--zd-text-subtle: 91 100 100;
+	--zd-primary: 12 107 120;
+	--zd-primary-hover: 35 193 210;
+	--zd-primary-active: 5 54 61;
+	--zd-primary-disabled: 168 179 179;
+	--zd-secondary: 106 168 90;
+	--zd-secondary-hover: 127 181 107;
+	--zd-secondary-active: 26 63 67;
+	--zd-tertiary: 184 176 156;
+	--zd-tertiary-hover: 215 210 195;
+	--zd-tertiary-active: 127 138 138;
+	--zd-accent: 35 193 210;
+	--zd-focus: 127 227 242;
+}
+
+:root[data-theme='bos'] {
+	/* BoS palette (bos_logos.png) */
+	--zd-bg: 255 255 255;
+	--zd-bg-deep: 0 0 0;
+	--zd-surface: 255 255 255;
+	--zd-surface-muted: 230 200 0;
+	--zd-border: 0 0 0;
+	--zd-border-strong: 0 0 0;
+	--zd-text: 0 0 0;
+	--zd-text-muted: 0 0 0;
+	--zd-text-subtle: 0 0 0;
+	--zd-primary: 210 10 10;
+	--zd-primary-hover: 210 10 10;
+	--zd-primary-active: 0 0 0;
+	--zd-primary-disabled: 0 0 0;
+	--zd-secondary: 60 165 230;
+	--zd-secondary-hover: 60 165 230;
+	--zd-secondary-active: 60 160 60;
+	--zd-tertiary: 230 200 0;
+	--zd-tertiary-hover: 230 200 0;
+	--zd-tertiary-active: 0 0 0;
+	--zd-accent: 60 160 60;
+	--zd-focus: 60 165 230;
 }
 
 @font-face {
