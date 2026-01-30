@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { FileText, MessageSquare, Send } from 'lucide-svelte';
+	import { FileText, MessageSquare, Send, Plus } from 'lucide-svelte';
 	import { m } from '@src/paraglide/messages';
 	import { supabase } from '@/supabase';
 	import {
@@ -16,6 +16,7 @@
 		round: number;
 		userId?: string | null;
 		disabled?: boolean;
+		inline?: boolean;
 	}
 
 	let {
@@ -25,7 +26,8 @@
 		proposalId,
 		round,
 		userId = null,
-		disabled = false
+		disabled = false,
+		inline = false
 	}: DiscussionInputBarProps = $props();
 
 	let message = $state('');
@@ -324,7 +326,11 @@
 </script>
 
 <!-- Discussion Input Bar -->
-<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto">
+<div
+	class="{inline
+		? 'w-full'
+		: 'fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto'}"
+>
 	<div class="relative">
 		{#if attachments.length > 0 || uploadError}
 			<div class="mb-2 rounded-2xl border border-border/40 bg-surface px-4 py-3 text-xs text-text shadow-lg">
@@ -414,7 +420,7 @@
 					aria-label={m.add_documents()}
 					title={m.add_documents()}
 				>
-					<FileText class="w-5 h-5 sm:w-6 sm:h-6 text-text" />
+					<Plus class="w-5 h-5 sm:w-6 sm:h-6 text-text" />
 				</button>
 
 				<!-- Divider -->

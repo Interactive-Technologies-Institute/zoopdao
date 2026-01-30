@@ -141,6 +141,7 @@
 		name: 'Sam',
 		role: 'research'
 	};
+
 	
 	// Configurable variable for number of discussion rounds with message exchanges
 	// This controls how many rounds of messages are exchanged between user and AIs
@@ -673,34 +674,38 @@
 		playerState={currentPlayerState}
 		currentRound={gameState.currentRound}
 	/>
-	<Button
-		size="lg"
-		class="absolute right-4 -translate-y-1/2 top-1/2 images z-50 pointer-events-auto hover:bg-tertiary/40"
-		disabled={!tourCompleted}
-		onclick={() => (openProposalDialog = true)}
-	>
-		<FileText />
-		{m.view_full_proposal()}
-	</Button>
 	<ProposalDialog 
 		bind:open={openProposalDialog} 
 		proposalId={data.proposalId ?? null} 
 	/>
 	
-	<Button
-		size="lg"
-			onclick={async () => {
-				openStoryDialog = true;
-				if (gameState.currentRound > 0) {
-					gameState.playerMove();
-				}
-			}}
-			class="absolute bottom-4 left-1/2 -translate-x-1/2 story-button rounded-full px-4 z-50 pointer-events-auto"
-		disabled={!tourCompleted}
-	>
-		<ScrollText />
-		{m.story_sheet()}
-	</Button>
+	{#if !chatRound}
+		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[520px] z-50 pointer-events-auto flex flex-col gap-3">
+			<Button
+				size="lg"
+				onclick={async () => {
+					openStoryDialog = true;
+					if (gameState.currentRound > 0) {
+						gameState.playerMove();
+					}
+				}}
+				class="story-button rounded-full px-4"
+				disabled={!tourCompleted}
+			>
+				<ScrollText />
+				{m.story_sheet()}
+			</Button>
+			<button
+				type="button"
+				class="w-full rounded-full border-2 border-sand bg-white px-4 py-3 text-center text-base font-semibold text-black shadow-lg transition-colors hover:bg-sand/20"
+				disabled={!tourCompleted}
+				onclick={() => (openProposalDialog = true)}
+			>
+				<FileText class="mr-2 inline-block h-4 w-4" />
+				{m.view_full_proposal()}
+			</button>
+		</div>
+	{/if}
 	<StoryDialog bind:open={openStoryDialog} {gameState} proposalId={data.proposalId ?? null} />
 	
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
@@ -712,16 +717,28 @@
 				</div>
 			</div>
 		{/if}
-		<!-- Discussion Input Bar (Round 7 only) -->
-		<DiscussionInputBar
-			onSend={handleSendMessage}
-			onOpenHistory={handleOpenHistory}
-			gameId={data.game.id}
-			proposalId={data.proposalId ?? null}
-			round={gameState.currentRound}
-			userId={data.userId}
-			disabled={!tourCompleted}
-		/>
+		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto flex flex-col gap-3">
+			<!-- Discussion Input Bar (Round 7 only) -->
+			<DiscussionInputBar
+				inline
+				onSend={handleSendMessage}
+				onOpenHistory={handleOpenHistory}
+				gameId={data.game.id}
+				proposalId={data.proposalId ?? null}
+				round={gameState.currentRound}
+				userId={data.userId}
+				disabled={!tourCompleted}
+			/>
+			<button
+				type="button"
+				class="w-full rounded-full border-2 border-sand bg-white px-4 py-3 text-center text-base font-semibold text-black shadow-lg transition-colors hover:bg-sand/20"
+				disabled={!tourCompleted}
+				onclick={() => (openProposalDialog = true)}
+			>
+				<FileText class="mr-2 inline-block h-4 w-4" />
+				{m.view_full_proposal()}
+			</button>
+		</div>
 	{/if}
 	
 	<!-- Discussion History Dialog -->
