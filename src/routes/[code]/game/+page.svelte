@@ -8,7 +8,6 @@
 	import DiscussionHistoryDialog from '@/components/discussion-history-dialog.svelte';
 	import Button from '@/components/ui/button/button.svelte';
 	import { GameState } from '@/state/game-state.svelte';
-	import { MapPosition } from '@/state/map-position.svelte';
 	import { CircleHelp, ScrollText, LogOut, FileText } from 'lucide-svelte';
 	import type { PageData } from './$types';
 	import EndDialog from '@/components/end-dialog.svelte';
@@ -27,6 +26,7 @@
 	import type { AIAgent, AIMessage, Participant, Role } from '@/types';
 	import { supabase } from '@/supabase';
 	import { storeHumanMessage, getDiscussionMessages, getChatHistoryForAI, storeAIMessage } from '@/utils/discussion-messages';
+	import { AquariumLayoutState } from '@/state/aquarium-layout.svelte';
 
 	let tour: Tour | undefined;
 
@@ -124,7 +124,7 @@
 		data.gameMode
 	);
 
-	let mapPosition = new MapPosition();
+	let aquariumLayout = new AquariumLayoutState();
 
 	let showRoundTransition = $state(false);
 	type TransitionState = 'starting' | 'transitioning' | 'ending' | 'ended';
@@ -666,20 +666,8 @@
 	$inspect(playerState);
 </script>
 
-<!-- <svelte:window
-	onkeydown={(e) => mapPosition.pan(e)}
-	onwheel={(e) => mapPosition.zoom(e)}
-	onmousedown={(e) => mapPosition.startDrag(e)}
-	onmousemove={(e) => mapPosition.drag(e)}
-	onmouseup={() => mapPosition.endDrag()}
-	onmouseleave={() => mapPosition.endDrag()}
-	ontouchstart={(e) => mapPosition.startDrag(e)}
-	ontouchmove={(e) => mapPosition.drag(e)}
-	ontouchend={() => mapPosition.endDrag()}
-/> -->
-
 <div class="w-screen h-[100dvh] relative">
-	<Map {gameState} position={mapPosition} {tourCompleted} />
+	<Map layout={aquariumLayout} />
 	<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
 	<StatusPill
 		playerState={currentPlayerState}
@@ -770,10 +758,11 @@
 		playersState={gameState.playersState}
 		aiMessages={chatRound && hasUserChattedThisRound ? aiMessages : []}
 		currentRound={gameState.currentRound}
-				{tourCompleted}
-				{transitionState}
+		{tourCompleted}
+		{transitionState}
 		currentPlayerId={data.playerId}
 		typingAgents={chatRound && hasUserChattedThisRound ? typingAgents : new Set()}
+		layout={aquariumLayout}
 	/>
 
 	{#if showRoundTransition}

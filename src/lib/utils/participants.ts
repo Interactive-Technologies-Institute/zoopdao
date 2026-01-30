@@ -86,37 +86,95 @@ export function createParticipants(players: Player[], aiAgents: AIAgent[]): Part
  */
 export function calculateAquariumPositions(
 	count: number = TOTAL_PARTICIPANTS,
-	currentPlayerIndex: number = 0
+	currentPlayerIndex: number = 0,
+	viewportWidth: number = 1024,
+	viewportHeight: number = 768
 ): Array<{ angle: number; x: number; y: number; xVw: number; yVh: number }> {
 	const positions: Array<{ angle: number; x: number; y: number; xVw: number; yVh: number }> = [];
-	
-	// Use viewport center (50vw, 50vh)
-	const centerX = 50; // Viewport width percentage
-	const centerY = 50; // Viewport height percentage
-	const radius = 35; // Viewport units distance from center (adjusted to keep all participants visible)
-	
+
+	if (count <= 0) {
+		return positions;
+	}
+
+	const config = getAquariumLayoutConfig(viewportWidth, viewportHeight);
+	const { centerX, centerY, radiusX, radiusY, minX, maxX, minY, maxY } = config;
+
 	// Bottom position is 90 degrees (6 o'clock position)
 	const bottomAngle = 90;
-	
+
 	for (let i = 0; i < count; i++) {
 		// Calculate relative position: rotate so current player is at bottom
 		const relativeIndex = (i - currentPlayerIndex + count) % count;
-		
+
 		// Calculate angle: distribute evenly around circle starting from bottom
 		const angle = bottomAngle + (relativeIndex * 360) / count;
 		const radian = (angle * Math.PI) / 180;
-		
+
 		// Calculate x, y positions in viewport units
-		const xVw = centerX + radius * Math.cos(radian);
-		const yVh = centerY + radius * Math.sin(radian);
-		
+		const rawX = centerX + radiusX * Math.cos(radian);
+		const rawY = centerY + radiusY * Math.sin(radian);
+		const xVw = Math.min(maxX, Math.max(minX, rawX));
+		const yVh = Math.min(maxY, Math.max(minY, rawY));
+
 		// Also keep percentage for backward compatibility
 		const x = xVw;
 		const y = yVh;
-		
+
 		positions.push({ angle, x, y, xVw, yVh });
 	}
-	
+
 	return positions;
 }
 
+function getAquariumLayoutConfig(viewportWidth: number, viewportHeight: number) {
+	const isShort = viewportHeight < 700;
+	const isXs = viewportWidth < 480;
+	const isSm = viewportWidth >= 480 && viewportWidth < 768;
+	const isMd = viewportWidth >= 768 && viewportWidth < 1024;
+
+	let centerX = 50;
+	let centerY = 50;
+	let radiusX = 38;
+	let radiusY = 26;
+	let minX = 8;
+	let maxX = 92;
+	let minY = 14;
+	let maxY = 84;
+
+	if (isXs) {
+		centerY = 56;
+		radiusX = 42;
+		radiusY = 28;
+		minY = 18;
+		maxY = 88;
+	} else if (isSm) {
+		centerY = 54;
+		radiusX = 40;
+		radiusY = 28;
+		minY = 16;
+		maxY = 86;
+	} else if (isMd) {
+		centerY = 52;
+		radiusX = 38;
+		radiusY = 26;
+		minY = 14;
+		maxY = 84;
+	} else {
+		centerY = 48;
+		radiusX = 36;
+		radiusY = 24;
+		minX = 10;
+		maxX = 90;
+		minY = 12;
+		maxY = 80;
+	}
+
+	if (isShort) {
+		centerY = Math.min(58, centerY + 2);
+		radiusY = Math.max(22, radiusY - 4);
+		minY = Math.max(minY, 18);
+		maxY = Math.min(maxY, 82);
+	}
+
+	return { centerX, centerY, radiusX, radiusY, minX, maxX, minY, maxY };
+}
