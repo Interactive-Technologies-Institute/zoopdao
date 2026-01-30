@@ -12,6 +12,7 @@
 		tourCompleted: boolean;
 		transitionState: 'starting' | 'transitioning' | 'ending' | 'ended';
 		isCurrentPlayer?: boolean;
+		bubbleSide?: 'left' | 'right';
 	}
 
 	let {
@@ -21,7 +22,8 @@
 		currentRound,
 		tourCompleted,
 		transitionState,
-		isCurrentPlayer = false
+		isCurrentPlayer = false,
+		bubbleSide = 'right'
 	}: PlayerBadgeProps = $props();
 </script>
 
@@ -34,7 +36,7 @@
 		<User class="h-6 w-6 md:h-7 md:w-7 text-gray-600" />
 	</div>
 	<div
-		class="absolute origin-right -top-2 left-full ml-2 rounded-full bg-deep-teal text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-nowrap"
+		class="absolute -top-2 rounded-full bg-deep-teal text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-nowrap {bubbleSide === 'left' ? 'right-full mr-2 origin-left' : 'left-full ml-2 origin-right'}"
 	>
 		{#if playerState.state === 'starting'}
 			<div class="flex items-center gap-2">

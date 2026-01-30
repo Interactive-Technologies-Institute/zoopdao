@@ -9,9 +9,17 @@
 		round: number;
 		isActive?: boolean;
 		isTyping?: boolean;
+		bubbleSide?: 'left' | 'right';
 	}
 
-	let { agent, messages = [], round, isActive = false, isTyping = false }: AIAgentProps = $props();
+	let {
+		agent,
+		messages = [],
+		round,
+		isActive = false,
+		isTyping = false,
+		bubbleSide = 'right'
+	}: AIAgentProps = $props();
 	
 	// Filter messages for current round
 	const currentRoundMessages = $derived(
@@ -60,7 +68,7 @@
 	
 	<!-- Pop-up Message Bubble (similar to player badge) -->
 	{#if isTyping || currentRoundMessages.length > 0}
-		<div class="absolute origin-right -top-2 left-full ml-2 rounded-full bg-blue-500 text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-normal">
+		<div class="absolute -top-2 rounded-full bg-blue-500 text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-normal {bubbleSide === 'left' ? 'right-full mr-2 origin-left' : 'left-full ml-2 origin-right'}">
 			{#if isTyping}
 				<TypingIndicator />
 			{:else if currentRoundMessages.length > 0}
@@ -84,4 +92,3 @@
 		}
 	}
 </style>
-
