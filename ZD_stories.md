@@ -1970,3 +1970,79 @@ d) Validate that theme switching no longer leaves legacy colors behind.
 
 **Completion Criteria:**
 1) Visual sweep completed on lobby, game, and discussion screens.
+
+---
+
+## ZD-146: Position participants (AI + users) around the assembly aquarium
+
+**Overview:**
+Align participant avatars (AI + users) in fixed, evenly spaced positions around the assembly aquarium so they remain consistent across screen sizes and do not drift into the aquarium focal area.
+
+**Goal:**
+Make participant avatar placement stable, legible, and visually balanced across responsive breakpoints.
+
+**Description:**
+a) Audit current participant placement and identify drift/overlap in responsive layouts.
+b) Define a consistent positioning system (ring layout or anchor points) around the aquarium, similar to the old map-point system.
+c) Support adaptive positioning for a variable number of participants (up to 6), with even spacing around the ring.
+d) Apply consistent offsets and sizes per breakpoint to keep spacing balanced.
+e) Ensure avatars do not overlap the aquarium image or round UI overlays.
+f) Modules/scripts to review: `src/routes/[code]/game/+page.svelte`, `src/lib/components/participants-container.svelte` (and any avatar badge components).
+
+**Acceptance Criteria:**
+1) AI + user avatars are evenly distributed around the aquarium across common breakpoints.
+2) Avatars never overlap the aquarium focal area or other critical UI (round indicator, dialogs).
+3) Avatar spacing remains stable during round transitions and mode switches.
+
+**Completion Criteria:**
+1) Participant placement is visually verified on desktop and mobile in at least two rounds.
+
+---
+
+## ZD-146a: Cleanup legacy map/stop positioning code (preserve aquarium avatar positioning)
+
+**Overview:**
+Remove unused map and stop-point code left from the old map system, while preserving the new aquarium-based avatar positioning logic.
+
+**Goal:**
+Reduce dead code and avoid confusion without breaking participant placement around the aquarium.
+
+**Description:**
+a) Identify legacy map/stop assets and logic that are no longer used by the aquarium view.
+b) Remove or archive obsolete map pan/zoom handlers and stop marker overlays.
+c) Keep/replace any reusable positioning logic needed for avatar ring placement.
+d) Verify map-position code is either repurposed for avatars or removed safely.
+e) Modules/scripts to review: `src/lib/components/map.svelte`, `src/lib/state/map-position.svelte.ts`, `src/routes/[code]/game/+page.svelte`, old stop/map components if still present.
+
+**Acceptance Criteria:**
+1) No unused map/stop code remains in the active build.
+2) Aquarium avatar positioning continues to work as expected.
+
+**Completion Criteria:**
+1) Build runs without references to removed map/stop modules.
+2) Participant placement is visually verified after cleanup.
+
+---
+
+## ZD-147: Align step/indicative messages between rounds
+
+**Overview:**
+Place step and indicative messages in a consistent, readable location between rounds without overlapping the aquarium or avatars.
+
+**Goal:**
+Ensure round messaging appears predictably and does not obscure the assembly view.
+
+**Description:**
+a) Audit current step/indicative message placement during round transitions.
+b) Define a fixed message region that avoids avatar zones and aquarium focal area.
+c) Set responsive spacing and max-width rules for readability.
+d) Ensure messages remain visible during transitions without obstructing critical controls.
+e) Modules/scripts to review: round transition components and message overlay styles.
+
+**Acceptance Criteria:**
+1) Step/indicative messages appear in a consistent location between rounds.
+2) Messages do not overlap avatars or the aquarium focal area.
+3) Text remains readable on desktop and mobile.
+
+**Completion Criteria:**
+1) Message placement is visually verified on desktop and mobile for at least two rounds.
