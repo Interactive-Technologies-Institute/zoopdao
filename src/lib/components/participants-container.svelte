@@ -65,7 +65,8 @@
 			participants.length, 
 			currentPlayerIndex >= 0 ? currentPlayerIndex : 0,
 			layoutWidth,
-			layoutHeight
+			layoutHeight,
+			layout.aquariumRect
 		)
 	);
 </script>
