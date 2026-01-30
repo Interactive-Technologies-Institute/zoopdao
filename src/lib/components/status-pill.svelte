@@ -12,7 +12,7 @@
 </script>
 
 <div
-	class="absolute top-28 sm:top-32 md:top-36 left-1/2 -translate-x-1/2 z-30 max-w-[88vw] sm:max-w-[70vw] text-deep-teal px-3 sm:px-4 py-2 rounded-2xl flex items-center gap-2 text-sm sm:text-base md:text-lg font-semibold text-center whitespace-normal leading-tight bg-white/90"
+	class="absolute top-[clamp(6.5rem,12vh,10rem)] left-1/2 -translate-x-1/2 z-30 max-w-[90vw] sm:max-w-[70vw] text-deep-teal px-3 sm:px-4 py-2 rounded-2xl flex items-center gap-2 text-sm sm:text-base md:text-lg font-semibold text-center whitespace-normal leading-snug bg-white/90"
 >
 	{#if playerState.state === 'starting'}
 		<span> {m.choose_starting_stop()}</span>

@@ -35,53 +35,55 @@
 	>
 		<User class="h-6 w-6 md:h-7 md:w-7 text-gray-600" />
 	</div>
-	<div
-		class="absolute -top-2 rounded-full bg-deep-teal text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-nowrap {bubbleSide === 'left' ? 'right-full mr-2 origin-left' : 'left-full ml-2 origin-right'}"
-	>
-		{#if playerState.state === 'starting'}
-			<div class="flex items-center gap-2">
-				<Flag class="w-3 h-3 stroke-white" />
-				{#if isCurrentPlayer}
-					<span class="text-white text-xs text-nowrap">{m.starting()}</span>
-				{:else}
-					<span class="text-white text-xs text-nowrap"
-						>{m.starting_player({ nickname: player.nickname ?? '' })}</span
-					>
-				{/if}
-			</div>
-		{:else if playerState.state === 'moving'}
-			<div class="flex items-center gap-2">
-				<Route class="w-3 h-3 stroke-white" />
-				{#if isCurrentPlayer}
-					<span class="text-white text-xs text-nowrap">{m.moving()}</span>
-				{:else}
-					<span class="text-white text-xs text-nowrap"
-						>{m.moving_player({ nickname: player.nickname ?? '' })}</span
-					>
-				{/if}
-			</div>
-		{:else if playerState.state === 'writing'}
-			<div class="flex items-center gap-2">
-				<SquarePen class="w-3 h-3 stroke-white" />
-				{#if isCurrentPlayer}
-					<span class="text-white text-xs text-nowrap">{m.writing()}</span>
-				{:else}
-					<span class="text-white text-xs text-nowrap"
-						>{m.writing_player({ nickname: player.nickname ?? '' })}</span
-					>
-				{/if}
-			</div>
-		{:else if playerState.state === 'done'}
-			<div class="flex items-center gap-2">
-				<Check class="w-3 h-3 stroke-white" />
-				{#if isCurrentPlayer}
-					<span class="text-white text-xs text-nowrap">{m.done()}</span>
-				{:else}
-					<span class="text-white text-xs text-nowrap"
-						>{m.done_player({ nickname: player.nickname ?? '' })}</span
-					>
-				{/if}
-			</div>
-		{/if}
-	</div>
+	{#if currentRound === 7}
+		<div
+			class="absolute -top-2 rounded-full bg-deep-teal text-white z-30 flex items-center py-2 px-3 max-w-xs whitespace-nowrap {bubbleSide === 'left' ? 'right-full mr-2 origin-left' : 'left-full ml-2 origin-right'}"
+		>
+			{#if playerState.state === 'starting'}
+				<div class="flex items-center gap-2">
+					<Flag class="w-3 h-3 stroke-white" />
+					{#if isCurrentPlayer}
+						<span class="text-white text-xs text-nowrap">{m.starting()}</span>
+					{:else}
+						<span class="text-white text-xs text-nowrap"
+							>{m.starting_player({ nickname: player.nickname ?? '' })}</span
+						>
+					{/if}
+				</div>
+			{:else if playerState.state === 'moving'}
+				<div class="flex items-center gap-2">
+					<Route class="w-3 h-3 stroke-white" />
+					{#if isCurrentPlayer}
+						<span class="text-white text-xs text-nowrap">{m.moving()}</span>
+					{:else}
+						<span class="text-white text-xs text-nowrap"
+							>{m.moving_player({ nickname: player.nickname ?? '' })}</span
+						>
+					{/if}
+				</div>
+			{:else if playerState.state === 'writing'}
+				<div class="flex items-center gap-2">
+					<SquarePen class="w-3 h-3 stroke-white" />
+					{#if isCurrentPlayer}
+						<span class="text-white text-xs text-nowrap">{m.writing()}</span>
+					{:else}
+						<span class="text-white text-xs text-nowrap"
+							>{m.writing_player({ nickname: player.nickname ?? '' })}</span
+						>
+					{/if}
+				</div>
+			{:else if playerState.state === 'done'}
+				<div class="flex items-center gap-2">
+					<Check class="w-3 h-3 stroke-white" />
+					{#if isCurrentPlayer}
+						<span class="text-white text-xs text-nowrap">{m.done()}</span>
+					{:else}
+						<span class="text-white text-xs text-nowrap"
+							>{m.done_player({ nickname: player.nickname ?? '' })}</span
+						>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>
