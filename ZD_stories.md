@@ -2046,3 +2046,28 @@ e) Modules/scripts to review: round transition components and message overlay st
 
 **Completion Criteria:**
 1) Message placement is visually verified on desktop and mobile for at least two rounds.
+
+---
+
+## ZD-148: Reposition “Full Proposal” button and match discussion input style (remove “View/Ver”)
+
+**Overview:**
+Move the “Full Proposal” button to test alternative placements across rounds, and update its styling to match the button used in the discussion input dialog. Remove the word “View/Ver” from the label.
+
+**Goal:**
+Achieve consistent styling and determine the best button placement for all rounds.
+
+**Description:**
+a) Identify the current “View full proposal” button placement across rounds.
+b) Update the button styling to match the discussion input dialog button (same size, padding, font, and icon treatment).
+c) Remove “View/Ver” from the label (e.g., use “Full proposal / Proposta completa” only).
+d) Implement alternative placements (e.g., top-right, centered near round indicator, or near input bar) and compare usability.
+e) Select the best placement based on visual balance and minimal overlap with avatars/messages.
+
+**Acceptance Criteria:**
+1) Button styling matches the discussion input dialog button.
+2) Button label no longer includes “View/Ver”.
+3) At least two alternative placements are tested across multiple rounds.
+
+**Completion Criteria:**
+1) Final placement is chosen and validated on desktop and mobile.
