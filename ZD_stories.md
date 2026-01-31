@@ -2086,10 +2086,12 @@ Create a single Round 7 discussion timeline store and ensure user messages show 
 Guarantee instant UI feedback for user messages without flashing previous content.
 
 **Description:**
-a) Create/confirm a single in-memory Round 7 timeline store as source of truth.
-b) Optimistically insert user messages on Send.
-c) Reconcile optimistic messages with realtime inserts using ids (dedupe).
-d) Modules/scripts to review: discussion message state/store and send handler.
+a) Create/confirm a single in-memory Round 7 timeline store as source of truth (the chat log for Round 7).
+b) Normalize message shape (id/tempId, gameId, round, senderType, senderId, content, createdAt, status).
+c) Optimistically insert user messages on Send using a `tempId` and `status: 'sending'` (avatar bubble + History update immediately).
+d) Reconcile optimistic messages with DB-confirmed inserts by replacing `tempId` with real `id` and/or deduping by a stable key.
+e) Ensure ordering is deterministic (createdAt primary, id secondary) and duplicates cannot appear.
+f) Modules/scripts to review: timeline store, send handler, and merge/dedupe utilities.
 
 **Acceptance Criteria:**
 1) On Send, user bubble updates immediately with the new message.
@@ -2109,10 +2111,11 @@ Keep the History dialog live while open and in sync with realtime inserts.
 No reopen required to see new messages in History.
 
 **Description:**
-a) Subscribe to discussion message inserts (scoped by game_id + round).
-b) Merge new events into the timeline store in correct order.
-c) History dialog reads the timeline store and updates live when open.
-d) Modules/scripts to review: History dialog component, realtime subscription wiring.
+a) Subscribe to discussion message inserts (scoped by game_id + round) via Supabase realtime.
+b) Merge new events into the timeline store using the same normalization + dedupe rules as ZD-176a.
+c) Ensure History dialog reads from the timeline store (not from a one-time fetch) and re-renders live while open.
+d) Add duplicate protections for the “fetch initial history + realtime inserts” overlap case.
+e) Modules/scripts to review: realtime subscription wiring, timeline merge/dedupe, History dialog data source.
 
 **Acceptance Criteria:**
 1) New user/AI messages appear instantly in History when it is open.
@@ -2143,3 +2146,131 @@ d) Modules/scripts to review: avatar bubble components and bubble layout styles.
 
 **Completion Criteria:**
 1) Visual verification on iPhone SE, iPhone, iPad mini, and desktop.
+
+---
+
+## ZD-176d: Chat Circles geometry + bounded hover expansion (matches sketch)
+
+**Overview:**
+Make the “chat circles” behave like the expected sketch: the expanded circle replaces the minimized circle at the same anchor position, grows to a large diameter (up to near the aquarium center space), fills the circle with readable text, and never escapes the aquarium+avatars bounds.
+
+**Goal:**
+Deliver a robust, predictable hover expansion for AI + user chat circles that:
+- stays inside `.avatar-boundary` (the aquarium+avatars container box),
+- prefers expanding inward (towards the aquarium center),
+- uses circle geometry (not a fixed-width rectangle),
+- and makes the text occupy the circle surface (minimal empty space), with scroll only when necessary.
+
+**Implementation Notes / Guardrails:**
+- Bounds source of truth is `.avatar-boundary` in `src/routes/[code]/game/+page.svelte` (same debug boundary used for avatar placement).
+- Do **not** break the existing avatar margin rules: circles must stay inside `.avatar-boundary` at all times.
+- Expanded hover should show the **full text** (scroll allowed).
+- Max diameter should be “almost the aquarium diameter”: compute it from the aquarium/table rect rather than hardcoding.
+
+**Step-by-step Plan (follow in order):**
+1) **Capture bounds + aquarium center in the page**
+   - File: `src/routes/[code]/game/+page.svelte`
+   - Ensure we can read:
+     - `boundsRect = avatarBoundary.getBoundingClientRect()` (already computed for layout debug / safe-area).
+     - `aquariumCenter = center of aquarium/table rect` (prefer `aquariumLayout.tableLeft/top/width/height` which is object-contain accurate).
+   - Add/confirm these values are passed down to `ParticipantsContainer` as props:
+     - `chatBoundsRect` (left/top/right/bottom in viewport coords)
+     - `aquariumCenter` (cx/cy)
+
+2) **Plumb bounds/center into each badge component**
+   - File: `src/lib/components/participants-container.svelte`
+   - Pass `chatBoundsRect` + `aquariumCenter` to:
+     - `src/lib/components/ai-agent.svelte`
+     - `src/lib/components/player-badge.svelte`
+
+3) **Create a single reusable “HoverCircle” implementation**
+   - New file (recommended): `src/lib/components/chat-circle-hover.svelte`
+   - Props (minimum):
+     - `text`, `isTyping`, `colorVariant` (AI vs user),
+     - `anchorEl` (the minimized circle button ref),
+     - `boundsRect` (left/top/right/bottom),
+     - `aquariumCenter` (cx/cy),
+     - `maxDiameterPx` (computed outside or computed inside from aquarium/table).
+   - This avoids AI/user drift and makes future rules easier.
+
+4) **Compute dynamic diameter (circle geometry)**
+   - Rule:
+     - `diameter = clamp(f(textLength), minDiameter, maxDiameter)`
+   - Requirements:
+     - Short message => small circle.
+     - Long message => bigger circle (up to max).
+     - `maxDiameter` should be derived from aquarium/table (see step 6), not fixed.
+
+5) **Anchor expansion to the minimized circle (replace position)**
+   - Compute `anchorCenter` from `anchorEl.getBoundingClientRect()`.
+   - Default expanded center = anchorCenter (so it “replaces” the minimized circle).
+
+6) **Clamp to `.avatar-boundary` and prefer “inward” expansion**
+   - Hard constraint:
+     - Expanded circle must fit entirely inside `boundsRect`.
+     - `cx = clamp(cx, bounds.left + r, bounds.right - r)`
+     - `cy = clamp(cy, bounds.top + r, bounds.bottom - r)`
+   - Inward preference:
+     - If the circle would overflow, shift the center along the vector **towards** `aquariumCenter` before doing the final clamp.
+     - This creates the “expands into the aquarium” feeling on narrow screens.
+
+7) **Text filling rules (min empty space, no ugly breaks)**
+   - Inside the circle:
+     - Use dynamic padding based on diameter (smaller padding for longer texts).
+     - Use dynamic font-size based on diameter + text length.
+   - Typography:
+     - `text-align: justify; text-justify: inter-word; text-align-last: center;`
+     - `hyphens: auto;` (ensure `lang="pt"` / `lang="en"` is set on the text container so hyphenation works better).
+     - Avoid breaking words unless necessary:
+       - `word-break: normal; overflow-wrap: break-word;`
+   - Overflow:
+     - If text still does not fit at max diameter, allow `overflow: auto` inside the circle.
+
+8) **Z-index + stacking context**
+   - File: `src/lib/components/participants-container.svelte`
+   - Keep the “hover brings participant-slot to front” rule so expanded circle overlays other avatars.
+
+9) **Manual test matrix (required)**
+   - Devices:
+     - iPhone SE, iPhone, iPad mini, iPad 11, desktop.
+   - Scenarios:
+     - Very short message (1–2 words) => small circle.
+     - Medium message => medium circle.
+     - Long message => large circle centered in available aquarium space; scroll only if necessary.
+     - Confirm expanded circle never leaves `.avatar-boundary`.
+
+**Acceptance Criteria:**
+1) Hover expansion replaces the minimized circle at the same anchor position (no sideways tooltip effect).
+2) Expanded bubble is always circular (width == height) and size scales with message length.
+3) Expanded bubble stays fully inside `.avatar-boundary` and prefers moving inward (towards aquarium center) when constrained.
+4) Text occupies the circle area with minimal empty space; no “thin column” layout; scroll only when unavoidable.
+
+**Completion Criteria:**
+1) Visual verification passes on iPhone SE, iPhone, iPad mini, iPad 11, desktop (portrait + landscape where relevant).
+
+---
+
+## ZD-176e (Optional): Chat Circles advanced layout rules (portrait-inward + multi-message stacks)
+
+**Overview:**
+Extend the Round 7 “chat circles” UI with smarter placement and multi-message handling inspired by Chat Circles, without implementing full clustering.
+
+**Goal:**
+Improve readability and reduce collisions on constrained layouts (portrait/mobile) and in larger groups, while preserving the existing hard bounds (no circles outside the avatar boundary).
+
+**Description:**
+a) Portrait rule: when the viewport is portrait (or otherwise narrow), force chat circles to render **towards the inside of the aquarium** (invert side automatically) so they don’t run off-screen.\n
+b) Multi-message rule: when a participant has multiple recent messages, render a **stack of 2–3 circles** (most recent on top) with decreasing opacity/scale; if more, show a `+N` indicator.\n
+c) Collision safety: add simple collision/overlap avoidance (or fallback) so stacks don’t overlap key UI or each other on small screens.\n
+d) Clamp: enforce that circles/snippets never escape the existing `.avatar-boundary` limits.\n
+e) Optional: decide whether “inside” means toward the aquarium center (radial) vs. toward screen center; validate on iPhone SE + iPad mini portrait.
+
+**Acceptance Criteria:**
+1) In portrait, chat circles consistently render inward (towards aquarium center) for all participants.\n
+2) With multiple messages per participant, stacks render up to 3 circles and `+N` appears when overflow.\n
+3) Circles never overflow the screen or escape `.avatar-boundary`.\n
+4) No major overlaps with round title/status pill/input bar on iPhone SE and iPad mini.
+
+**Completion Criteria:**
+1) Manual verification on iPhone SE, iPhone, iPad mini (portrait + landscape), and desktop.\n
+2) Verified with 6 participants (1 user + 5 AIs) and multiple messages each.
