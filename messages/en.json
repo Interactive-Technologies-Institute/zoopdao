@@ -72,7 +72,7 @@
 	"map_description": "This is the assembly aquarium table. Here you will see all participants positioned around the table for governance discussions. The aquarium represents the center of our multispecies governance assembly.",
 	"round_indicator": "Discussion Round Indicator",
 	"round_indicator_description": "Track the current discussion round. Each round represents a new phase in the governance assembly where participants contribute their perspectives on the proposal.",
-	"story_sheet": "Discussion Input",
+	"story_sheet": "Start Discussion",
 	"story_sheet_description": "This is the discussion input bar. Here, you can type your message to the assembly, send it, and view the chat history of all participants' contributions to the governance discussion.",
 	"player_badge": "Participant Badge",
 	"player_badge_description": "This is your participant badge, positioned at the bottom of the aquarium. Here you can see your message to the assembly and your current participation status.",

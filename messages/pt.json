@@ -72,7 +72,7 @@
 	"map_description": "Este é o aquário da mesa da assembleia. Aqui verás todos os participantes posicionados à volta da mesa para discussões de governança. O aquário representa o centro da nossa assembleia de governança multiespécie.",
 	"round_indicator": "Indicador de Ronda de Discussão",
 	"round_indicator_description": "Acompanha a ronda de discussão atual. Cada ronda representa uma nova fase na assembleia de governança onde os participantes contribuem com as suas perspetivas sobre a proposta.",
-	"story_sheet": "Entrada de Discussão",
+	"story_sheet": "Iniciar Discussão",
 	"story_sheet_description": "Esta é a barra de entrada de discussão. Aqui, podes escrever a tua mensagem para a assembleia, enviá-la e ver o histórico de chat de todas as contribuições dos participantes para a discussão de governança.",
 	"player_badge": "Emblema de Participante",
 	"player_badge_description": "Este é o teu emblema de participante, posicionado na parte inferior do aquário. Aqui poderás ver a tua mensagem para a assembleia e o teu estado atual de participação.",

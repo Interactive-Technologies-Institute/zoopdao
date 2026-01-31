@@ -234,9 +234,12 @@
 		}
 	});
 
-	function handleTransitionComplete() {
-		showRoundTransition = false;
+function handleTransitionComplete() {
+	showRoundTransition = false;
+	if (keepStoryDialogOpen && !chatRound) {
+		openStoryDialog = true;
 	}
+}
 
 	let playerState = $derived.by(() => {
 		return gameState.playersState[gameState.playerId].state;
@@ -798,11 +801,12 @@
 	/>
 	
 	{#if !chatRound}
-		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[520px] z-50 pointer-events-auto flex flex-col gap-3">
+		<div class="discussion-entry-controls fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[520px] z-50 pointer-events-auto flex flex-col gap-3">
 			<Button
 				size="lg"
 				onclick={async () => {
 					openStoryDialog = true;
+					keepStoryDialogOpen = true;
 					if (gameState.currentRound > 0) {
 						gameState.playerMove();
 					}

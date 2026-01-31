@@ -1251,32 +1251,7 @@ e) Review for consistency across flows: homepage, lobby, proposal creation, roun
 1) `messages/en.json` and `messages/pt.json` are updated and verified in the UI.
 2) Manual walkthrough confirms the main flows contain the new terminology end-to-end.
 
----
 
-## ZD-175: Pedagogic Mode (Round 7): add per-AI 2-minute timer under avatars
-
-**Overview:**
-In Pedagogic Mode during the final discussion round, display a small 2-minute countdown timer below each AI avatar to structure AI turn timing. The timer runs during the AI’s turn (thinking) and stops when the AI message is visible to the user or when the AI passes.
-
-**Goal:**
-Provide clear AI turn timing indicators in the final pedagogic discussion round.
-
-**Description:**
-a) In Pedagogic Mode and Round 7 only, render a 2:00 timer UI below each AI avatar.
-b) Start/count down only during that AI’s turn (including AI thinking).
-c) Stop the timer when the AI message is sent and visible in the UI.
-d) If the AI passes its turn, stop the timer and yield the turn.
-e) Ensure timer resets correctly for each new AI turn.
-
-**Acceptance Criteria:**
-1) Timers appear only in Pedagogic Mode, Round 7, below each AI avatar.
-2) AI timer counts down during the AI’s turn and continues while AI is thinking.
-3) AI timer stops when the AI message becomes visible in the UI.
-4) AI pass stops the timer and yields the turn.
-
-**Completion Criteria:**
-1) AI timer UI + logic works across multiple AIs in Round 7 Pedagogic Mode.
-2) Manual verification confirms correct start/stop/reset behavior.
 
 ---
 
@@ -2071,3 +2046,28 @@ e) Select the best placement based on visual balance and minimal overlap with av
 
 **Completion Criteria:**
 1) Final placement is chosen and validated on desktop and mobile.
+
+---
+
+## ZD-175: Auto-show “Start Discussion” dialog until Round 7
+
+**Overview:**
+Change the discussion entry button label to “Start Discussion” and keep the discussion entry dialog visible by default throughout rounds 1–6 and transition phases, without requiring the user to click the button.
+
+**Goal:**
+Ensure the discussion entry dialog is always present before the discussion round begins, and avoid extra clicks.
+
+**Description:**
+a) Rename the discussion entry button label to “Start Discussion” (PT equivalent).
+b) Show the discussion entry dialog automatically in rounds 1–6 and during transitions (persistent until Round 7).
+c) Hide/disable the entry dialog once Round 7 starts and the discussion input bar is active.
+d) Ensure the dialog does not block other critical UI (round indicator, help/exit).
+
+**Acceptance Criteria:**
+1) The button label reads “Start Discussion” (and PT translation).
+2) The entry dialog is visible by default throughout rounds 1–6 and during transitions.
+3) The dialog is no longer shown once Round 7 begins.
+4) The dialog does not interfere with core UI elements.
+
+**Completion Criteria:**
+1) Manual verification confirms the dialog is always visible pre‑Round‑7 and hidden in Round 7.
