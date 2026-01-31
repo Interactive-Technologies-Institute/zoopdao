@@ -425,7 +425,7 @@
 						!userId ||
 						attachments.length >= RAG_MAX_FILES_PER_ROUND
 					}
-					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-tertiary hover:bg-tertiary-hover active:bg-tertiary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+					class="images flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-tertiary hover:bg-tertiary-hover active:bg-tertiary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
 					aria-label={m.add_documents()}
 					title={m.add_documents()}
 				>
