@@ -89,16 +89,73 @@ export function calculateAquariumPositions(
 	currentPlayerIndex: number = 0,
 	viewportWidth: number = 1024,
 	viewportHeight: number = 768,
-	aquariumRect?: { x: number; y: number; width: number; height: number }
-): Array<{ angle: number; x: number; y: number; xVw: number; yVh: number }> {
-	const positions: Array<{ angle: number; x: number; y: number; xVw: number; yVh: number }> = [];
+	safeTopPx?: number,
+	safeBottomPx?: number,
+	offsetLeftPx: number = 0,
+	offsetTopPx: number = 0,
+	tableRect?: { x: number; y: number; width: number; height: number } | null,
+	clampRect?: { left: number; top: number; width: number; height: number } | null,
+	badgeSize?: { width: number; height: number } | null
+): Array<{ angle: number; xPx: number; yPx: number }> {
+	const positions: Array<{ angle: number; xPx: number; yPx: number }> = [];
 
 	if (count <= 0) {
 		return positions;
 	}
 
-	const config = getAquariumLayoutConfig(viewportWidth, viewportHeight, aquariumRect);
-	const { centerX, centerY, radiusX, radiusY, minX, maxX, minY, maxY } = config;
+	const useTableRect =
+		!!tableRect && tableRect.width > 0 && tableRect.height > 0 && viewportWidth > 0 && viewportHeight > 0;
+
+	let centerX: number;
+	let centerY: number;
+	let radiusX: number;
+	let radiusY: number;
+	let minX: number;
+	let maxX: number;
+	let minY: number;
+	let maxY: number;
+
+	if (useTableRect) {
+		// Orbit around the actual aquarium/table image, then clamp to the safe-area boundary.
+		// IMPORTANT:
+		// We do a hard pixel clamp later (using `clampRect` + measured `badgeSize`) to guarantee badges
+		// never leave the "correct limits". If we also pad here, we effectively double-clamp and the
+		// top/bottom positions get pulled into the aquarium on smaller-height layouts (iPad mini / iPhone SE).
+		const safeTop = safeTopPx ?? 0;
+		const safeBottom = safeBottomPx ?? 0;
+		minX = 0;
+		maxX = 100;
+		minY = (safeTop / viewportHeight) * 100;
+		maxY = ((viewportHeight - safeBottom) / viewportHeight) * 100;
+
+		const tableCenterXpx = tableRect.x + tableRect.width / 2;
+		const tableCenterYpx = tableRect.y + tableRect.height / 2;
+		centerX = (tableCenterXpx / viewportWidth) * 100;
+		centerY = (tableCenterYpx / viewportHeight) * 100;
+
+		// The SVG's outer "dotted ring" is ~rx=560 ry=340 inside a 1200x800 viewBox.
+		// Use those ratios to align the orbit to the visible outer ring, then push out by badge size.
+		const dottedRingRx = 560 / 600; // 0.9333...
+		const dottedRingRy = 340 / 400; // 0.85
+		const measuredW = badgeSize?.width ?? 80;
+		const measuredH = badgeSize?.height ?? 90;
+		const outsetGapX = Math.max(8, Math.min(24, Math.round(viewportWidth * 0.015)));
+		const outsetGapY = Math.max(10, Math.min(32, Math.round(viewportHeight * 0.02)));
+		const badgeOutsetXpx = measuredW / 2 + outsetGapX;
+		const badgeOutsetYpx = measuredH / 2 + outsetGapY;
+		const radiusXpx = (tableRect.width / 2) * dottedRingRx + badgeOutsetXpx;
+		const radiusYpx = (tableRect.height / 2) * dottedRingRy + badgeOutsetYpx;
+		radiusX = (radiusXpx / viewportWidth) * 100;
+		radiusY = (radiusYpx / viewportHeight) * 100;
+	} else {
+		const config = getAquariumLayoutConfig(
+			viewportWidth,
+			viewportHeight,
+			safeTopPx,
+			safeBottomPx
+		);
+		({ centerX, centerY, radiusX, radiusY, minX, maxX, minY, maxY } = config);
+	}
 
 	// Bottom position is 90 degrees (6 o'clock position)
 	const bottomAngle = 90;
@@ -114,14 +171,57 @@ export function calculateAquariumPositions(
 		// Calculate x, y positions in viewport units
 		const rawX = centerX + radiusX * Math.cos(radian);
 		const rawY = centerY + radiusY * Math.sin(radian);
-		const xVw = Math.min(maxX, Math.max(minX, rawX));
-		const yVh = Math.min(maxY, Math.max(minY, rawY));
+		const clampedX = Math.min(maxX, Math.max(minX, rawX));
+		const clampedY = Math.min(maxY, Math.max(minY, rawY));
 
-		// Also keep percentage for backward compatibility
-		const x = xVw;
-		const y = yVh;
+		let xPx = offsetLeftPx + (clampedX / 100) * viewportWidth;
+		let yPx = offsetTopPx + (clampedY / 100) * viewportHeight;
 
-		positions.push({ angle, x, y, xVw, yVh });
+		// Keep labels below the avatar everywhere, but avoid the top-half labels intersecting the aquarium.
+		// For points in the upper half (sin < 0), push the badge slightly outward along the radial vector.
+		if (useTableRect) {
+			const isTopHalf = Math.sin(radian) < 0;
+			if (isTopHalf) {
+				const isMdUp = viewportWidth >= 768;
+				const avatarDiameterPx = isMdUp ? 56 : 48;
+				const measuredH = badgeSize?.height ?? (isMdUp ? 96 : 88);
+				const labelBlockPx = Math.max(0, measuredH - avatarDiameterPx);
+				// iPad mini landscape (and similar short-height landscape layouts) needs a bit more clearance
+				// so the role text doesn't kiss the outer ring.
+				const isCompactLandscape =
+					isMdUp && viewportHeight > 0 && viewportHeight < 780 && viewportWidth / viewportHeight > 1.25;
+				// Bias more aggressively on compact landscape so the label block clears the aquarium rim.
+				const base = isCompactLandscape ? 18 : 6;
+				const scale = isCompactLandscape ? 1.05 : 0.6;
+				const nearTopBonus = Math.sin(radian) < -0.85 ? (isCompactLandscape ? 14 : 3) : 0;
+				const extraOutsetPx = Math.max(
+					0,
+					Math.min(84, Math.round(labelBlockPx * scale + base + nearTopBonus))
+				);
+				xPx += Math.cos(radian) * extraOutsetPx;
+				yPx += Math.sin(radian) * extraOutsetPx;
+			}
+		}
+
+		// Hard clamp to the allowed boundary so badges can't escape the "correct limits"
+		// (the red debug boundary, i.e. avatar-boundary).
+		const isMdUp = viewportWidth >= 768;
+		const fallbackW = isMdUp ? 90 : 80;
+		const fallbackH = isMdUp ? 96 : 88;
+		const badgeWidthPx = badgeSize?.width ?? fallbackW;
+		const badgeHeightPx = badgeSize?.height ?? fallbackH;
+		const halfW = badgeWidthPx / 2;
+		const halfH = badgeHeightPx / 2;
+
+		const boundsLeft = clampRect?.left ?? 0;
+		const boundsTop = clampRect?.top ?? (safeTopPx ?? 0);
+		const boundsRight = clampRect ? clampRect.left + clampRect.width : viewportWidth;
+		const boundsBottom = clampRect ? clampRect.top + clampRect.height : viewportHeight - (safeBottomPx ?? 0);
+
+		const clampedXPx = Math.min(boundsRight - halfW, Math.max(boundsLeft + halfW, xPx));
+		const clampedYPx = Math.min(boundsBottom - halfH, Math.max(boundsTop + halfH, yPx));
+
+		positions.push({ angle, xPx: clampedXPx, yPx: clampedYPx });
 	}
 
 	return positions;
@@ -130,80 +230,61 @@ export function calculateAquariumPositions(
 function getAquariumLayoutConfig(
 	viewportWidth: number,
 	viewportHeight: number,
-	aquariumRect?: { x: number; y: number; width: number; height: number }
+	safeTopPx?: number,
+	safeBottomPx?: number
 ) {
-	const isShort = viewportHeight < 700;
-	const isWide = viewportWidth >= 1200;
 	const isXs = viewportWidth < 480;
-	const isSm = viewportWidth >= 480 && viewportWidth < 768;
-	const isMd = viewportWidth >= 768 && viewportWidth < 1024;
+	const isShort = viewportHeight < 700;
+	const isWide = viewportWidth / viewportHeight > 1.15;
 
-	let centerX = 50;
-	let centerY = 50;
-	let radiusX = 38;
-	let radiusY = 26;
-	let minX = 8;
-	let maxX = 92;
-	let minY = 14;
-	let maxY = 84;
+	let topSafePx = safeTopPx ?? (isXs ? 200 : 150);
+	let bottomSafePx = safeBottomPx ?? (isXs ? 200 : 170);
+	const insetCap = isWide ? 40 : 56;
+	const insetRatio = isWide ? 0.045 : 0.07;
+	const participantInsetPx = Math.max(24, Math.min(insetCap, Math.round(viewportHeight * insetRatio)));
+	topSafePx += participantInsetPx;
+	bottomSafePx += participantInsetPx;
 
-	if (aquariumRect && aquariumRect.width > 0 && aquariumRect.height > 0) {
-		const margin = Math.max(36, Math.min(64, viewportWidth * 0.04));
-		const centerXpx = aquariumRect.x + aquariumRect.width / 2;
-		const centerYpx = aquariumRect.y + aquariumRect.height / 2;
-		const radiusXpx = aquariumRect.width / 2 + margin;
-		const radiusYpx = aquariumRect.height / 2 + margin;
-
-		centerX = (centerXpx / viewportWidth) * 100;
-		centerY = (centerYpx / viewportHeight) * 100;
-		radiusX = (radiusXpx / viewportWidth) * 100;
-		radiusY = (radiusYpx / viewportHeight) * 100;
-		minX = (Math.max(0, aquariumRect.x - margin) / viewportWidth) * 100;
-		maxX = (Math.min(viewportWidth, aquariumRect.x + aquariumRect.width + margin) / viewportWidth) * 100;
-		minY = (Math.max(0, aquariumRect.y - margin) / viewportHeight) * 100;
-		maxY = (Math.min(viewportHeight, aquariumRect.y + aquariumRect.height + margin) / viewportHeight) * 100;
+	let availableHeight = viewportHeight - topSafePx - bottomSafePx;
+	if (availableHeight < 260) {
+		const deficit = 260 - availableHeight;
+		topSafePx = Math.max(120, topSafePx - deficit * 0.6);
+		bottomSafePx = Math.max(140, bottomSafePx - deficit * 0.4);
+		availableHeight = viewportHeight - topSafePx - bottomSafePx;
 	}
 
-	if (!aquariumRect && isXs) {
-		centerY = 52;
-		radiusX = 40;
-		radiusY = 24;
-		minY = 14;
-		maxY = 78;
-	} else if (!aquariumRect && isSm) {
-		centerY = 52;
-		radiusX = 38;
-		radiusY = 24;
-		minY = 14;
-		maxY = 80;
-	} else if (!aquariumRect && isMd) {
-		centerY = 50;
-		radiusX = 36;
-		radiusY = 24;
-		minY = 14;
-		maxY = 82;
-	} else if (!aquariumRect) {
-		centerY = 46;
-		radiusX = 34;
-		radiusY = 22;
-		minX = 10;
-		maxX = 90;
-		minY = 12;
-		maxY = 78;
-	}
+	const marginPx = Math.max(24, Math.min(48, viewportWidth * 0.045));
+	const centerXpx = viewportWidth / 2;
+	const centerYpx = topSafePx + availableHeight / 2;
+	let radiusXpx = Math.min(viewportWidth / 2 - marginPx, viewportWidth * 0.42);
+	const radiusYpx = Math.max(
+		60,
+		Math.min(availableHeight / 2 - marginPx, viewportHeight * 0.28)
+	);
+	// Match the aquarium's oval (roughly 560x340 in the SVG) instead of over-squeezing on wide screens.
+	radiusXpx = Math.min(radiusXpx, radiusYpx * 1.65);
 
-	if (!aquariumRect && isWide) {
-		centerY = 44;
-		radiusX = 32;
-		radiusY = 20;
-		maxY = 74;
-	}
+	const centerX = (centerXpx / viewportWidth) * 100;
+	const centerY = (centerYpx / viewportHeight) * 100;
+	const radiusX = (radiusXpx / viewportWidth) * 100;
+	const radiusY = (radiusYpx / viewportHeight) * 100;
+	const minX = (marginPx / viewportWidth) * 100;
+	const maxX = ((viewportWidth - marginPx) / viewportWidth) * 100;
+	const minY = (topSafePx / viewportHeight) * 100;
+	const maxY = ((viewportHeight - bottomSafePx) / viewportHeight) * 100;
 
-	if (!aquariumRect && isShort) {
-		centerY = Math.min(56, centerY + 2);
-		radiusY = Math.max(20, radiusY - 4);
-		minY = Math.max(minY, 16);
-		maxY = Math.min(maxY, 76);
+	if (isShort) {
+		const tighten = Math.min(8, (700 - viewportHeight) * 0.02);
+		return {
+			centerX,
+			centerY: centerY + tighten,
+			radiusX,
+			radiusY: Math.max(18, radiusY - tighten),
+			minX,
+			maxX,
+			minY,
+			maxY: Math.max(minY + 18, maxY - tighten)
+		};
 	}
 
 	return { centerX, centerY, radiusX, radiusY, minX, maxX, minY, maxY };

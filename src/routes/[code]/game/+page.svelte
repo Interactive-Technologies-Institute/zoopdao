@@ -246,11 +246,129 @@
 		return gameState.playersState[gameState.playerId] || { state: 'done' };
 	});
 
+	$effect(() => {
+		if (chatRound) {
+			keepStoryDialogOpen = false;
+			return;
+		}
+		if (!openStoryDialog && !showRoundTransition) {
+			keepStoryDialogOpen = false;
+		}
+	});
+
 	let openStoryDialog = $state(false);
 	let openHelpDialog = $state(false);
 	let openEndDialog = $state(false);
 	let openProposalDialog = $state(false);
 	let openHistoryDialog = $state(false);
+	let keepStoryDialogOpen = $state(false);
+	let showLayoutDebug = $state(false);
+	let safeAreaObserver: ResizeObserver | null = null;
+
+	function updateSafeArea() {
+		if (typeof window === 'undefined') return;
+		const statusEl = document.querySelector('.status-pill');
+		const roundEl = document.querySelector('.round-indicator-wrap');
+		const bottomEl =
+			document.querySelector('.discussion-controls') ||
+			document.querySelector('.discussion-entry-controls');
+		const avatarBoundary = document.querySelector('.avatar-boundary');
+		const topPadding = 12;
+		const bottomPadding = 16;
+
+		const roundBottom = roundEl ? roundEl.getBoundingClientRect().bottom : 0;
+		if (roundBottom > 0) {
+			// Keep the status pill below the title area to prevent overlap on landscape layouts.
+			const minTopPx = 104; // 6.5rem @ 16px base font size
+			const desiredTopPx = roundBottom + 12;
+			const topForPill = Math.max(minTopPx, desiredTopPx);
+			document.documentElement.style.setProperty('--status-pill-top', `${topForPill}px`);
+		} else {
+			document.documentElement.style.removeProperty('--status-pill-top');
+		}
+
+		const statusBottom = statusEl ? statusEl.getBoundingClientRect().bottom : 0;
+		const topPx = Math.max(statusBottom, roundBottom) + topPadding;
+		const bottomPx = bottomEl
+			? window.innerHeight - bottomEl.getBoundingClientRect().top + bottomPadding
+			: 0;
+
+		aquariumLayout.setSafeArea(topPx, bottomPx);
+
+		if (avatarBoundary) {
+			const sideMargin = Math.max(16, Math.min(72, window.innerWidth * 0.06));
+			avatarBoundary.style.top = `${topPx}px`;
+			avatarBoundary.style.bottom = `${bottomPx}px`;
+			avatarBoundary.style.left = `${sideMargin}px`;
+			avatarBoundary.style.right = `${sideMargin}px`;
+			const rect = avatarBoundary.getBoundingClientRect();
+			aquariumLayout.setContainerRect(rect.left, rect.top, rect.width, rect.height);
+		}
+
+		const mapEl = document.querySelector('.map-image') as HTMLImageElement | null;
+		if (mapEl) {
+			// `object-contain` means the rendered image content may be smaller than the element's box.
+			// Use the contained rect so avatar math stays stable across aspect ratios (e.g. iPad landscape).
+			const rect = mapEl.getBoundingClientRect();
+			const naturalAspect =
+				mapEl.naturalWidth && mapEl.naturalHeight ? mapEl.naturalWidth / mapEl.naturalHeight : 1200 / 800;
+			const boxAspect = rect.width / rect.height;
+
+			let contentLeft = rect.left;
+			let contentTop = rect.top;
+			let contentWidth = rect.width;
+			let contentHeight = rect.height;
+
+			if (boxAspect > naturalAspect) {
+				// Height-limited: horizontal letterboxing.
+				contentHeight = rect.height;
+				contentWidth = rect.height * naturalAspect;
+				contentLeft = rect.left + (rect.width - contentWidth) / 2;
+			} else {
+				// Width-limited: vertical letterboxing.
+				contentWidth = rect.width;
+				contentHeight = rect.width / naturalAspect;
+				contentTop = rect.top + (rect.height - contentHeight) / 2;
+			}
+
+			aquariumLayout.setTableRect(contentLeft, contentTop, contentWidth, contentHeight);
+		}
+	}
+
+	function attachSafeAreaObservers() {
+		if (typeof window === 'undefined') return;
+		safeAreaObserver?.disconnect();
+		safeAreaObserver = new ResizeObserver(() => updateSafeArea());
+
+		const statusEl = document.querySelector('.status-pill');
+		const roundEl = document.querySelector('.round-indicator-wrap');
+		const bottomEl =
+			document.querySelector('.discussion-controls') ||
+			document.querySelector('.discussion-entry-controls');
+
+		if (statusEl) safeAreaObserver.observe(statusEl);
+		if (roundEl) safeAreaObserver.observe(roundEl);
+		if (bottomEl) safeAreaObserver.observe(bottomEl);
+		updateSafeArea();
+	}
+
+	onMount(() => {
+		if (typeof window === 'undefined') return;
+		const params = new URLSearchParams(window.location.search);
+		showLayoutDebug = params.get('debug') === 'layout';
+		attachSafeAreaObservers();
+		window.addEventListener('resize', updateSafeArea);
+		return () => {
+			window.removeEventListener('resize', updateSafeArea);
+			safeAreaObserver?.disconnect();
+		};
+	});
+
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		chatRound;
+		requestAnimationFrame(attachSafeAreaObservers);
+	});
 	
 	// Discussion messages state
 	interface DiscussionMessage {
@@ -706,6 +824,22 @@
 			</button>
 		</div>
 	{/if}
+
+	{#if showLayoutDebug}
+		<div
+			class="fixed left-3 right-3 z-[90] pointer-events-none border-2 border-dashed border-fuchsia-500/70 rounded-2xl bg-fuchsia-500/5"
+			style={`top:${aquariumLayout.safeTopPx}px; bottom:${aquariumLayout.safeBottomPx}px;`}
+		></div>
+		<div class="fixed left-3 bottom-3 z-[91] rounded-lg bg-black/80 px-3 py-2 text-xs text-white pointer-events-none">
+			safeTop: {Math.round(aquariumLayout.safeTopPx)}px · safeBottom:{' '}
+			{Math.round(aquariumLayout.safeBottomPx)}px
+		</div>
+	{/if}
+	<div
+		class="fixed avatar-boundary left-3 right-3 z-[60] pointer-events-none rounded-2xl"
+		style={`top:${aquariumLayout.safeTopPx}px; bottom:${aquariumLayout.safeBottomPx}px;`}
+		aria-hidden="true"
+	></div>
 	<StoryDialog bind:open={openStoryDialog} {gameState} proposalId={data.proposalId ?? null} />
 	
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
