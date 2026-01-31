@@ -731,7 +731,7 @@
 			/>
 			<button
 				type="button"
-				class="w-full rounded-full border-2 border-sand bg-white px-4 py-3 text-center text-base font-semibold text-black shadow-lg transition-colors hover:bg-sand/20"
+				class="tour-proposal-button w-full rounded-full border-2 border-sand bg-white px-4 py-3 text-center text-base font-semibold text-black shadow-lg transition-colors hover:bg-sand/20"
 				disabled={!tourCompleted}
 				onclick={() => (openProposalDialog = true)}
 			>

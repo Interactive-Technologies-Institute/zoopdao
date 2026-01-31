@@ -56,7 +56,7 @@ export function createGameTour() {
 			title: m.map(),
 			text: m.map_description(),
 			attachTo: {
-				element: '.map-highlight',
+				element: '.avatar-boundary',
 				on: 'bottom'
 			},
 			buttons: [
@@ -148,7 +148,7 @@ export function createGameTour() {
 			title: m.images_title(),
 			text: m.images_description(),
 			attachTo: {
-				element: '.images',
+				element: '.tour-proposal-button',
 				on: 'bottom'
 			},
 			buttons: [
