@@ -25,8 +25,15 @@
 	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
 	import type { AIAgent, AIMessage, Participant, Role } from '@/types';
 	import { supabase } from '@/supabase';
-	import { storeHumanMessage, getDiscussionMessages, getChatHistoryForAI, storeAIMessage } from '@/utils/discussion-messages';
+	import {
+		storeHumanMessage,
+		getDiscussionMessages,
+		getChatHistoryForAI,
+		storeAIMessage,
+		mapDiscussionMessageRow
+	} from '@/utils/discussion-messages';
 	import { AquariumLayoutState } from '@/state/aquarium-layout.svelte';
+	import { DiscussionTimelineState, type TimelineMessage } from '@/state/discussion-timeline.svelte';
 
 	let tour: Tour | undefined;
 
@@ -91,6 +98,7 @@
 		}
 	});
 
+
 	onDestroy(() => {
 		if (tour) {
 			tour.complete();
@@ -112,6 +120,7 @@
 		console.log('Rounds length:', data.rounds?.length || 0);
 	});
 
+
 	let gameState = new GameState(
 		data.cards,
 		data.rounds,
@@ -125,7 +134,6 @@
 	);
 
 	let aquariumLayout = new AquariumLayoutState();
-
 	let showRoundTransition = $state(false);
 	type TransitionState = 'starting' | 'transitioning' | 'ending' | 'ended';
 	let transitionState: TransitionState = $state('starting');
@@ -208,7 +216,6 @@
 
 	$effect(() => {
 		if (!enableDiscussionChat || !chatRound || !hasUserChattedThisRound) {
-			aiMessages = [];
 			typingAgents = new Set();
 		}
 	});
@@ -380,45 +387,227 @@ function handleTransitionComplete() {
 		requestAnimationFrame(attachSafeAreaObservers);
 	});
 	
-	// Discussion messages state
-	interface DiscussionMessage {
-		id: string;
-		content: string;
-		senderType: 'human' | 'ai';
-		senderName: string;
-		round: number;
-		timestamp: Date;
-	}
-	let discussionMessages = $state<DiscussionMessage[]>([]);
+	// Discussion timeline (single source of truth for history + avatar chat UI)
+	let discussionTimeline = new DiscussionTimelineState();
+	let lastLoadedDiscussionRound = $state<number | null>(null);
 
-	// Load existing messages on mount
+	function splitContentParts(content: string): string[] {
+		return content
+			.split('\n\n')
+			.map((p) => p.trim())
+			.filter(Boolean);
+	}
+
+	function toTitleCaseRole(role: string) {
+		return role.charAt(0).toUpperCase() + role.slice(1);
+	}
+
+	function resolveAgentIdByRole(role: Role | null): string | null {
+		if (!role) return null;
+		const found = aiAgents.find((a) => a.role === role);
+		return found?.id ?? null;
+	}
+
+	function resolveAgentNameByRole(role: Role | null): string {
+		if (!role) return 'AI Agent';
+		const found = aiAgents.find((a) => a.role === role);
+		return found?.name ?? toTitleCaseRole(role);
+	}
+
+	function timelineMessagesFromDbMessage(dbMsg: any): TimelineMessage[] {
+		const msg = mapDiscussionMessageRow(dbMsg);
+		const parts = splitContentParts(msg.content);
+		const senderType = msg.participantType === 'human' ? 'human' : 'ai';
+		const isSelf = senderType === 'human' && msg.participantId === data.playerId;
+
+		const role = msg.agentRole as Role | null;
+		const resolvedAgentId = resolveAgentIdByRole(role);
+		const senderId =
+			senderType === 'human'
+				? String(msg.participantId ?? 'human')
+				: (msg.metadata?.agent_id ?? resolvedAgentId ?? (role ? `role:${role}` : 'ai'));
+
+		const senderName =
+			senderType === 'human' ? (isSelf ? 'You' : 'Participant') : resolveAgentNameByRole(role);
+
+		const createdAt = msg.createdAt;
+		const dbId = msg.id;
+		const clientTempId = msg.metadata?.client_temp_id;
+
+		// Stable per-part keys so we can split/join deterministically for fetch + realtime.
+		return (parts.length ? parts : ['']).map((part, idx) => ({
+			key: `db:${dbId}:${idx}`,
+			dbId,
+			clientTempId,
+			round: msg.round,
+			senderType,
+			senderId,
+			senderRole: senderType === 'ai' ? (role ?? undefined) : undefined,
+			senderName,
+			content: part,
+			createdAt,
+			status: 'sent'
+		}));
+	}
+
+	function addOptimisticHumanMessage(content: string) {
+		const clientTempId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+		discussionTimeline.upsert({
+			key: `temp:${clientTempId}`,
+			clientTempId,
+			round: gameState.currentRound,
+			senderType: 'human',
+			senderId: String(data.playerId),
+			senderName: 'You',
+			content,
+			createdAt: new Date().toISOString(),
+			status: 'sending'
+		});
+		return clientTempId;
+	}
+
+	const discussionMessages = $derived.by(() =>
+		discussionTimeline.messages.map((msg) => ({
+			id: msg.key,
+			content: msg.content,
+			senderType: msg.senderType,
+			senderName: msg.senderName,
+			round: msg.round,
+			timestamp: new Date(msg.createdAt),
+			status: msg.status
+		}))
+	);
+
+	// Derive per-agent messages for the participants ring from the same timeline.
 	$effect(() => {
 		if (!enableDiscussionChat || !chatRound || !hasUserChattedThisRound) {
-			discussionMessages = [];
+			aiMessages = [];
 			return;
 		}
-		if (gameState.state === 'playing' || gameState.state === 'finished') {
-			const loadMessages = async () => {
-				try {
-					const gameId = data.game.id;
-					const messages = await getDiscussionMessages(supabase, gameId);
-					
-					discussionMessages = messages.map((msg) => ({
-						id: msg.id.toString(),
-						content: msg.content,
-						senderType: msg.participantType === 'human' ? 'human' : 'ai',
-						senderName: msg.participantType === 'human' 
-							? 'You' 
-							: (msg.agentRole ? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1) : 'AI Agent'),
-						round: msg.round,
-						timestamp: new Date(msg.createdAt)
-					}));
-				} catch (error) {
-					console.error('Error loading messages:', error);
-				}
-			};
-			loadMessages();
+		// Re-run when agents are (re)initialized so DB messages can resolve `role:*` ids.
+		aiAgents.length;
+
+		const resolveAgentId = (msg: TimelineMessage) => {
+			if (msg.senderType !== 'ai') return msg.senderId;
+			const role =
+				msg.senderRole ??
+				(msg.senderId.startsWith('role:') ? (msg.senderId.slice(5) as Role) : null);
+			if (role) {
+				const found = aiAgents.find((a) => a.role === role);
+				if (found) return found.id;
+			}
+			return msg.senderId.startsWith('role:') ? msg.senderId.slice(5) : msg.senderId;
+		};
+
+		aiMessages = discussionTimeline.messages
+			.filter((msg) => msg.senderType === 'ai')
+			.map((msg) => ({
+				id: msg.key,
+				agent_id: resolveAgentId(msg),
+				round: msg.round,
+				content: msg.content,
+				created_at: msg.createdAt
+			}));
+	});
+
+	// Load existing round messages when entering the chat round.
+	$effect(() => {
+		if (!enableDiscussionChat || !chatRound) {
+			discussionTimeline.reset();
+			lastLoadedDiscussionRound = null;
+			return;
 		}
+		if (gameState.state !== 'playing' && gameState.state !== 'finished') return;
+
+		const currentRound = gameState.currentRound;
+		if (lastLoadedDiscussionRound === currentRound) return;
+		lastLoadedDiscussionRound = currentRound;
+
+		const gameId = data.game.id;
+		let cancelled = false;
+		(async () => {
+			try {
+				const dbMessages = await getDiscussionMessages(supabase, gameId, { round: currentRound });
+				if (cancelled) return;
+
+				const nextTimeline: TimelineMessage[] = [];
+				for (const dbMsg of dbMessages) {
+					nextTimeline.push(...timelineMessagesFromDbMessage({
+						id: dbMsg.id,
+						game_id: dbMsg.gameId,
+						proposal_id: dbMsg.proposalId,
+						round: dbMsg.round,
+						participant_type: dbMsg.participantType,
+						participant_id: dbMsg.participantId,
+						agent_role: dbMsg.agentRole,
+						content: dbMsg.content,
+						created_at: dbMsg.createdAt,
+						metadata: dbMsg.metadata
+					}));
+				}
+
+				// Replace timeline with DB snapshot for this round. We keep any optimistic entries
+				// (they'll be reconciled via client_temp_id or the insert response).
+				discussionTimeline.upsert(nextTimeline);
+
+				// If we're coming back/reloading, infer "has user chatted" from persisted messages.
+				const hasSelfMessage = dbMessages.some(
+					(m) => m.participantType === 'human' && m.participantId === data.playerId && m.round === currentRound
+				);
+				if (hasSelfMessage) {
+					hasUserChattedThisRound = true;
+					const last = [...dbMessages]
+						.reverse()
+						.find((m) => m.participantType === 'human' && m.participantId === data.playerId);
+					if (last?.content) userLastSentMessage = last.content;
+				}
+			} catch (error) {
+				console.error('Error loading discussion messages:', error);
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	// Subscribe to realtime inserts so the history dialog updates live while open.
+	$effect(() => {
+		if (!enableDiscussionChat || !chatRound) return;
+		const gameId = data.game.id;
+		const currentRound = gameState.currentRound;
+
+		const channel = supabase
+			.channel(`discussion_messages:${gameId}:${currentRound}`)
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'discussion_messages',
+					filter: `game_id=eq.${gameId}`
+				},
+				(payload) => {
+					try {
+						const row = (payload as any).new;
+						if (!row) return;
+						if (row.round !== currentRound) return;
+
+						const clientTempId = row?.metadata?.client_temp_id;
+						if (clientTempId) {
+							discussionTimeline.removeByClientTempId(clientTempId);
+						}
+						discussionTimeline.upsert(timelineMessagesFromDbMessage(row));
+					} catch (error) {
+						console.error('Failed to ingest realtime discussion message:', error);
+					}
+				}
+			)
+			.subscribe();
+
+		return () => {
+			channel.unsubscribe();
+		};
 	});
 
 	
@@ -448,7 +637,6 @@ function handleTransitionComplete() {
 			
 			// Get unique agent IDs that have sent messages in this round
 			const agentsWhoResponded = new Set(currentRoundMessages.map(msg => msg.agent_id));
-			
 			// Check if all agents have responded (each agent should have at least one message)
 			const allAgentsResponded = aiAgents.every(agent => agentsWhoResponded.has(agent.id));
 			const noAgentsTyping = typingAgents.size === 0;
@@ -456,7 +644,7 @@ function handleTransitionComplete() {
 				(msg) => msg.senderType === 'human' && msg.round === gameState.currentRound
 			).length;
 			const aiMessageCount = currentRoundMessages.length;
-			
+
 			// If all agents have responded and none are typing, discussion round is complete
 			if (SINGLE_AI_MODE_ROUND7) {
 				if (
@@ -509,6 +697,9 @@ function handleTransitionComplete() {
 				return;
 			}
 
+			// Optimistic UI: show immediately in timeline/history (even if the history dialog is open).
+			const clientTempId = addOptimisticHumanMessage(message);
+
 			// Save human message to database
 			const savedMessage = await storeHumanMessage(
 				supabase,
@@ -516,30 +707,37 @@ function handleTransitionComplete() {
 				proposalId,
 				currentRound,
 				playerId,
-				message
+				message,
+				{ clientTempId }
 			);
 
 			if (!savedMessage) {
+				discussionTimeline.markFailedByClientTempId(clientTempId);
 				userIsSending = false;
 				console.error('Failed to save message');
 				return;
 			}
+			// Replace optimistic entry with persisted DB message.
+			discussionTimeline.removeByClientTempId(clientTempId);
+			discussionTimeline.upsert(
+				timelineMessagesFromDbMessage({
+					id: savedMessage.id,
+					game_id: savedMessage.gameId,
+					proposal_id: savedMessage.proposalId,
+					round: savedMessage.round,
+					participant_type: savedMessage.participantType,
+					participant_id: savedMessage.participantId,
+					agent_role: savedMessage.agentRole,
+					content: savedMessage.content,
+					created_at: savedMessage.createdAt,
+					metadata: savedMessage.metadata
+				})
+			);
 			if (chatRound) {
 				userLastSentMessage = savedMessage.content;
 				userDraft = '';
 				userIsSending = false;
 			}
-
-			// Add human message to local state
-			const newMessage: DiscussionMessage = {
-				id: savedMessage.id.toString(),
-				content: savedMessage.content,
-				senderType: 'human',
-				senderName: 'You',
-				round: savedMessage.round,
-				timestamp: new Date(savedMessage.createdAt)
-			};
-			discussionMessages = [...discussionMessages, newMessage];
 
 
 			// Get chat history for AI context (including current round)
@@ -572,37 +770,33 @@ function handleTransitionComplete() {
 
 					await waitForAiDelay(2000 + Math.random() * 2000); // 2-4 seconds
 
-					const localId = `fallback-${agent.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+					const fallbackClientTempId = `fallback-${agent.id}-${Date.now()}-${Math.random()
+						.toString(36)
+						.slice(2, 8)}`;
 					const now = new Date();
 
 					// UI-first: add to local state immediately
-					const discussionMessage: DiscussionMessage = {
-						id: localId,
-						content: fallbackContent,
+					discussionTimeline.upsert({
+						key: `temp:${fallbackClientTempId}`,
+						clientTempId: fallbackClientTempId,
+						round: currentRound,
 						senderType: 'ai',
+						senderId: agent.id,
+						senderRole: agent.role,
 						senderName: agent.name,
-						round: currentRound,
-						timestamp: now
-					};
-					discussionMessages = [...discussionMessages, discussionMessage];
-
-					const aiMessage: AIMessage = {
-						id: localId,
-						agent_id: agent.id,
-						round: currentRound,
 						content: fallbackContent,
-						created_at: now.toISOString()
-					};
-					aiMessages = [...aiMessages, aiMessage];
+						createdAt: now.toISOString(),
+						status: 'sent'
+					});
 
 					clearTyping(agent.id);
 
 					// Best-effort persistence after UI update
 					try {
-						const fallbackTurnIndex = aiMessages.filter(
-							(msg) => msg.round === currentRound && msg.agent_id === agent.id
+						const fallbackTurnIndex = discussionTimeline.messages.filter(
+							(msg) => msg.round === currentRound && msg.senderType === 'ai' && msg.senderId === agent.id
 						).length;
-						await storeAIMessage(
+						const persisted = await storeAIMessage(
 							supabase,
 							gameId,
 							proposalId,
@@ -611,9 +805,27 @@ function handleTransitionComplete() {
 							agent.role,
 							fallbackContent,
 							{
-								turnIndex: SINGLE_AI_MODE_ROUND7 ? fallbackTurnIndex : null
+								turnIndex: SINGLE_AI_MODE_ROUND7 ? fallbackTurnIndex : null,
+								clientTempId: fallbackClientTempId
 							}
 						);
+						if (persisted) {
+							discussionTimeline.removeByClientTempId(fallbackClientTempId);
+							discussionTimeline.upsert(
+								timelineMessagesFromDbMessage({
+									id: persisted.id,
+									game_id: persisted.gameId,
+									proposal_id: persisted.proposalId,
+									round: persisted.round,
+									participant_type: persisted.participantType,
+									participant_id: persisted.participantId,
+									agent_role: persisted.agentRole,
+									content: persisted.content,
+									created_at: persisted.createdAt,
+									metadata: persisted.metadata
+								})
+							);
+						}
 					} catch (fallbackError) {
 						console.error(`Failed to store fallback message for ${agent.name}:`, fallbackError);
 					}
@@ -696,27 +908,18 @@ function handleTransitionComplete() {
 									.filter((m: string) => m.trim());
 								
 								messageContents.forEach((content: string, index: number) => {
-									// Add to discussionMessages for chat history
-									const discussionMessage: DiscussionMessage = {
-										id: `${result.message.id}-${index}`,
-										content: content.trim(),
+									discussionTimeline.upsert({
+										key: `db:${result.message.id}:${index}`,
+										dbId: result.message.id,
+										round: result.message.round,
 										senderType: 'ai',
+										senderId: agent.id,
+										senderRole: agent.role,
 										senderName: agent.name,
-										round: result.message.round,
-										timestamp: new Date(result.message.createdAt)
-									};
-									discussionMessages = [...discussionMessages, discussionMessage];
-									
-									// Add to aiMessages for display in participants container
-									const aiMessage: AIMessage = {
-										id: `${result.message.id}-${index}`,
-										agent_id: agent.id,
-										round: result.message.round,
 										content: content.trim(),
-										created_at: result.message.createdAt
-									};
-									console.log('Adding AI message:', { agent: agent.name, message: aiMessage, currentRound });
-									aiMessages = [...aiMessages, aiMessage];
+										createdAt: result.message.createdAt,
+										status: 'sent'
+									});
 								});
 							} finally {
 								clearTyping(agent.id);
@@ -809,13 +1012,13 @@ function handleTransitionComplete() {
 	$inspect(playerState);
 </script>
 
-<div class="w-screen h-[100dvh] relative">
-	<Map layout={aquariumLayout} />
-	<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
-	<StatusPill
-		playerState={currentPlayerState}
-		currentRound={gameState.currentRound}
-	/>
+	<div class="w-screen h-[100dvh] relative">
+		<Map layout={aquariumLayout} />
+		<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
+		<StatusPill
+			playerState={currentPlayerState}
+			currentRound={gameState.currentRound}
+		/>
 	<ProposalDialog 
 		bind:open={openProposalDialog} 
 		proposalId={data.proposalId ?? null} 
@@ -840,7 +1043,7 @@ function handleTransitionComplete() {
 			</Button>
 			<button
 				type="button"
-				class="w-full rounded-full border-2 border-sand bg-white px-4 py-3 text-center text-base font-semibold text-black shadow-lg transition-colors hover:bg-sand/20"
+				class="tour-proposal-button w-full rounded-full border-2 border-sand bg-white px-4 py-3 text-center text-base font-semibold text-black shadow-lg transition-colors hover:bg-sand/20"
 				disabled={!tourCompleted}
 				onclick={() => (openProposalDialog = true)}
 			>
@@ -905,8 +1108,7 @@ function handleTransitionComplete() {
 	{#if enableDiscussionChat && chatRound}
 		<DiscussionHistoryDialog
 			bind:open={openHistoryDialog}
-			gameId={data.game.id}
-			supabase={supabase}
+			messages={discussionMessages}
 			onClose={() => (openHistoryDialog = false)}
 		/>
 	{/if}

@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte';
 	import { m } from '@src/paraglide/messages';
-	import type { SupabaseClient } from '@supabase/supabase-js';
-	import { getDiscussionMessages } from '@/utils/discussion-messages';
 
 	interface Message {
 		id: string;
@@ -11,49 +9,16 @@
 		senderName: string;
 		round: number;
 		timestamp: Date;
+		status?: 'sending' | 'sent' | 'failed';
 	}
 
 	interface DiscussionHistoryDialogProps {
 		open: boolean;
-		gameId: number;
-		supabase: SupabaseClient;
+		messages: Message[];
 		onClose?: () => void;
 	}
 
-	let { open = $bindable(false), gameId, supabase, onClose }: DiscussionHistoryDialogProps = $props();
-
-	let messages = $state<Message[]>([]);
-	let isLoading = $state(false);
-
-	// Load messages from database when dialog opens
-	$effect(() => {
-		if (open && gameId) {
-			isLoading = true;
-			getDiscussionMessages(supabase, gameId)
-				.then((dbMessages) => {
-					// Convert database messages to dialog format
-					messages = dbMessages.map((msg) => ({
-						id: msg.id.toString(),
-						content: msg.content,
-						senderType: msg.participantType === 'human' ? 'human' : 'ai',
-						senderName: msg.participantType === 'human' 
-							? 'Participant' 
-							: (msg.agentRole 
-								? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1) 
-								: 'AI Agent'),
-						round: msg.round,
-						timestamp: new Date(msg.createdAt)
-					}));
-				})
-				.catch((error) => {
-					console.error('Error loading discussion messages:', error);
-					messages = [];
-				})
-				.finally(() => {
-					isLoading = false;
-				});
-		}
-	});
+	let { open = $bindable(false), messages = [], onClose }: DiscussionHistoryDialogProps = $props();
 
 	function handleClose() {
 		open = false;
@@ -100,11 +65,7 @@
 			<!-- Scrollable Content Area -->
 			<div class="flex-1 p-8 overflow-y-auto">
 				<div class="bg-dark-deep/70 bos-surface rounded-2xl p-6 border border-ice/10 bos-border min-h-[520px]">
-					{#if isLoading}
-						<div class="flex items-center justify-center h-full text-ice/70 bos-muted">
-							<p class="text-lg">Loading messages...</p>
-						</div>
-					{:else if messages.length === 0}
+					{#if messages.length === 0}
 						<div class="flex items-center justify-center h-full text-ice/70 bos-muted">
 							<p class="text-lg">{m.no_messages_yet()}</p>
 						</div>

@@ -13,6 +13,21 @@ export interface DiscussionMessage {
 	metadata: Record<string, any>;
 }
 
+export function mapDiscussionMessageRow(msg: any): DiscussionMessage {
+	return {
+		id: msg.id,
+		gameId: msg.game_id,
+		proposalId: msg.proposal_id,
+		round: msg.round,
+		participantType: msg.participant_type,
+		participantId: msg.participant_id,
+		agentRole: msg.agent_role,
+		content: msg.content,
+		createdAt: msg.created_at,
+		metadata: msg.metadata || {}
+	};
+}
+
 /**
  * Fetch discussion messages for a game
  */
@@ -55,18 +70,7 @@ export async function getDiscussionMessages(
 		return [];
 	}
 
-	return (data || []).map((msg) => ({
-		id: msg.id,
-		gameId: msg.game_id,
-		proposalId: msg.proposal_id,
-		round: msg.round,
-		participantType: msg.participant_type,
-		participantId: msg.participant_id,
-		agentRole: msg.agent_role,
-		content: msg.content,
-		createdAt: msg.created_at,
-		metadata: msg.metadata || {}
-	}));
+	return (data || []).map(mapDiscussionMessageRow);
 }
 
 /**
@@ -106,18 +110,7 @@ export async function getProposalMessages(
 		return [];
 	}
 
-	return (data || []).map((msg) => ({
-		id: msg.id,
-		gameId: msg.game_id,
-		proposalId: msg.proposal_id,
-		round: msg.round,
-		participantType: msg.participant_type,
-		participantId: msg.participant_id,
-		agentRole: msg.agent_role,
-		content: msg.content,
-		createdAt: msg.created_at,
-		metadata: msg.metadata || {}
-	}));
+	return (data || []).map(mapDiscussionMessageRow);
 }
 
 /**
@@ -129,7 +122,11 @@ export async function storeHumanMessage(
 	proposalId: number | null,
 	round: number,
 	participantId: number,
-	content: string
+	content: string,
+	options?: {
+		// Used to reconcile optimistic UI messages with realtime inserts / server ack.
+		clientTempId?: string;
+	}
 ): Promise<DiscussionMessage | null> {
 	const { data, error } = await supabase
 		.from('discussion_messages')
@@ -139,7 +136,8 @@ export async function storeHumanMessage(
 			round: round,
 			participant_type: 'human',
 			participant_id: participantId,
-			content: content
+			content: content,
+			metadata: options?.clientTempId ? { client_temp_id: options.clientTempId } : undefined
 		})
 		.select()
 		.single();
@@ -176,6 +174,7 @@ export async function storeAIMessage(
 	content: string,
 	options?: {
 		turnIndex?: number | null;
+		clientTempId?: string;
 	}
 ): Promise<DiscussionMessage | null> {
 	const { data, error } = await supabase
@@ -189,7 +188,10 @@ export async function storeAIMessage(
 			agent_role: agentRole,
 			turn_index: options?.turnIndex ?? null,
 			content: content,
-			metadata: { agent_id: agentId }
+			metadata: {
+				agent_id: agentId,
+				...(options?.clientTempId ? { client_temp_id: options.clientTempId } : {})
+			}
 		})
 		.select()
 		.single();
