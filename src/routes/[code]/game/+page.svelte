@@ -141,7 +141,7 @@
 	
 	const enableDiscussionChat = true;
 	const chatRound = $derived.by(() => gameState.currentRound === 7);
-	const SINGLE_AI_MODE_ROUND7 = true;
+	const SINGLE_AI_MODE_ROUND7 = false;
 	const MAX_USER_MESSAGES_ROUND7 = 5;
 	const MAX_AI_MESSAGES_ROUND7 = 5;
 	const SINGLE_AI_AGENT: AIAgent = {
