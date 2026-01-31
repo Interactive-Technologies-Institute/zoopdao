@@ -49,7 +49,7 @@
 
 <div
 	class={cn(
-		'absolute top-4 inset-x-0 flex flex-col items-center gap-1 md:gap-2 lg:gap-4 w-fit m-auto'
+		'round-indicator-wrap absolute top-4 inset-x-0 flex flex-col items-center gap-1 md:gap-2 lg:gap-4 w-fit m-auto'
 	)}
 >
 	<div
