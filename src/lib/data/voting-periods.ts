@@ -5,6 +5,18 @@ export type VotingPeriod = {
 	endDate: Date;
 };
 
+function startOfDay(date: Date): Date {
+	const normalized = new Date(date);
+	normalized.setHours(0, 0, 0, 0);
+	return normalized;
+}
+
+function endOfDay(date: Date): Date {
+	const normalized = new Date(date);
+	normalized.setHours(23, 59, 59, 999);
+	return normalized;
+}
+
 /**
  * Get voting periods for a given year
  * Quarterly meeting periods:
@@ -66,7 +78,7 @@ export function isProposalOpen(periodId: string, allPeriods: VotingPeriod[]): bo
 	if (!period) return false;
 	
 	const now = new Date();
-	return now >= period.startDate && now <= period.endDate;
+	return now >= startOfDay(period.startDate) && now <= endOfDay(period.endDate);
 }
 
 /**
@@ -75,4 +87,3 @@ export function isProposalOpen(periodId: string, allPeriods: VotingPeriod[]): bo
 export function getProposalStatus(periodId: string, allPeriods: VotingPeriod[]): 'open' | 'closed' {
 	return isProposalOpen(periodId, allPeriods) ? 'open' : 'closed';
 }
-
