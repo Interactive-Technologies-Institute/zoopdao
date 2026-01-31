@@ -11,6 +11,7 @@
 	interface DiscussionInputBarProps {
 		onSend: (message: string) => void;
 		onOpenHistory: () => void;
+		onDraftChange?: (draft: string) => void;
 		gameId: number;
 		proposalId: number | null;
 		round: number;
@@ -22,6 +23,7 @@
 	let {
 		onSend,
 		onOpenHistory,
+		onDraftChange = undefined,
 		gameId,
 		proposalId,
 		round,
@@ -46,6 +48,13 @@
 	let actionInProgress = $state<Record<string, 'deleting' | 'reindexing'>>({});
 
 	const DOCUMENTS_BUCKET = 'discussion-documents';
+
+	$effect(() => {
+		// Mirror draft changes upward so other UI (e.g. user bubble) can react.
+		if (typeof onDraftChange === 'function') {
+			onDraftChange(message);
+		}
+	});
 
 	function buildStoragePath() {
 		const proposalKey = proposalId ? `proposal-${proposalId}` : `game-${gameId}`;

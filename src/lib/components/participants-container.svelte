@@ -174,7 +174,11 @@
 						currentRound={currentRound}
 						{tourCompleted}
 						{transitionState}
-						isCurrentPlayer={participant.player.id === currentPlayerId}
+						isCurrentPlayer={isCurrent}
+						chatIsTyping={isCurrent ? userChatIsTyping : false}
+						chatDraft={isCurrent ? userChatDraft : ''}
+						chatMessage={isCurrent ? userChatMessage : null}
+						chatIsSending={isCurrent ? userChatIsSending : false}
 						bubbleSide={bubbleSide}
 					/>
 				{:else}

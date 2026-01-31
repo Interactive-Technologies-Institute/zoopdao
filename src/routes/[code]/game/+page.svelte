@@ -151,6 +151,10 @@
 	);
 	
 	let hasUserChattedThisRound = $state(false);
+	let userDraft = $state('');
+	let userLastSentMessage = $state<string | null>(null);
+	let userIsSending = $state(false);
+	const userIsTyping = $derived.by(() => userDraft.trim().length > 0);
 	let lastChatRound = $state(-1);
 	let discussionRoundCount = $state(0); // Track how many discussion rounds have been completed
 
@@ -194,6 +198,9 @@
 		if (gameState.currentRound !== lastChatRound) {
 			lastChatRound = gameState.currentRound;
 			hasUserChattedThisRound = false;
+			userDraft = '';
+			userLastSentMessage = null;
+			userIsSending = false;
 			// Reset discussion round count when entering a new round
 			discussionRoundCount = 0;
 		}
@@ -479,6 +486,9 @@ function handleTransitionComplete() {
 		try {
 			if (chatRound) {
 				hasUserChattedThisRound = true;
+				// Keep the user bubble empty while the new message is being persisted,
+				// to avoid flashing the previous message between sends.
+				userIsSending = true;
 			}
 			const gameId = data.game.id;
 			const proposalId = data.proposalId || null; // Get proposal_id from loader
@@ -494,6 +504,7 @@ function handleTransitionComplete() {
 				SINGLE_AI_MODE_ROUND7 &&
 				userMessageCount >= MAX_USER_MESSAGES_ROUND7
 			) {
+				userIsSending = false;
 				alert(m.message_limit_reached());
 				return;
 			}
@@ -509,8 +520,14 @@ function handleTransitionComplete() {
 			);
 
 			if (!savedMessage) {
+				userIsSending = false;
 				console.error('Failed to save message');
 				return;
+			}
+			if (chatRound) {
+				userLastSentMessage = savedMessage.content;
+				userDraft = '';
+				userIsSending = false;
 			}
 
 			// Add human message to local state
@@ -716,6 +733,10 @@ function handleTransitionComplete() {
 			}
 		} catch (error) {
 			console.error('Error sending message:', error);
+		} finally {
+			if (chatRound) {
+				userIsSending = false;
+			}
 		}
 	}
 
@@ -855,12 +876,13 @@ function handleTransitionComplete() {
 				</div>
 			</div>
 		{/if}
-		<div class="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto flex flex-col gap-3">
+		<div class="discussion-controls fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto flex flex-col gap-3">
 			<!-- Discussion Input Bar (Round 7 only) -->
 			<DiscussionInputBar
 				inline
 				onSend={handleSendMessage}
 				onOpenHistory={handleOpenHistory}
+				onDraftChange={(draft) => (userDraft = draft)}
 				gameId={data.game.id}
 				proposalId={data.proposalId ?? null}
 				round={gameState.currentRound}
@@ -917,6 +939,10 @@ function handleTransitionComplete() {
 		{transitionState}
 		currentPlayerId={data.playerId}
 		typingAgents={chatRound && hasUserChattedThisRound ? typingAgents : new Set()}
+		userChatIsTyping={chatRound ? userIsTyping : false}
+		userChatDraft={chatRound ? userDraft : ''}
+		userChatMessage={chatRound ? userLastSentMessage : null}
+		userChatIsSending={chatRound ? userIsSending : false}
 		layout={aquariumLayout}
 	/>
 
