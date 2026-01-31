@@ -11,9 +11,10 @@
 	interface RoundIndicatorProps {
 		rounds: Round[];
 		currentRound: number;
+		proposalTitle?: string | null;
 	}
 
-	let { rounds, currentRound }: RoundIndicatorProps = $props();
+	let { rounds, currentRound, proposalTitle = null }: RoundIndicatorProps = $props();
 
 	let roundsMap = $derived.by(() => {
 		return rounds.reduce<Record<number, Round>>((acc, round) => {
@@ -89,7 +90,9 @@
 			<h2 class="text-2xl font-medium text-deep-teal text-center">
 				{getTranslation(ROUNDS[0].title)}
 			</h2>
-			<p class="text-center text-text">{m.choose_starting_stop()}</p>
+			<p class="text-center text-text">
+				{proposalTitle && proposalTitle.trim().length > 0 ? proposalTitle : m.choose_starting_stop()}
+			</p>
 		</div>
 	{:else}
 		<div class="flex flex-col items-center">

@@ -139,6 +139,15 @@ export const load = async ({ params, parent }) => {
 	const playerCards = await getPlayerCards(game.id);
 	const playerAnswers = await getPlayerAnswers(game.id);
 	const proposalId = game.proposal_id ?? null;
+	let proposalTitle: string | null = null;
+	if (proposalId) {
+		const { data: proposalData } = await supabase
+			.from('proposals')
+			.select('title')
+			.eq('id', proposalId)
+			.single();
+		proposalTitle = proposalData?.title ?? null;
+	}
 
 	// Check if player was inactive and if they can rejoin
 	if (player.is_active === false) {
@@ -174,6 +183,7 @@ export const load = async ({ params, parent }) => {
 		playerCards,
 		playerAnswers,
 		proposalId,
+		proposalTitle,
 		gameMode: game.mode ?? 'pedagogic'
 	};
 };
