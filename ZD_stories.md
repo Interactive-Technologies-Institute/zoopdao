@@ -1255,32 +1255,6 @@ e) Review for consistency across flows: homepage, lobby, proposal creation, roun
 
 ---
 
-## ZD-176: Pedagogic Mode (Round 7): user turn timer + hand-emoji “pass” control
-
-**Overview:**
-In Pedagogic Mode during the final discussion round, add a user turn timer that runs while the user is writing and stops when the user sends a message or explicitly passes using a hand-emoji button. This gives the user control to yield without the timer continuing.
-
-**Goal:**
-Enable user turn timing and an explicit “pass turn” mechanism in the final pedagogic round.
-
-**Description:**
-a) In Pedagogic Mode and Round 7 only, implement a 2:00 countdown for the user’s turn.
-b) Timer counts down during the user’s turn, including while the user is typing/writing.
-c) Stop the user timer when the user sends a new message.
-d) Add a hand-emoji button for the user to pass/stop; while passed, the timer stays stopped and the turn yields.
-e) Ensure timer resets correctly when the user gets a new turn.
-
-**Acceptance Criteria:**
-1) User has a 2-minute turn timer in Pedagogic Mode, Round 7.
-2) Timer runs during the user’s turn and continues while typing.
-3) Timer stops when the user sends a message.
-4) Hand-emoji pass stops the timer and yields the turn; timer remains stopped while passed.
-
-**Completion Criteria:**
-1) User timer + pass control works reliably in Round 7 Pedagogic Mode.
-2) Manual verification confirms correct start/stop/reset and turn yielding.
-
----
 
 ## ZD-180: Epic — Finish AI assembly with switchable LLM provider (IAEDU GPT-4o gateway + keep Gemini)
 
@@ -2071,3 +2045,101 @@ d) Ensure the dialog does not block other critical UI (round indicator, help/exi
 
 **Completion Criteria:**
 1) Manual verification confirms the dialog is always visible pre‑Round‑7 and hidden in Round 7.
+
+---
+
+## ZD-176: Epic — Real-time Avatar Bubble + Live History Updates (Round 7 Discussion)
+
+**Overview:**
+Deliver a live Round 7 discussion experience where avatar bubbles and the History dialog update instantly for user and AI messages.
+
+**Goal:**
+Make Round 7 feel real-time: no refresh, no reopen, and no visual regressions when sending or receiving messages.
+
+**Description:**
+a) Establish a single Round 7 discussion timeline as the source of truth for UI and History.
+b) Implement optimistic UI updates for user sends and reconcile with realtime inserts.
+c) Wire realtime subscription for inserts (game_id + round scope) to keep history live.
+d) Ensure avatar bubbles (user + AI) immediately reflect the latest message.
+e) Ensure History dialog updates live when open; no duplicates.
+f) Enforce safe wrapping/clamping for bubbles and history items on small screens.
+g) Modules/scripts to review: discussion state store, history dialog, avatar bubble components, realtime subscription wiring.
+
+**Acceptance Criteria:**
+1) User Send updates avatar chat circle immediately with the new message (no brief revert).
+2) AI messages update their avatar bubbles immediately on arrival.
+3) History dialog updates live when open (no reopen required).
+4) No duplicate messages due to optimistic + realtime inserts.
+5) Message text wraps and stays inside viewport on iPhone SE, iPhone, iPad mini, desktop.
+
+**Completion Criteria:**
+1) Manual verification on iPhone SE, iPhone, iPad mini, and desktop wide with History closed and open.
+
+---
+
+## ZD-176a: Round 7 timeline store + optimistic send
+
+**Overview:**
+Create a single Round 7 discussion timeline store and ensure user messages show immediately on send.
+
+**Goal:**
+Guarantee instant UI feedback for user messages without flashing previous content.
+
+**Description:**
+a) Create/confirm a single in-memory Round 7 timeline store as source of truth.
+b) Optimistically insert user messages on Send.
+c) Reconcile optimistic messages with realtime inserts using ids (dedupe).
+d) Modules/scripts to review: discussion message state/store and send handler.
+
+**Acceptance Criteria:**
+1) On Send, user bubble updates immediately with the new message.
+2) No duplicate messages appear after realtime inserts confirm the optimistic send.
+
+**Completion Criteria:**
+1) Manual verification on mobile + desktop with two consecutive sends.
+
+---
+
+## ZD-176b: Realtime subscription + live History dialog
+
+**Overview:**
+Keep the History dialog live while open and in sync with realtime inserts.
+
+**Goal:**
+No reopen required to see new messages in History.
+
+**Description:**
+a) Subscribe to discussion message inserts (scoped by game_id + round).
+b) Merge new events into the timeline store in correct order.
+c) History dialog reads the timeline store and updates live when open.
+d) Modules/scripts to review: History dialog component, realtime subscription wiring.
+
+**Acceptance Criteria:**
+1) New user/AI messages appear instantly in History when it is open.
+2) Message order is correct and no duplicates appear.
+
+**Completion Criteria:**
+1) Manual verification with History dialog open during multiple AI/user messages.
+
+---
+
+## ZD-176c: Avatar bubbles + responsive safety
+
+**Overview:**
+Render avatar bubbles from the timeline store and ensure message wrapping on small screens.
+
+**Goal:**
+Keep bubble/snippet UI readable and within viewport on all target devices.
+
+**Description:**
+a) Avatar bubbles derive latest message per participant from the timeline store.
+b) Ensure AI + user bubbles update immediately on new messages.
+c) Add wrapping/clamp rules for long messages (no overflow on iPhone SE / iPad mini).
+d) Modules/scripts to review: avatar bubble components and bubble layout styles.
+
+**Acceptance Criteria:**
+1) User/AI avatar bubbles update immediately when new messages arrive.
+2) Long messages wrap and remain within viewport bounds on small screens.
+
+**Completion Criteria:**
+1) Visual verification on iPhone SE, iPhone, iPad mini, and desktop.
