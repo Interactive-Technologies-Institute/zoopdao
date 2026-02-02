@@ -62,10 +62,10 @@ export function getVotingPeriods(year: number = new Date().getFullYear()): Votin
 export function getExceptionalVotingPeriods(): VotingPeriod[] {
 	return [
 		{
-			id: 'january-2026-exceptional',
-			label: 'January 29-31, 2026',
-			startDate: new Date(2026, 0, 29), // Adjusted to include today for testing
-			endDate: new Date(2026, 0, 31)
+			id: 'february-2026-exceptional',
+			label: 'February 1-28, 2026',
+			startDate: new Date(2026, 1, 1),
+			endDate: new Date(2026, 1, 28)
 		}
 	];
 }

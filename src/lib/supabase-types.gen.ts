@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       cards: {
@@ -63,23 +38,182 @@ export type Database = {
         }
         Relationships: []
       }
+      discussion_messages: {
+        Row: {
+          agent_role: Database["public"]["Enums"]["agent_role_type"] | null
+          content: string
+          created_at: string
+          game_id: number
+          id: number
+          metadata: Json | null
+          participant_id: number | null
+          participant_type: Database["public"]["Enums"]["participant_type"]
+          proposal_id: number | null
+          round: number
+          turn_index: number | null
+        }
+        Insert: {
+          agent_role?: Database["public"]["Enums"]["agent_role_type"] | null
+          content: string
+          created_at?: string
+          game_id: number
+          id?: number
+          metadata?: Json | null
+          participant_id?: number | null
+          participant_type: Database["public"]["Enums"]["participant_type"]
+          proposal_id?: number | null
+          round: number
+          turn_index?: number | null
+        }
+        Update: {
+          agent_role?: Database["public"]["Enums"]["agent_role_type"] | null
+          content?: string
+          created_at?: string
+          game_id?: number
+          id?: number
+          metadata?: Json | null
+          participant_id?: number | null
+          participant_type?: Database["public"]["Enums"]["participant_type"]
+          proposal_id?: number | null
+          round?: number
+          turn_index?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_messages_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_messages_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_messages_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          document_id: number
+          embedding: string | null
+          id: number
+          metadata: Json
+          proposal_id: number
+          round: number
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          document_id: number
+          embedding?: string | null
+          id?: number
+          metadata?: Json
+          proposal_id: number
+          round: number
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          document_id?: number
+          embedding?: string | null
+          id?: number
+          metadata?: Json
+          proposal_id?: number
+          round?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_chunks_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          created_at: string
+          filename: string
+          id: number
+          metadata: Json
+          mime_type: string | null
+          proposal_id: number
+          round: number
+          size_bytes: number | null
+          storage_path: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          filename: string
+          id?: number
+          metadata?: Json
+          mime_type?: string | null
+          proposal_id: number
+          round: number
+          size_bytes?: number | null
+          storage_path: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          filename?: string
+          id?: number
+          metadata?: Json
+          mime_type?: string | null
+          proposal_id?: number
+          round?: number
+          size_bytes?: number | null
+          storage_path?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_rounds: {
         Row: {
-          dice_roll: number
           game_id: number
           id: number
           round: number
           timer_duration: number | null
         }
         Insert: {
-          dice_roll: number
           game_id: number
           id?: number
           round: number
           timer_duration?: number | null
         }
         Update: {
-          dice_roll?: number
           game_id?: number
           id?: number
           round?: number
@@ -100,21 +234,35 @@ export type Database = {
           code: string
           id: number
           inserted_at: string
+          mode: Database["public"]["Enums"]["game_mode"] | null
+          proposal_id: number | null
           state: Database["public"]["Enums"]["game_state"]
         }
         Insert: {
           code: string
           id?: number
           inserted_at?: string
+          mode?: Database["public"]["Enums"]["game_mode"] | null
+          proposal_id?: number | null
           state?: Database["public"]["Enums"]["game_state"]
         }
         Update: {
           code?: string
           id?: number
           inserted_at?: string
+          mode?: Database["public"]["Enums"]["game_mode"] | null
+          proposal_id?: number | null
           state?: Database["public"]["Enums"]["game_state"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "games_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       player_answers: {
         Row: {
@@ -194,48 +342,8 @@ export type Database = {
           },
         ]
       }
-      player_moves: {
-        Row: {
-          game_id: number
-          id: number
-          player_id: number
-          round: number
-          stop_id: number
-        }
-        Insert: {
-          game_id: number
-          id?: number
-          player_id: number
-          round: number
-          stop_id: number
-        }
-        Update: {
-          game_id?: number
-          id?: number
-          player_id?: number
-          round?: number
-          stop_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "player_moves_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "games"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "player_moves_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       players: {
         Row: {
-          character: Database["public"]["Enums"]["character_type"] | null
           description: string | null
           game_id: number
           id: number
@@ -244,10 +352,10 @@ export type Database = {
           is_owner: boolean
           last_active: string | null
           nickname: string | null
+          role: Database["public"]["Enums"]["role_type"] | null
           user_id: string
         }
         Insert: {
-          character?: Database["public"]["Enums"]["character_type"] | null
           description?: string | null
           game_id: number
           id?: number
@@ -256,10 +364,10 @@ export type Database = {
           is_owner?: boolean
           last_active?: string | null
           nickname?: string | null
+          role?: Database["public"]["Enums"]["role_type"] | null
           user_id: string
         }
         Update: {
-          character?: Database["public"]["Enums"]["character_type"] | null
           description?: string | null
           game_id?: number
           id?: number
@@ -268,6 +376,7 @@ export type Database = {
           is_owner?: boolean
           last_active?: string | null
           nickname?: string | null
+          role?: Database["public"]["Enums"]["role_type"] | null
           user_id?: string
         }
         Relationships: [
@@ -312,12 +421,47 @@ export type Database = {
           },
         ]
       }
+      proposal_votes: {
+        Row: {
+          choice: string
+          context: string
+          created_at: string
+          id: string
+          proposal_id: number
+          user_id: string
+        }
+        Insert: {
+          choice: string
+          context: string
+          created_at?: string
+          id?: string
+          proposal_id: number
+          user_id: string
+        }
+        Update: {
+          choice?: string
+          context?: string
+          created_at?: string
+          id?: string
+          proposal_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_votes_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposals: {
         Row: {
           created_at: string
-          discussion: string
           functionalities: string
           id: number
+          language: string
           objectives: Json
           title: string
           user_id: string | null
@@ -325,9 +469,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          discussion: string
           functionalities: string
           id?: number
+          language?: string
           objectives: Json
           title: string
           user_id?: string | null
@@ -335,9 +479,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          discussion?: string
           functionalities?: string
           id?: number
+          language?: string
           objectives?: Json
           title?: string
           user_id?: string | null
@@ -366,77 +510,61 @@ export type Database = {
         }
         Relationships: []
       }
-      saved_stories: {
+      saved_discussions: {
         Row: {
           card_types: string[]
           character: Json
           character_search: unknown
           created_at: string
-          full_story: string
+          discussion_id: string
+          discussion_title: string
+          full_discussion: string
           id: number
           player_name: string
-          public_story: boolean | null
+          proposal_id: number | null
+          public_discussion: boolean | null
           rounds: Json
-          story_id: string
-          story_title: string
+          vote: string | null
         }
         Insert: {
           card_types?: string[]
           character: Json
           character_search?: unknown
           created_at?: string
-          full_story: string
+          discussion_id?: string
+          discussion_title: string
+          full_discussion: string
           id?: number
           player_name: string
-          public_story?: boolean | null
+          proposal_id?: number | null
+          public_discussion?: boolean | null
           rounds: Json
-          story_id?: string
-          story_title: string
+          vote?: string | null
         }
         Update: {
           card_types?: string[]
           character?: Json
           character_search?: unknown
           created_at?: string
-          full_story?: string
+          discussion_id?: string
+          discussion_title?: string
+          full_discussion?: string
           id?: number
           player_name?: string
-          public_story?: boolean | null
+          proposal_id?: number | null
+          public_discussion?: boolean | null
           rounds?: Json
-          story_id?: string
-          story_title?: string
+          vote?: string | null
         }
-        Relationships: []
-      }
-      stops: {
-        Row: {
-          id: number
-          initial: boolean
-          name: string | null
-          paths: number[]
-          type: Database["public"]["Enums"]["stop_type"]
-          x: number
-          y: number
-        }
-        Insert: {
-          id?: number
-          initial?: boolean
-          name?: string | null
-          paths: number[]
-          type: Database["public"]["Enums"]["stop_type"]
-          x: number
-          y: number
-        }
-        Update: {
-          id?: number
-          initial?: boolean
-          name?: string | null
-          paths?: number[]
-          type?: Database["public"]["Enums"]["stop_type"]
-          x?: number
-          y?: number
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "saved_stories_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -451,57 +579,105 @@ export type Database = {
         Args: { p_game_id: number }
         Returns: undefined
       }
-      check_starting_round_completion: {
-        Args: { p_game_id: number }
-        Returns: undefined
-      }
-      create_game: {
-        Args: never
-        Returns: Database["public"]["CompositeTypes"]["create_game_result"]
-        SetofOptions: {
-          from: "*"
-          to: "create_game_result"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      create_game:
+        | {
+            Args: never
+            Returns: Database["public"]["CompositeTypes"]["create_game_result"]
+            SetofOptions: {
+              from: "*"
+              to: "create_game_result"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: { p_proposal_id?: number }
+            Returns: Database["public"]["CompositeTypes"]["create_game_result"]
+            SetofOptions: {
+              from: "*"
+              to: "create_game_result"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_mode?: Database["public"]["Enums"]["game_mode"]
+              p_proposal_id?: number
+            }
+            Returns: Database["public"]["CompositeTypes"]["create_game_result"]
+            SetofOptions: {
+              from: "*"
+              to: "create_game_result"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       generate_story_id: { Args: never; Returns: string }
       join_game: { Args: { game_code: string }; Returns: undefined }
       mark_player_inactive_by_user: {
         Args: { game_code: string; p_user_id: string }
         Returns: undefined
       }
+      match_documents: {
+        Args: { filter?: Json; match_count?: number; query_embedding: string }
+        Returns: {
+          content: string
+          id: number
+          metadata: Json
+          similarity: number
+        }[]
+      }
       player_answer: {
         Args: { answer: string; game_code: string; game_round: number }
         Returns: undefined
       }
-      player_move:
-        | {
-            Args: { game_code: string; game_round: number; stop_id: number }
-            Returns: number
-          }
-        | {
-            Args: {
-              game_code: string
-              game_round: number
-              p_character_category: string
-              p_hero_step: number
-              stop_id: number
-            }
-            Returns: number
-          }
-      player_start: {
-        Args: { game_code: string; stop_id: number }
+      player_move: {
+        Args: {
+          game_code: string
+          game_round: number
+          p_character_category: string
+          p_hero_step: number
+          stop_id: number
+        }
+        Returns: number
+      }
+      player_next_discussion: {
+        Args: {
+          game_code: string
+          game_round: number
+          p_character_category: string
+          p_hero_step: number
+        }
+        Returns: number
+      }
+      player_start_discussion: {
+        Args: { game_code: string }
         Returns: undefined
       }
       roll_dice: { Args: { p_game_id: number }; Returns: number }
-      save_story:
+      save_discussion:
+        | {
+            Args: {
+              p_card_types: string[]
+              p_character: Json
+              p_discussion_title: string
+              p_full_discussion: string
+              p_player_name: string
+              p_proposal_id?: number
+              p_rounds: Json
+              p_vote?: string
+            }
+            Returns: string
+          }
         | {
             Args: {
               p_character: Json
+              p_discussion_title: string
               p_player_name: string
+              p_proposal_id?: number
               p_rounds: Json
-              p_story_title: string
+              p_vote?: string
             }
             Returns: string
           }
@@ -513,6 +689,17 @@ export type Database = {
               p_player_name: string
               p_rounds: Json
               p_story_title: string
+              p_vote?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_character: Json
+              p_player_name: string
+              p_rounds: Json
+              p_story_title: string
+              p_vote?: string
             }
             Returns: string
           }
@@ -536,23 +723,46 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_player_role: {
+        Args: {
+          game_code: string
+          player_role: Database["public"]["Enums"]["role_type"]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
+      agent_role_type:
+        | "administration"
+        | "research"
+        | "reception"
+        | "operations"
+        | "bar"
+        | "cleaning"
       character_category: "human" | "non-human"
       character_type:
-        | "child"
-        | "different-needs"
-        | "local-specialist"
-        | "nature-lover"
-        | "scientist"
-        | "time-traveller"
+        | "administrator"
+        | "research"
+        | "reception"
+        | "operations"
+        | "bar"
+        | "cleaning"
         | "trocaz-pigeon"
         | "monk-seal"
         | "vulcanic-rock"
         | "iberian-green-frog"
         | "zinos-petrel"
         | "water"
+      game_mode: "pedagogic" | "decision_making"
       game_state: "waiting" | "ready" | "starting" | "playing" | "finished"
+      participant_type: "human" | "ai_agent"
+      role_type:
+        | "administration"
+        | "research"
+        | "reception"
+        | "operations"
+        | "bar"
+        | "cleaning"
       stop_type: "nature" | "sense" | "action" | "history" | "landmark"
     }
     CompositeTypes: {
@@ -682,19 +892,24 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
+      agent_role_type: [
+        "administration",
+        "research",
+        "reception",
+        "operations",
+        "bar",
+        "cleaning",
+      ],
       character_category: ["human", "non-human"],
       character_type: [
-        "child",
-        "different-needs",
-        "local-specialist",
-        "nature-lover",
-        "scientist",
-        "time-traveller",
+        "administrator",
+        "research",
+        "reception",
+        "operations",
+        "bar",
+        "cleaning",
         "trocaz-pigeon",
         "monk-seal",
         "vulcanic-rock",
@@ -702,7 +917,17 @@ export const Constants = {
         "zinos-petrel",
         "water",
       ],
+      game_mode: ["pedagogic", "decision_making"],
       game_state: ["waiting", "ready", "starting", "playing", "finished"],
+      participant_type: ["human", "ai_agent"],
+      role_type: [
+        "administration",
+        "research",
+        "reception",
+        "operations",
+        "bar",
+        "cleaning",
+      ],
       stop_type: ["nature", "sense", "action", "history", "landmark"],
     },
   },
