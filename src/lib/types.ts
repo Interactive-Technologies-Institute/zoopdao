@@ -121,6 +121,8 @@ export type SavedStory = {
 	story_id: string;
 	created_at: string;
 	proposal_id?: number | null;
+	// Optional display field (not persisted in saved_discussions); used by UI when we join proposals.
+	proposal_title?: string | null;
 	player_name: string;
 	story_title: string;
 	character: StoryCharacter;
