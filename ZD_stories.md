@@ -2487,3 +2487,71 @@ d) Confirm no regressions in lobby, map, or round views.
 
 **Completion Criteria:**
 1) Manual verification on mobile and desktop.
+
+---
+
+## ZD-177: Voting on proposal preview + end-of-discussion (single vote)
+
+**Overview:**
+Add direct voting (yes/no/abstain) on each proposal preview page, show results during the voting window, and enforce a single vote per user per proposal across both the preview and end-of-discussion dialog.
+
+**Goal:**
+Enable participants to vote either before starting the discussion or at the end of the discussion (round 7), while guaranteeing they can only vote once per proposal and keeping results consistent with the voting period.
+
+**Description:**
+a) Proposal Preview UI (`/proposals/{id}/preview`)
+   - Add a vote card with 3 options: yes/no/abstain.
+   - Vote submit button is disabled unless an option is selected and the period is open.
+   - Disabled vote state uses a neutral gray (consistent with other disabled CTA buttons).
+   - Show a results panel (counts + percentages) only while the proposal is in an open voting period.
+   - Show localized voting period range in the header (PT should be Portuguese formatting).
+   - Show creation date in the header:
+     - For `february-2026-exceptional`, treat as created on **December 11, 2025**.
+     - Otherwise, use the `created_at` returned from the DB for proposals created in the platform.
+   - Do not show voting UI or results when the voting period is closed (or not started).
+
+b) End-of-discussion vote (Save Dialog)
+   - In the “end dialog” (after discussion), display vote options matching the preview sizing and selection colors.
+   - Before showing vote options, query if the current user already voted for the proposal:
+     - If already voted (e.g., in preview), hide vote controls and update the submit CTA copy to remove “and vote”.
+     - If not voted yet, allow voting here and persist to DB as a “discussion” context vote.
+
+c) Data + API
+   - Create `proposal_votes` table (RLS-enabled) enforcing one vote per `(proposal_id, user_id)`:
+     - `choice`: `yes | no | abstain`
+     - `context`: `preview | discussion`
+     - `created_at` timestamp
+   - Add API endpoints:
+     - `GET /api/proposals/{id}/votes` returns totals and (when authorized) the user’s vote + context.
+     - `POST /api/proposals/{id}/votes` inserts a vote and rejects duplicates (409).
+   - Vote persistence must be guarded by voting period status:
+     - Votes can only be submitted while the proposal is in an open voting period.
+
+d) Exceptional voting period correctness
+   - Ensure `february-2026-exceptional` is **February 1–28, 2026**.
+   - Ensure any UI date labels match this period.
+
+**Acceptance Criteria:**
+1) Preview vote card renders on `/proposals/{id}/preview` and offers yes/no/abstain with consistent selection styling.
+2) Vote submission is only possible during an open voting period; outside the period voting controls/results are hidden.
+3) Results (counts + %) are shown only during an open voting period and update after a successful vote.
+4) Each user can vote only once per proposal:
+   - If a user votes in preview, the end-of-discussion dialog hides vote controls and the submit button text does not include “and vote”.
+   - If a user votes at the end-of-discussion, preview vote is disabled for that user.
+5) `proposal_votes` enforces uniqueness on `(proposal_id, user_id)` at the database level.
+6) API behavior:
+   - `POST` duplicates return 409.
+   - `POST` outside an open voting window returns 400.
+   - `GET` returns totals and returns user vote/context when authorized.
+7) Creation date shown in preview:
+   - For `february-2026-exceptional` proposals it displays **December 11, 2025**.
+   - For other proposals it displays the proposal `created_at` from the DB.
+8) Portuguese mode shows Portuguese date formatting for the voting period and created date.
+
+**Completion Criteria:**
+1) DB migration applied and verified (table exists, RLS enabled, uniqueness index present).
+2) Manual verification:
+   - Vote in preview then open end dialog: vote controls hidden; submit CTA copy excludes “e votar”.
+   - Vote in end dialog then open preview: preview voting disabled for that user.
+   - Open vs closed periods correctly show/hide voting UI/results.
+3) Smoke test API endpoints returning expected responses (200/201, 400, 409).
