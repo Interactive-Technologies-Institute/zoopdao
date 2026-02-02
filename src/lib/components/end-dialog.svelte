@@ -15,6 +15,7 @@
 	import { supabase } from '@/supabase';
 	import { getDiscussionMessages } from '@/utils/discussion-messages';
 	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
+	import { User } from 'lucide-svelte';
 
 	let audio: HTMLAudioElement;
 	onMount(() => {
@@ -293,17 +294,23 @@
 		}
 		return [];
 	}
-	function getCharacterName(characterType: string): string {
-		// Find the character card with the matching type
-		const characterCard = CHARACTER.find((char) => char.type === characterType);
 
-		// If found, get the translated title
-		if (characterCard?.title) {
-			return getTranslation(characterCard.title);
-		}
+	function getPlayerRoleLabel(player: Player): string {
+		// New system: players.role stores the organizational role.
+		// Legacy system: some older data used `player.character`.
+		const raw = ((player as any).role ?? (player as any).character) as string | null | undefined;
+		if (!raw) return getLocale() === 'pt' ? 'Cargo não definido' : 'Role not set';
 
-		// Fallback: return a formatted version of the type itself
-		return characterType
+		// Prefer i18n role titles (we store them under character_<role>_title).
+		const roleKey = `character_${raw}_title`;
+		const translated = getTranslation(roleKey);
+		if (translated && translated !== 'Translation missing') return translated;
+
+		// Legacy characters table (only if it's not a role)
+		const characterCard = CHARACTER.find((char) => char.type === raw);
+		if (characterCard?.title) return getTranslation(characterCard.title);
+
+		return raw
 			.split('-')
 			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 			.join(' ');
@@ -480,8 +487,48 @@
 			<p class="text-deep-teal rounded-full font-medium text-lg underline">{m.game_ended()}</p>
 			<p class="text-deep-teal font-bold text-4xl text-center">{m.thanks_for_playing()}</p>
 		</div>
-		<div class="flex flex-col lg:flex-row gap-4 p-4 h-full">
-			<div class="overflow-y-auto flex flex-col flex-grow w-full max-w-full sm:max-w-[75ch]">
+		<!-- Always stack vote block above the story block (even on wide screens) -->
+		<div class="flex flex-col gap-4 p-4 h-full">
+			<div class="flex flex-col shrink-1 gap-4 order-1">
+				<div class="flex flex-col gap-2">
+					{#if voteRequired}
+						<p class="text-sm font-semibold text-deep-teal uppercase tracking-wide">
+							{m.vote_prompt()}
+						</p>
+						<div class="grid grid-cols-3 gap-3">
+							{#each voteOptions as option}
+								<button
+									type="button"
+									class={`min-h-[52px] rounded-md border p-3 text-sm font-semibold transition ${
+										vote === option.key
+											? option.color
+											: 'border-deep-teal/30 bg-white hover:border-deep-teal/60'
+									}`}
+									onclick={() => (vote = option.key)}
+								>
+									{option.label()}
+								</button>
+							{/each}
+						</div>
+					{:else}
+						<p class="text-sm text-gray-600">
+							{getLocale() === 'pt'
+								? 'Já votaste nesta proposta.'
+								: 'You already voted on this proposal.'}
+						</p>
+					{/if}
+				</div>
+				<Button
+					class="p-2 flex disabled:bg-gray-300 disabled:text-gray-600 disabled:hover:bg-gray-300"
+					size="lg"
+					onclick={handleGameEnd}
+					disabled={!isFormValid}
+				>
+					{voteRequired ? m.submit_discussion_and_vote() : m.submit_discussion()}
+				</Button>
+			</div>
+
+			<div class="overflow-y-auto flex flex-col flex-grow w-full max-w-full order-2">
 				{#if Object.keys(storiesByPlayer).length > 0}
 					<div class="space-y-8">
 						{#each storiesByPlayer as playerData, index}
@@ -494,21 +541,26 @@
 									{playerData.isCurrent ? m.your_story() : m.others_stories()}
 								</h2>
 								<div class="bg-gray-50 p-4 flex items-center gap-3 border-b">
-									<div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-										<img
-											src={getBadgeSrc(playerData.player.character)}
-											alt={playerData.player.character ?? 'custom'}
-											class="w-full h-full object-cover"
-										/>
-									</div>
+									{#if playerData.isCurrent}
+										<!-- Match the user badge used during the live discussion (icon + black circle) -->
+										<div class="w-16 h-16 rounded-full border-4 border-black bg-gray-200 flex items-center justify-center flex-shrink-0">
+											<User class="h-8 w-8 text-gray-600" />
+										</div>
+									{:else}
+										<div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
+											<img
+												src={getBadgeSrc((playerData.player as any).role ?? (playerData.player as any).character)}
+												alt={(playerData.player as any).role ?? (playerData.player as any).character ?? 'custom'}
+												class="w-full h-full object-cover"
+											/>
+										</div>
+									{/if}
 									<div>
 										<h3 class="font-bold text-2xl text-deep-teal">
 											{playerData.player.nickname}
 										</h3>
 										<p class="text-sm text-gray-500 capitalize">
-											{playerData.player.character
-												? getCharacterName(playerData.player.character)
-												: 'Unknown Character'}
+											{getPlayerRoleLabel(playerData.player)}
 										</p>
 									</div>
 								</div>
@@ -608,7 +660,7 @@
 															{answer.answer}
 														</p>
 													</button>
-													{#if playerData.isCurrent && editMode === false}
+													{#if playerData.isCurrent && editMode === false && answer.round !== 7}
 														<div class="align-self-end">
 															<Button
 																variant={editMode ? 'default' : 'outline'}
@@ -631,44 +683,6 @@
 				{:else}
 					<p class="text-center text-gray-500">Error</p>
 				{/if}
-			</div>
-			<div class="flex flex-col shrink-1 gap-4 min-h-full">
-				<div class="flex flex-col gap-2">
-					{#if voteRequired}
-						<p class="text-sm font-semibold text-deep-teal uppercase tracking-wide">
-							{m.vote_prompt()}
-						</p>
-						<div class="grid grid-cols-3 gap-3">
-							{#each voteOptions as option}
-								<button
-									type="button"
-									class={`min-h-[52px] rounded-md border p-3 text-sm font-semibold transition ${
-										vote === option.key
-											? option.color
-											: 'border-deep-teal/30 bg-white hover:border-deep-teal/60'
-									}`}
-									onclick={() => (vote = option.key)}
-								>
-									{option.label()}
-								</button>
-							{/each}
-						</div>
-					{:else}
-						<p class="text-sm text-gray-600">
-							{getLocale() === 'pt'
-								? 'Já votaste nesta proposta.'
-								: 'You already voted on this proposal.'}
-						</p>
-					{/if}
-				</div>
-				<Button
-					class="p-2 flex disabled:bg-gray-300 disabled:text-gray-600 disabled:hover:bg-gray-300"
-					size="lg"
-					onclick={handleGameEnd}
-					disabled={!isFormValid}
-				>
-					{voteRequired ? m.submit_discussion_and_vote() : m.submit_discussion()}
-				</Button>
 			</div>
 		</div>
 	</Dialog.Content>
