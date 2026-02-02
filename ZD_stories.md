@@ -2555,3 +2555,72 @@ d) Exceptional voting period correctness
    - Vote in end dialog then open preview: preview voting disabled for that user.
    - Open vs closed periods correctly show/hide voting UI/results.
 3) Smoke test API endpoints returning expected responses (200/201, 400, 409).
+
+---
+
+## ZD-190: Browse histories + saved discussion metadata (cargo + voto final)
+
+**Overview:**
+Improve the saved discussions (Browse histories) experience so that it reflects the ZoopDAO role-based model and makes it easy to understand who participated, in which role (cargo), and what the final vote was.
+
+**Goal:**
+When browsing or opening a saved discussion, users can immediately see:
+1) Proposal context (title / proposal filter),
+2) Role (cargo) used in the discussion,
+3) Final vote (yes/no/abstain).
+
+**Description:**
+a) Browse histories filters + proposal context (`/stories`)
+   - Remove/disable the text search input.
+   - Rename filters:
+     - "Filtrar por personagem" -> "Filtrar por cargo"
+     - "Filtrar por carta" -> "Filtrar por proposta"
+   - Replace the previous "card type" filter with a proposal filter:
+     - Show proposal options as chips (label = first 3 words + ellipsis).
+     - Only include proposals that already have at least one public saved discussion.
+   - Show proposal title on discussion cards when `proposal_id` exists (instead of generic "Discussao Final").
+
+b) Story cards (list view) (`/stories`)
+   - Show metadata on each card:
+     - Cargo (from saved discussion role key)
+     - Voto final (yes/no/abstain; "-" when missing)
+   - Update the player badge to match the live discussion user badge:
+     - User icon on gray background with a black ring (no inner white ring).
+
+c) Saved discussion page (`/stories/{story_id}`)
+   - Show title as the proposal title when available.
+   - Display metadata in this order:
+     1) Cargo
+     2) Voto final
+     3) Participante (name)
+   - Do not show "Sem descricao..." placeholder when the description is empty.
+
+d) Save dialog (end-of-discussion)
+   - Replace "Unknown Character" with the correct cargo label (from `player.role`).
+   - Ensure the current user badge matches the discussion user badge (icon + black circle).
+
+e) Persist role into saved discussions
+   - When saving a discussion, persist the selected role into `p_character.type` so it can be shown later in Browse histories and the saved discussion page.
+
+f) UI polish included in the same changeset
+   - Card long text: add "Ver mais" expansion behavior (hover/click) instead of overflow.
+   - Discussion input bar: "History" and "Documents" buttons are white with black icons; active state is yellow; yellow ring around the button.
+   - Timer: warning/ticking behavior starts at half of the configured duration (instead of always below 1 minute).
+   - Browse histories dropdown: role filter dropdown height fits content (no oversized empty dropdown).
+   - i18n: add role title keys (PT/EN) for administration/research/reception/operations/bar/cleaning.
+   - Seeds: fix Portuguese prompt typo in SQL seeds.
+
+**Acceptance Criteria:**
+1) Browse histories has no visible search input.
+2) Browse histories filters are "Filtrar por cargo" and "Filtrar por proposta".
+3) Proposal filter only lists proposals that have at least one public saved discussion.
+4) Discussion cards show cargo + voto final, and use proposal title when available.
+5) Saved discussion page shows cargo + voto final + participante (in that order) and hides empty description placeholder.
+6) Save dialog shows cargo (not "Unknown Character") and uses the user icon badge with black ring.
+7) New saved discussions persist role so cargo is not empty when browsing later.
+
+**Completion Criteria:**
+1) Manual test:
+   - Finish a discussion with a chosen cargo and final vote, save it, and confirm list + detail show cargo/voto.
+   - Confirm proposal filter options update based on existing saved discussions.
+2) Visual QA on mobile + desktop (no major regressions).
