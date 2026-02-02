@@ -409,11 +409,11 @@ inputDisabled = inputDisabled ?? disabled;
 		<button
 			onclick={onOpenHistory}
 			disabled={historyDisabled}
-			class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-neutral-900 active:bg-red-600 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+			class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-neutral-100 active:bg-yellow-300 transition-colors flex items-center justify-center border-2 border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
 			aria-label={m.open_message_history()}
 			title={m.open_message_history()}
 		>
-			<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+			<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
 		</button>
 
 				<!-- Divider -->
@@ -438,11 +438,11 @@ inputDisabled = inputDisabled ?? disabled;
 				!userId ||
 				attachments.length >= RAG_MAX_FILES_PER_ROUND
 			}
-			class="images flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-neutral-900 active:bg-red-600 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+			class="images flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-neutral-100 active:bg-yellow-300 transition-colors flex items-center justify-center border-2 border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
 			aria-label={m.add_documents()}
 			title={m.add_documents()}
 		>
-			<Plus class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+			<Plus class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
 		</button>
 
 				<!-- Divider -->

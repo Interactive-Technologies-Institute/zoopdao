@@ -21,7 +21,9 @@
 	let timerDuration = $derived.by(() => duration);
 	let timeLeft = $state(duration);
 	let intervalId: ReturnType<typeof setInterval> | null = null;
-	let isUnderOneMinute = $derived.by(() => timeLeft < 60);
+	// Start warning behavior when half of the configured duration remains.
+	let warningThreshold = $derived.by(() => Math.max(1, Math.floor(timerDuration / 2)));
+	let isUnderWarningThreshold = $derived.by(() => timeLeft <= warningThreshold);
 
 	$effect(() => {
 		// Reset timer when duration changes
@@ -39,7 +41,7 @@
 		const updateTimeLeft = () => {
 			timeLeft = Math.max(0, timeLeft - 1);
 
-			if (timeLeft <= 60 && timeLeft > 0 && tickSound) {
+			if (timeLeft <= warningThreshold && timeLeft > 0 && tickSound) {
 				tickSound.play().catch((err) => console.error('Error playing warning sound:', err));
 			}
 
@@ -91,15 +93,15 @@
 </script>
 
 <div class="relative flex flex-grow items-center justify-center gap-3">
-	<span class="hourglass-animation {isUnderOneMinute ? 'flash-text' : 'text-deep-teal'}">
+	<span class="hourglass-animation {isUnderWarningThreshold ? 'flash-text' : 'text-deep-teal'}">
 		<Hourglass strokeWidth={2.5} absoluteStrokeWidth={true} size={24} />
 	</span>
-	<p class="text-xl font-bold text-left {isUnderOneMinute ? 'flash-time' : 'text-deep-teal'}">
+	<p class="text-xl font-bold text-left {isUnderWarningThreshold ? 'flash-time' : 'text-deep-teal'}">
 		{formattedTime}
 	</p>
 	<div class="relative flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
 		<div
-			class="absolute top-0 left-0 h-full bg-deep-teal transition-all duration-1000 ease-linear {isUnderOneMinute
+			class="absolute top-0 left-0 h-full bg-deep-teal transition-all duration-1000 ease-linear {isUnderWarningThreshold
 				? 'flash-bg'
 				: ''}"
 			style="width: {progressWidth}%"
