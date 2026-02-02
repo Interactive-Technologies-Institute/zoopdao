@@ -3,6 +3,7 @@
 	import * as Dialog from './ui/dialog';
 	import { m } from '@src/paraglide/messages';
 	import { localizeHref } from '@src/paraglide/runtime';
+	import { getLocale } from '@src/paraglide/runtime.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
 	import { GameState } from '@/state/game-state.svelte';
@@ -40,6 +41,12 @@
 	let discussionMessagesRound7 = $state<Array<{ senderName: string; content: string; timestamp: Date }>>([]);
 	let vote = $state<'yes' | 'no' | 'abstain' | null>(null);
 	let proposal = $state<any>(null);
+	let existingProposalVote = $state<{ choice: 'yes' | 'no' | 'abstain'; context: 'preview' | 'discussion' } | null>(null);
+	const voteOptions = [
+		{ key: 'yes' as const, label: () => m.vote_yes(), color: 'bg-green-200 border-green-500' },
+		{ key: 'no' as const, label: () => m.vote_no(), color: 'bg-rose-200 border-rose-500' },
+		{ key: 'abstain' as const, label: () => m.vote_abstain(), color: 'bg-gray-200 border-gray-400' }
+	];
 
 	const roleSet = new Set<string>(ROLES as unknown as string[]);
 
@@ -78,8 +85,10 @@
 	$effect(() => {
 		if (open) {
 			fetchProposal();
+			fetchExistingProposalVote();
 		} else {
 			proposal = null;
+			existingProposalVote = null;
 		}
 	});
 
@@ -321,7 +330,46 @@
 
 	let playerName = $state('');
 	let storyTitle = $state('');
-	let isFormValid = $derived(vote !== null);
+	const voteRequired = $derived(existingProposalVote === null);
+	let isFormValid = $derived(!voteRequired || vote !== null);
+
+	async function fetchExistingProposalVote() {
+		if (!proposalId) {
+			existingProposalVote = null;
+			return;
+		}
+
+		try {
+			let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+			if (!session || sessionError) {
+				const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
+				if (anonError || !anonData.session) {
+					existingProposalVote = null;
+					return;
+				}
+				session = anonData.session;
+			}
+
+			const headers: Record<string, string> = {};
+			if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+
+			const res = await fetch(`/api/proposals/${proposalId}/votes`, { headers });
+			if (!res.ok) {
+				existingProposalVote = null;
+				return;
+			}
+
+			const payload = await res.json();
+			existingProposalVote =
+				payload?.userChoice && payload?.userContext
+					? { choice: payload.userChoice, context: payload.userContext }
+					: null;
+		} catch (err) {
+			console.error('Failed to fetch existing proposal vote:', err);
+			existingProposalVote = null;
+		}
+	}
 
 	$effect(() => {
 		if (open && gameState) {
@@ -333,14 +381,41 @@
 
 	async function handleGameEnd() {
 		audio.play();
-		if (!vote) return;
+		if (voteRequired && !vote) return;
 		// Logic to save the story
 		const discussionText = formatRound7Discussion();
-		const id = await gameState.saveStory(playerName, storyTitle, discussionText, vote, proposalId);
+		const id = await gameState.saveStory(
+			playerName,
+			storyTitle,
+			discussionText,
+			voteRequired ? vote : (existingProposalVote?.choice ?? null),
+			proposalId
+		);
 		if (!id || id === false) {
 			console.error('Failed to save discussion; no id returned.');
 			return;
 		}
+
+		// Persist proposal vote (single vote per user per proposal enforced by DB)
+		if (voteRequired && vote && proposalId) {
+			try {
+				const { data: { session } } = await supabase.auth.getSession();
+				const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+				if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+				const res = await fetch(`/api/proposals/${proposalId}/votes`, {
+					method: 'POST',
+					headers,
+					body: JSON.stringify({ choice: vote, context: 'discussion' })
+				});
+				// If already voted (e.g. voted in preview), treat as success and continue.
+				if (!res.ok && res.status !== 409) {
+					console.error('Failed to persist proposal vote:', await res.text());
+				}
+			} catch (e) {
+				console.error('Failed to persist proposal vote:', e);
+			}
+		}
+
 		goto(localizeHref(`/stories/${id}`));
 		// Reset the form
 		playerName = '';
@@ -559,38 +634,40 @@
 			</div>
 			<div class="flex flex-col shrink-1 gap-4 min-h-full">
 				<div class="flex flex-col gap-2">
-					<p>{m.vote_prompt()}</p>
-					<div class="flex items-center gap-2">
-						<Button
-							variant={vote === 'yes' ? 'default' : 'outline'}
-							size="sm"
-							onclick={() => (vote = 'yes')}
-						>
-							{m.vote_yes()}
-						</Button>
-						<Button
-							variant={vote === 'no' ? 'default' : 'outline'}
-							size="sm"
-							onclick={() => (vote = 'no')}
-						>
-							{m.vote_no()}
-						</Button>
-						<Button
-							variant={vote === 'abstain' ? 'default' : 'outline'}
-							size="sm"
-							onclick={() => (vote = 'abstain')}
-						>
-							{m.vote_abstain()}
-						</Button>
-					</div>
+					{#if voteRequired}
+						<p class="text-sm font-semibold text-deep-teal uppercase tracking-wide">
+							{m.vote_prompt()}
+						</p>
+						<div class="grid grid-cols-3 gap-3">
+							{#each voteOptions as option}
+								<button
+									type="button"
+									class={`min-h-[52px] rounded-md border p-3 text-sm font-semibold transition ${
+										vote === option.key
+											? option.color
+											: 'border-deep-teal/30 bg-white hover:border-deep-teal/60'
+									}`}
+									onclick={() => (vote = option.key)}
+								>
+									{option.label()}
+								</button>
+							{/each}
+						</div>
+					{:else}
+						<p class="text-sm text-gray-600">
+							{getLocale() === 'pt'
+								? 'Já votaste nesta proposta.'
+								: 'You already voted on this proposal.'}
+						</p>
+					{/if}
 				</div>
 				<Button
-					class="p-2 flex"
+					class="p-2 flex disabled:bg-gray-300 disabled:text-gray-600 disabled:hover:bg-gray-300"
 					size="lg"
 					onclick={handleGameEnd}
 					disabled={!isFormValid}
 				>
-					{m.submit_discussion_and_vote()}
+					{voteRequired ? m.submit_discussion_and_vote() : m.submit_discussion()}
 				</Button>
 			</div>
 		</div>
