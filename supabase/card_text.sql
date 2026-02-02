@@ -7,7 +7,7 @@ INSERT INTO prompt_text (card_id, lang, text) VALUES
 (2, 'pt', 'Ouves o sussurro do vento nas folhas. O que achas que as árvores te estão a dizer?'),
 
 (3, 'en', 'You see a fish swimming in the Levada. What role does it play in your journey?'),
-(3, 'pt', 'Vês um peixe a nadar na Levada. Qual o papel que isso desempenha em tua jornada?'),
+(3, 'pt', 'Vês um peixe a nadar na Levada. Qual a responsabilidade que isso desempenha em tua jornada?'),
 
 (4, 'en', 'Rocks with a special formation block your path. Describe the rocks and how they affect your journey.'),
 (4, 'pt', 'Rochas com uma formação especial bloqueiam o teu caminho. Descreve as rochas e como elas afetam a tua jornada.'),

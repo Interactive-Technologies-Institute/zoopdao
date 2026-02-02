@@ -26,7 +26,7 @@ VALUES -- Nature cards (1-9)
         3,
         'nature',
         '',
-        'Vês um peixe a nadar na Levada. Qual o papel que isso desempenha em tua jornada?'
+        'Vês um peixe a nadar na Levada. Qual a responsabilidade que isso desempenha em tua jornada?'
     ),
     (
         4,
