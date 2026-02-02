@@ -493,8 +493,10 @@ export class GameState {
 			p_player_name: name,
 			p_discussion_title: title,
 			p_character: {
-				type: character.character,
-				nickname: character.nickname,
+				// Persist the selected role (new system) so it can be shown later in Browse histories.
+				// Fallback keeps compatibility with any legacy `character` field that might exist in older data.
+				type: (character as any).role ?? (character as any).character ?? null,
+				nickname: character.nickname?.trim() ? character.nickname : name,
 				description: character.description
 			},
 			p_rounds: roundsData,
