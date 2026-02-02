@@ -2250,27 +2250,240 @@ Deliver a robust, predictable hover expansion for AI + user chat circles that:
 
 ---
 
-## ZD-176e (Optional): Chat Circles advanced layout rules (portrait-inward + multi-message stacks)
+## ZD-176e: Chat Circles UX polish (locks, typing, palette, previews)
 
 **Overview:**
-Extend the Round 7 “chat circles” UI with smarter placement and multi-message handling inspired by Chat Circles, without implementing full clustering.
+Document and accept the extra fixes added while working on ZD‑176 that sit outside the original a–d scope (previews, typing, disabling input, palette).
 
 **Goal:**
-Improve readability and reduce collisions on constrained layouts (portrait/mobile) and in larger groups, while preserving the existing hard bounds (no circles outside the avatar boundary).
+Keep a clear record of incidental improvements so they are not lost: UX locks, typing bubbles, palette consistency, and localized placeholders.
 
-**Description:**
-a) Portrait rule: when the viewport is portrait (or otherwise narrow), force chat circles to render **towards the inside of the aquarium** (invert side automatically) so they don’t run off-screen.\n
-b) Multi-message rule: when a participant has multiple recent messages, render a **stack of 2–3 circles** (most recent on top) with decreasing opacity/scale; if more, show a `+N` indicator.\n
-c) Collision safety: add simple collision/overlap avoidance (or fallback) so stacks don’t overlap key UI or each other on small screens.\n
-d) Clamp: enforce that circles/snippets never escape the existing `.avatar-boundary` limits.\n
-e) Optional: decide whether “inside” means toward the aquarium center (radial) vs. toward screen center; validate on iPhone SE + iPad mini portrait.
+**What was done:**
+- Input bar text + send are temporarily locked while any AI is “thinking”, debounced (~300 ms) to avoid flicker; history/docs buttons remain usable.
+- “Wait while others finish” placeholder is localized (PT/EN) and shown only while locked; normal placeholder restored when unlocked.
+- Typing balloons re-enabled for both user and AIs (AI shows whenever `isTyping`; user shows while typing/sending).
+- Avatar/chat-circle color palette standardized by role (reception sky, research emerald, operations amber, bar red, administration lime, cleaning teal); history/docs icons switched to white.
+- Chat-preview logic keeps within aquarium boundary and respects max‑2 open previews; latest preview is frontmost.
+- Toggle kept to optionally skip loading persisted history for debugging.
 
 **Acceptance Criteria:**
-1) In portrait, chat circles consistently render inward (towards aquarium center) for all participants.\n
-2) With multiple messages per participant, stacks render up to 3 circles and `+N` appears when overflow.\n
-3) Circles never overflow the screen or escape `.avatar-boundary`.\n
-4) No major overlaps with round title/status pill/input bar on iPhone SE and iPad mini.
+1) Lock/unlock flow behaves as above and never disables history/docs.  
+2) Localized waiting placeholder appears only while locked.  
+3) Typing balloons visible for user and any AI that is typing.  
+4) Role colors and white history/docs icons render as defined.  
+5) Max two previews open; newest appears on top and all stay inside the avatar boundary.
 
 **Completion Criteria:**
-1) Manual verification on iPhone SE, iPhone, iPad mini (portrait + landscape), and desktop.\n
-2) Verified with 6 participants (1 user + 5 AIs) and multiple messages each.
+Manual verification on iPhone SE, iPhone, iPad mini, iPad 11, and desktop (portrait/landscape where relevant) with 1 user + 5 AIs and persisted-history toggle both on/off.
+## ZD-149: Enable player cards and badges with .svg + fix flips + fix long text formatting
+
+**Overview:**
+Re-enable SVG-based player cards and badges in ZoopDAO (as in Loga Culture), audit and fix card flip behavior, and improve text formatting for oversized card content.
+
+**Goal:**
+Match the Loga Culture SVG card/badge pipeline, ensure flips are correct and consistent, and keep long card text readable without overflow.
+
+**Description:**
+a) Audit current card/badge rendering and compare with Loga Culture SVG path rules (player.character and card.type based).
+b) Implement/restore SVG mapping for badges and cards using string interpolation paths.
+c) Define role/user color palette applied to user badge circle and chat balloon, distinct per user and different from AI colors; use darker tones aligned with BoS base colors.
+d) Simplify role card colors to black/gray/white only, keeping text contrast readable.
+e) Audit flip behavior and fix regressions (rotation, backface visibility, click handlers).
+f) When the UI shows a single-card view, switch that view to a 3-row x 2-column grid layout (mobile-first).
+g) Fix long-text formatting on cards (clamp, wrap, or scale), ensuring readability on small screens.
+h) Modules/scripts to review: player badge component, character card/option components, card rendering component, CSS flip rules, text styles, card grid layout styles, role color mapping utilities.
+
+**Acceptance Criteria:**
+1) Player badges render SVGs using player.character-based paths.
+2) Character cards render SVGs using character-based paths; game cards render SVGs using card.type.
+3) User badge circle and chat balloon use role/user colors that are distinct per user and different from AI colors, aligned with darker BoS tones.
+4) Role card colors use only black/gray/white with readable contrast.
+5) Card flip works reliably after selection (front/back visibility correct, no mirrored text).
+6) In the single-card view, lobby, the layout displays a 3x2 grid arrangement (mobile-first).
+7) Long card text does not overflow; remains readable on mobile and desktop.
+8) No layout regressions in lobby, map, or round views.
+
+**Completion Criteria:**
+1) Visual verification of badges/cards/flip on mobile + desktop.
+2) Long-text case verified with at least one oversized card title/body.
+
+---
+
+## ZD-149a: Audit current card/badge SVG rendering (Loga Culture parity)
+
+**Overview:**
+Inventory current card and badge rendering paths and compare with Loga Culture’s SVG mapping rules.
+
+**Goal:**
+Identify all components and data fields needed to restore SVG-based rendering.
+
+**Description:**
+a) Locate current badge and card renderers in ZoopDAO.
+b) Compare to Loga Culture path mapping rules (player.character, character, card.type).
+c) List missing SVG assets or broken paths.
+d) Document the final mapping table for use in implementation.
+
+**Acceptance Criteria:**
+1) All badge/card render locations are identified.
+2) Required SVG path mapping rules are documented.
+
+**Completion Criteria:**
+1) Mapping table reviewed and ready for implementation.
+
+---
+
+## ZD-149b: Restore SVG mapping for badges and cards
+
+**Overview:**
+Re-enable SVG rendering for player badges, character cards, and game cards using path interpolation.
+
+**Goal:**
+Match Loga Culture’s SVG pipeline for consistent visual assets.
+
+**Description:**
+a) Map player.character to badge SVG paths.
+b) Map character to character card SVG paths.
+c) Map card.type to game card SVG paths.
+d) Ensure fallbacks are handled when assets are missing.
+
+**Acceptance Criteria:**
+1) Badges render via player.character SVGs.
+2) Character cards render via character SVGs.
+3) Game cards render via card.type SVGs.
+
+**Completion Criteria:**
+1) Visual check confirms SVGs appear in lobby + gameplay screens.
+
+---
+
+## ZD-149c: Role/user palette for badge circle + chat balloon
+
+**Overview:**
+Apply role/user color palette to user badge circle and chat balloon, distinct per user and different from AI.
+
+**Goal:**
+Make user identity colors consistent and readable, aligned to darker BoS tones.
+
+**Description:**
+a) Define a role/user color palette aligned to BoS base colors (darker tones).
+b) Ensure each user’s color is distinct from other users.
+c) Ensure user colors differ from AI colors.
+d) Apply to badge circle and chat balloon.
+
+**Acceptance Criteria:**
+1) User badge circles and chat balloons use the role/user palette.
+2) Colors are distinct per user and different from AI.
+3) Contrast remains readable (black/white where needed).
+
+**Completion Criteria:**
+1) Visual verification across multiple users in a round.
+
+---
+
+## ZD-149d: Simplify role card colors to black/gray/white
+
+**Overview:**
+Reduce role card colors to a black/gray/white palette for clarity and consistency.
+
+**Goal:**
+Keep role cards minimal and readable regardless of theme.
+
+**Description:**
+a) Replace role card colors with black/gray/white palette.
+b) Ensure text and icon contrast remains readable.
+
+**Acceptance Criteria:**
+1) Role cards use only black/gray/white.
+2) Text remains readable on mobile and desktop.
+
+**Completion Criteria:**
+1) Visual verification on at least two screen sizes.
+
+---
+
+## ZD-149e: Fix card flip behavior after selection
+
+**Overview:**
+Audit and correct card flip behavior to ensure clean front/back transitions.
+
+**Goal:**
+Eliminate flip regressions and mirrored text.
+
+**Description:**
+a) Audit flip CSS (rotateY, preserve-3d, backface-visibility).
+b) Ensure click handler triggers flip only when valid.
+c) Validate front/back visibility and orientation.
+
+**Acceptance Criteria:**
+1) Flip works reliably after selection.
+2) No mirrored or inverted text appears.
+
+**Completion Criteria:**
+1) Manual verification in the lobby selection flow.
+
+---
+
+## ZD-149f: Single-card view → 3x2 grid layout
+
+**Overview:**
+Update the single-card view layout to a 3-row x 2-column grid (mobile-first).
+
+**Goal:**
+Improve readability and structure for single-card presentation.
+
+**Description:**
+a) Define a 3x2 grid layout for single-card view content.
+b) Apply responsive rules for mobile-first scaling.
+c) Ensure layout does not break in desktop view.
+
+**Acceptance Criteria:**
+1) Single-card view renders as a 3x2 grid.
+2) Layout remains readable on mobile and desktop.
+
+**Completion Criteria:**
+1) Visual verification on mobile + desktop.
+
+---
+
+## ZD-149g: Long-text formatting on cards
+
+**Overview:**
+Prevent long card text from overflowing and ensure readability.
+
+**Goal:**
+Keep text legible across devices without layout breaks.
+
+**Description:**
+a) Add wrapping/clamping rules for long titles and body text.
+b) Apply responsive font sizing if needed.
+c) Validate with oversized text examples.
+
+**Acceptance Criteria:**
+1) Long text does not overflow card bounds.
+2) Text remains readable on small screens.
+
+**Completion Criteria:**
+1) Long-text case verified with at least one oversized card title/body.
+
+---
+
+## ZD-149h: Visual QA and regression check
+
+**Overview:**
+Final pass to verify all updates do not regress key screens.
+
+**Goal:**
+Confirm badges, cards, colors, flips, layout, and text formatting work together.
+
+**Description:**
+a) Verify badge and card SVGs in lobby and gameplay.
+b) Check user badge + chat balloon colors with multiple users.
+c) Validate flip behavior and text formatting.
+d) Confirm no regressions in lobby, map, or round views.
+
+**Acceptance Criteria:**
+1) All visual elements render as expected.
+2) No regressions detected across key screens.
+
+**Completion Criteria:**
+1) Manual verification on mobile and desktop.

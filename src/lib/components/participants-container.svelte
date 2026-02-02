@@ -19,6 +19,8 @@
 		userChatDraft?: string;
 		userChatMessage?: string | null;
 		userChatIsSending?: boolean;
+		latestAiMessageById?: Record<string, string>;
+		previewStateBySender?: Record<string, { open: boolean; rank: number }>;
 		layout: AquariumLayoutState;
 	}
 
@@ -35,6 +37,8 @@
 		userChatDraft = '',
 		userChatMessage = null,
 		userChatIsSending = false,
+		latestAiMessageById = {},
+		previewStateBySender = {},
 		layout
 	}: ParticipantsContainerProps = $props();
 
@@ -125,6 +129,31 @@
 			height: layout.containerHeight
 		};
 	});
+	const chatBoundsRect = $derived.by(() => {
+		if (layout.containerWidth <= 0 || layout.containerHeight <= 0) return null;
+		return {
+			left: layout.containerLeft,
+			top: layout.containerTop,
+			right: layout.containerLeft + layout.containerWidth,
+			bottom: layout.containerTop + layout.containerHeight
+		};
+	});
+	const aquariumCenter = $derived.by(() => {
+		if (layout.tableWidth <= 0 || layout.tableHeight <= 0) return null;
+		return {
+			x: layout.tableLeft + layout.tableWidth / 2,
+			y: layout.tableTop + layout.tableHeight / 2
+		};
+	});
+	const maxBubbleDiameter = $derived.by(() => {
+		if (layout.tableWidth > 0 && layout.tableHeight > 0) {
+			return Math.min(layout.tableWidth, layout.tableHeight) * 0.92;
+		}
+		if (layout.containerWidth > 0 && layout.containerHeight > 0) {
+			return Math.min(layout.containerWidth, layout.containerHeight) * 0.8;
+		}
+		return 240;
+	});
 	const badgeSize = $derived.by(() => {
 		if (layout.badgeWidth <= 0 || layout.badgeHeight <= 0) return null;
 		return { width: layout.badgeWidth, height: layout.badgeHeight };
@@ -150,7 +179,7 @@
 <!-- Participants positioned around aquarium table (centered on screen) -->
 <div class="fixed inset-0 w-screen h-screen z-10 overflow-visible">
 	<div bind:this={containerEl} class="relative w-full h-full overflow-visible pointer-events-none">
-		{#each participants as participant, index}
+		{#each participants as participant, index (participant.type === 'human' ? `human-${participant.player.id}` : `ai-${participant.agent.id}`)}
 			{@const position = positions[index]}
 			{@const inlineStyle = `left: ${position.xPx}px; top: ${position.yPx}px; transform: translate(-50%, -50%);`}
 			
@@ -164,7 +193,7 @@
 					: cos < -0.25
 						? 'right'
 						: 'right'}
-			<div class="absolute z-20 overflow-visible pointer-events-auto" style="{inlineStyle}">
+			<div class="participant-slot absolute z-20 overflow-visible pointer-events-auto" style="{inlineStyle}">
 				{#if participant.type === 'human'}
 					{@const isCurrent = participant.player.id === currentPlayerId}
 					<PlayerBadge
@@ -179,20 +208,44 @@
 						chatDraft={isCurrent ? userChatDraft : ''}
 						chatMessage={isCurrent ? userChatMessage : null}
 						chatIsSending={isCurrent ? userChatIsSending : false}
+						previewOpen={isCurrent ? previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.open ?? false : false}
+						previewRank={isCurrent ? previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.rank ?? 0 : 0}
 						bubbleSide={bubbleSide}
+						chatBoundsRect={chatBoundsRect}
+						aquariumCenter={aquariumCenter}
+						maxBubbleDiameter={maxBubbleDiameter}
 					/>
 				{:else}
 					{@const agentMessages = aiMessages.filter(msg => msg.agent_id === participant.agent.id)}
 					<AIAgent
 						agent={participant.agent}
 						messages={agentMessages}
+						latestMessage={latestAiMessageById[participant.agent.id] ?? ''}
+						previewOpen={previewStateBySender[participant.agent.id]?.open ?? false}
+						previewRank={previewStateBySender[participant.agent.id]?.rank ?? 0}
 						round={currentRound}
 						isActive={agentMessages.some(msg => msg.round === currentRound)}
 						isTyping={typingAgents.has(participant.agent.id)}
 						bubbleSide={bubbleSide}
+						chatBoundsRect={chatBoundsRect}
+						aquariumCenter={aquariumCenter}
+						maxBubbleDiameter={maxBubbleDiameter}
 					/>
 				{/if}
 			</div>
 		{/each}
 	</div>
 </div>
+
+<style>
+	/* Each participant bubble/avatar sits in its own stacking context due to transforms.
+	   Raise the hovered/focused participant so expanded chat bubbles can overlay others. */
+	.participant-slot:hover,
+	.participant-slot:focus-within {
+		z-index: 80;
+	}
+
+	.participant-slot.is-previewing {
+		z-index: 80;
+	}
+</style>

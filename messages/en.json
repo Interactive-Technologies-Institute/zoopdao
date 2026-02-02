@@ -301,6 +301,7 @@
 	"open_story_dialog": "Discussion Input",
 	"open_message_history": "Open message history",
 	"discussion_input_placeholder": "Debate with other participants...",
+	"discussion_waiting_placeholder": "Please wait until you get replied...",
 	"send_message": "Send message",
 	"add_documents": "Add documents",
 	"attachments": "Attachments",
