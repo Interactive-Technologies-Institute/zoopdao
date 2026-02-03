@@ -17,6 +17,8 @@ import {
 } from '$lib/ai/llm-types';
 import { generateAIMessageIaedu } from '$lib/ai/providers/iaedu';
 import { retrieveRagChunks } from '$lib/server/rag-retrieve';
+import speakerPromptConfig from '$lib/ai/nonhuman-speaker-prompt.json';
+import { getAINonHumanPersonaByName } from '$lib/data/ai-nonhumans';
 
 // #region agent log
 if (!GEMINI_API_KEY) {
@@ -137,6 +139,7 @@ const generateMessageSchema = z.object({
 	proposalId: z.number().int().positive().nullable(),
 	round: z.number().int().min(0).max(7),
 	agentRole: z.enum(AI_AGENT_ROLES),
+	agentName: z.string().min(1).optional(),
 	userId: z.string().min(1).optional(),
 	inputSource: z.enum(['manual', 'auto']).optional(),
 	allowMultipleAiReplies: z.boolean().optional(),
@@ -354,6 +357,34 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
 	return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
 }
 
+function buildNonHumanSystemPrompt(params: { agentName?: string | null; agentRole: AiAgentRole }): {
+	systemPrompt: string;
+	organizationName: string;
+} {
+	const orgShort = speakerPromptConfig.organization.short;
+	const orgFull = speakerPromptConfig.organization.full;
+	const nonhumanEntity = speakerPromptConfig.nonhumanEntity;
+	const roleTitle = speakerPromptConfig.roleTitleTemplate
+		.replaceAll('{ORG_SHORT}', orgShort)
+		.replaceAll('{NONHUMAN_ENTITY}', nonhumanEntity);
+
+	const persona = params.agentName ? getAINonHumanPersonaByName(params.agentName) : null;
+	const agentLine = persona
+		? `You are ${persona.name}, representing ${persona.cargoEn}.`
+		: params.agentName
+			? `You are ${params.agentName}.`
+			: `You are an AI agent participant (${params.agentRole}).`;
+
+	const systemPrompt = speakerPromptConfig.systemPromptTemplate
+		.replaceAll('{ORG_SHORT}', orgShort)
+		.replaceAll('{ORG_FULL}', orgFull)
+		.replaceAll('{NONHUMAN_ENTITY}', nonhumanEntity)
+		.replaceAll('{ROLE_TITLE}', roleTitle)
+		.replaceAll('{AGENT_LINE}', agentLine);
+
+	return { systemPrompt, organizationName: orgFull };
+}
+
 function buildErrorResponse(params: {
 	code: 'invalid_request' | 'rate_limited' | 'provider_unavailable' | 'provider_error' | 'timeout' | 'unauthorized' | 'unknown';
 	message: string;
@@ -381,10 +412,12 @@ async function generateAIMessageGemini(
 	round: number,
 	proposalPoint: string | null,
 	ragContext: string | null,
+	systemPrompt: string,
+	organizationName: string,
 	chatHistory: Array<{ content: string; senderType: string; senderName: string; round: number }> = [],
 	latestUserMessage: string | null = null
 ): Promise<string> {
-	const systemPrompt = roleSystemPrompts[agentRole] || roleSystemPrompts.administration;
+	const orgName = organizationName || 'the organization';
 
 	// Separate recent user messages from the rest of the history
 	const recentUserMessages = chatHistory
@@ -437,7 +470,7 @@ async function generateAIMessageGemini(
 	// Determine message count based on round
 	const messageCount = round === 7 ? 3 : Math.floor(Math.random() * 3) + 1; // 1-3 messages, 3 for round 7
 
-	const prompt = `You are participating in a governance assembly discussion at Aquário Vasco da Gama.
+	const prompt = `You are participating in a governance assembly discussion at ${orgName}.
 
 Round: ${round}${round === 7 ? ' (Final Discussion Round - Full Debate)' : ''}
 ${proposalContext}${ragContextBlock}${chatHistoryContext}${latestUserContext}
@@ -581,11 +614,16 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const validated = generateMessageSchema.parse(body);
 	const inputSource = validated.inputSource ?? (validated.latestUserMessage ? 'manual' : 'auto');
+	const { systemPrompt, organizationName } = buildNonHumanSystemPrompt({
+		agentName: validated.agentName ?? null,
+		agentRole: validated.agentRole
+	});
 	console.log('[ai-messages] validated', {
 		gameId: validated.gameId,
 		proposalId: validated.proposalId,
 		round: validated.round,
 		agentRole: validated.agentRole,
+		agentName: validated.agentName,
 		inputSource,
 		chatHistoryCount: validated.chatHistory?.length ?? 0,
 		hasLatestUserMessage: Boolean(validated.latestUserMessage)
@@ -745,6 +783,9 @@ export const POST: RequestHandler = async ({ request }) => {
 						proposalId: validated.proposalId,
 						round: validated.round,
 						agentRole: validated.agentRole,
+						agentName: validated.agentName ?? null,
+						systemPrompt,
+						organizationName,
 						userId: validated.userId ?? null,
 						inputSource,
 						proposalPoint: proposalPoint || validated.proposalPoint || undefined,
@@ -819,6 +860,8 @@ export const POST: RequestHandler = async ({ request }) => {
 						validated.round,
 						proposalPoint || validated.proposalPoint || null,
 						ragContext,
+						systemPrompt,
+						organizationName,
 						validated.chatHistory || [],
 						validated.latestUserMessage || null
 					),

@@ -22,6 +22,7 @@ export interface AiGenerateRequest {
 	proposalId: number | null;
 	round: number;
 	agentRole: AiAgentRole;
+	agentName?: string | null;
 	userId?: string | null;
 	inputSource?: 'manual' | 'auto';
 	proposalPoint?: string;
@@ -29,6 +30,8 @@ export interface AiGenerateRequest {
 	latestUserMessage?: string | null;
 	ragContext?: string;
 	mode?: 'pedagogic' | 'decision_making' | 'unknown';
+	systemPrompt?: string | null;
+	organizationName?: string | null;
 }
 
 export interface AiGeneratedMessage {
