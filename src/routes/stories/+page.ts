@@ -16,6 +16,7 @@ const mapDiscussionToStory = (
 		typeof discussion.proposal_id === 'number'
 			? proposalTitleById.get(discussion.proposal_id) ?? null
 			: null,
+	discussion_mode: discussion.discussion_mode ?? null,
 	player_name: discussion.player_name,
 	story_title: discussion.discussion_title,
 	character: discussion.character,
@@ -32,6 +33,20 @@ export const load = (async ({ url }) => {
 	const character = url.searchParams.get('character') ?? '';
 	const proposalIdRaw = url.searchParams.get('proposalId');
 	const proposalId = proposalIdRaw ? parseInt(proposalIdRaw) : null;
+	const modeRaw = url.searchParams.get('mode') ?? '';
+	function normalizeMode(raw: string): '' | 'pedagogic' | 'decision_making' {
+		const s = raw.trim().toLowerCase();
+		if (!s) return '';
+		// Accept internal values
+		if (s === 'pedagogic') return 'pedagogic';
+		if (s === 'decision_making') return 'decision_making';
+		// Accept possible label values (defensive; avoids silent no-op filtering)
+		if (s === 'pedagógico' || s === 'pedagogico') return 'pedagogic';
+		if (s === 'tomada de decisão' || s === 'tomada de decisao') return 'decision_making';
+		if (s === 'decision-making') return 'decision_making';
+		return '';
+	}
+	const mode = normalizeMode(modeRaw);
 	const sort = url.searchParams.get('sort') ?? 'latest';
 
 	// Start building the query
@@ -63,6 +78,10 @@ export const load = (async ({ url }) => {
 		query = query.eq('proposal_id', proposalId);
 	}
 
+	if (mode) {
+		query = query.eq('discussion_mode', mode);
+	}
+
 	// Calculate pagination
 	const from = (page - 1) * ITEMS_PER_PAGE;
 	const to = from + ITEMS_PER_PAGE - 1;
@@ -86,6 +105,7 @@ export const load = (async ({ url }) => {
 				search,
 				character,
 				proposalId,
+				mode,
 				sort
 			}
 		};
@@ -168,6 +188,7 @@ export const load = (async ({ url }) => {
 			search,
 			character,
 			proposalId,
+			mode,
 			sort
 		}
 	};

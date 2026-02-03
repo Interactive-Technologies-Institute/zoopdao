@@ -30,6 +30,8 @@
 	}
 
 	function getRoleLabel(): string {
+		const customRole = (data.character as any)?.custom_role as string | null | undefined;
+		if (customRole && customRole.trim().length > 0) return customRole.trim();
 		const type = data.character?.type;
 		if (type) {
 			const roleKey = `character_${type}_title`;
@@ -51,6 +53,12 @@
 		if (vote === 'no') return m.vote_no();
 		if (vote === 'abstain') return m.vote_abstain();
 		return vote;
+	}
+
+	function getModeLabel(mode: string | null | undefined): string {
+		if (mode === 'pedagogic') return m.pedagogic_mode();
+		if (mode === 'decision_making') return m.decision_making_mode();
+		return '-';
 	}
 
 	let isCopied = $state(false);
@@ -104,6 +112,10 @@
 					<span class="font-bold"> {getRoleLabel()}</span>
 				</p>
 				<p>
+					<span class="text-gray-500">{getLocale() === 'pt' ? 'Modo' : 'Mode'}:</span>
+					<span class="font-bold"> {getModeLabel((data as any)?.discussion_mode ?? null)}</span>
+				</p>
+				<p>
 					<span class="text-gray-500">{getLocale() === 'pt' ? 'Voto final' : 'Final vote'}:</span>
 					<span class="font-bold"> {getVoteLabel(data.vote ?? null)}</span>
 				</p>
@@ -123,26 +135,32 @@
 					</span>
 				{/each}
 			</div>
-			<div class="flex gap-2 items-center self-end">
-				<Button variant={'outline'} onclick={copyToClipboard} class="transition-all duration-200">
+			<div class="flex items-center gap-2 self-end w-full">
+				<button
+					class="h-10 px-3 text-sm whitespace-nowrap rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-tertiary/40 transition-colors text-deep-teal font-medium inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mr-auto"
+					onclick={() => (openProposalDialog = true)}
+					disabled={!hasProposal}
+					aria-disabled={!hasProposal}
+				>
+					<FileText class="h-4 w-4" />
+					{m.view_full_proposal()}
+				</button>
+				<Button
+					variant={'outline'}
+					onclick={copyToClipboard}
+					class="h-10 transition-all duration-200 shrink-0"
+				>
 					{#if isCopied}
 						<Check class="w-4 h-4 mr-2" /> {m.copied()}
 					{:else}
 						<Share2 class="w-4 h-4 mr-2" /> {m.share()}
 					{/if}
 				</Button>
-				<Button href={localizeHref(`/stories/${data.story_id}`)}>{m.read_more()}</Button>
+				<Button class="h-10 shrink-0" href={localizeHref(`/stories/${data.story_id}`)}
+					>{m.read_more()}</Button
+				>
 			</div>
 		</div>
-	<button
-		class="w-full mt-2 px-4 py-3 text-left rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-tertiary/40 transition-colors text-deep-teal font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-		onclick={() => (openProposalDialog = true)}
-		disabled={!hasProposal}
-		aria-disabled={!hasProposal}
-	>
-			<FileText class="h-4 w-4" />
-			{m.view_full_proposal()}
-		</button>
 	</div>
 </div>
 

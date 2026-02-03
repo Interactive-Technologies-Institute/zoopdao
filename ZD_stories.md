@@ -2149,132 +2149,67 @@ d) Modules/scripts to review: avatar bubble components and bubble layout styles.
 
 ---
 
-## ZD-176d: Chat Circles geometry + bounded hover expansion (matches sketch)
+## ZD-176d: Chat Circles UX polish (locks, typing, palette, previews)
 
 **Overview:**
-Make the “chat circles” behave like the expected sketch: the expanded circle replaces the minimized circle at the same anchor position, grows to a large diameter (up to near the aquarium center space), fills the circle with readable text, and never escapes the aquarium+avatars bounds.
+Document and accept the fixes delivered in this batch: input lock when AIs think, localized placeholders, typing bubbles, palette tweaks, and bounded previews.
 
 **Goal:**
-Deliver a robust, predictable hover expansion for AI + user chat circles that:
-- stays inside `.avatar-boundary` (the aquarium+avatars container box),
-- prefers expanding inward (towards the aquarium center),
-- uses circle geometry (not a fixed-width rectangle),
-- and makes the text occupy the circle surface (minimal empty space), with scroll only when necessary.
+Make the chat-circle experience predictable and readable while keeping history/docs usable during AI replies.
 
-**Implementation Notes / Guardrails:**
-- Bounds source of truth is `.avatar-boundary` in `src/routes/[code]/game/+page.svelte` (same debug boundary used for avatar placement).
-- Do **not** break the existing avatar margin rules: circles must stay inside `.avatar-boundary` at all times.
-- Expanded hover should show the **full text** (scroll allowed).
-- Max diameter should be “almost the aquarium diameter”: compute it from the aquarium/table rect rather than hardcoding.
-
-**Step-by-step Plan (follow in order):**
-1) **Capture bounds + aquarium center in the page**
-   - File: `src/routes/[code]/game/+page.svelte`
-   - Ensure we can read:
-     - `boundsRect = avatarBoundary.getBoundingClientRect()` (already computed for layout debug / safe-area).
-     - `aquariumCenter = center of aquarium/table rect` (prefer `aquariumLayout.tableLeft/top/width/height` which is object-contain accurate).
-   - Add/confirm these values are passed down to `ParticipantsContainer` as props:
-     - `chatBoundsRect` (left/top/right/bottom in viewport coords)
-     - `aquariumCenter` (cx/cy)
-
-2) **Plumb bounds/center into each badge component**
-   - File: `src/lib/components/participants-container.svelte`
-   - Pass `chatBoundsRect` + `aquariumCenter` to:
-     - `src/lib/components/ai-agent.svelte`
-     - `src/lib/components/player-badge.svelte`
-
-3) **Create a single reusable “HoverCircle” implementation**
-   - New file (recommended): `src/lib/components/chat-circle-hover.svelte`
-   - Props (minimum):
-     - `text`, `isTyping`, `colorVariant` (AI vs user),
-     - `anchorEl` (the minimized circle button ref),
-     - `boundsRect` (left/top/right/bottom),
-     - `aquariumCenter` (cx/cy),
-     - `maxDiameterPx` (computed outside or computed inside from aquarium/table).
-   - This avoids AI/user drift and makes future rules easier.
-
-4) **Compute dynamic diameter (circle geometry)**
-   - Rule:
-     - `diameter = clamp(f(textLength), minDiameter, maxDiameter)`
-   - Requirements:
-     - Short message => small circle.
-     - Long message => bigger circle (up to max).
-     - `maxDiameter` should be derived from aquarium/table (see step 6), not fixed.
-
-5) **Anchor expansion to the minimized circle (replace position)**
-   - Compute `anchorCenter` from `anchorEl.getBoundingClientRect()`.
-   - Default expanded center = anchorCenter (so it “replaces” the minimized circle).
-
-6) **Clamp to `.avatar-boundary` and prefer “inward” expansion**
-   - Hard constraint:
-     - Expanded circle must fit entirely inside `boundsRect`.
-     - `cx = clamp(cx, bounds.left + r, bounds.right - r)`
-     - `cy = clamp(cy, bounds.top + r, bounds.bottom - r)`
-   - Inward preference:
-     - If the circle would overflow, shift the center along the vector **towards** `aquariumCenter` before doing the final clamp.
-     - This creates the “expands into the aquarium” feeling on narrow screens.
-
-7) **Text filling rules (min empty space, no ugly breaks)**
-   - Inside the circle:
-     - Use dynamic padding based on diameter (smaller padding for longer texts).
-     - Use dynamic font-size based on diameter + text length.
-   - Typography:
-     - `text-align: justify; text-justify: inter-word; text-align-last: center;`
-     - `hyphens: auto;` (ensure `lang="pt"` / `lang="en"` is set on the text container so hyphenation works better).
-     - Avoid breaking words unless necessary:
-       - `word-break: normal; overflow-wrap: break-word;`
-   - Overflow:
-     - If text still does not fit at max diameter, allow `overflow: auto` inside the circle.
-
-8) **Z-index + stacking context**
-   - File: `src/lib/components/participants-container.svelte`
-   - Keep the “hover brings participant-slot to front” rule so expanded circle overlays other avatars.
-
-9) **Manual test matrix (required)**
-   - Devices:
-     - iPhone SE, iPhone, iPad mini, iPad 11, desktop.
-   - Scenarios:
-     - Very short message (1–2 words) => small circle.
-     - Medium message => medium circle.
-     - Long message => large circle centered in available aquarium space; scroll only if necessary.
-     - Confirm expanded circle never leaves `.avatar-boundary`.
+**What was done:**
+- Input bar text + send lock while any AI is “thinking”, debounced (~300 ms) to avoid flicker; history/docs stay active.
+- Localized “wait while others finish” placeholder (PT/EN) shown only while locked; normal placeholder when unlocked.
+- Typing balloons visible for both user and AIs (AI shows whenever `isTyping`; user while typing/sending).
+- Avatar/chat-circle palette by role (reception sky, research emerald, operations amber, bar red, administration lime, cleaning teal); history/docs icons white on black buttons.
+- Chat previews stay inside the aquarium boundary, max 2 open, newest on top; debug toggle to skip persisted history.
 
 **Acceptance Criteria:**
-1) Hover expansion replaces the minimized circle at the same anchor position (no sideways tooltip effect).
-2) Expanded bubble is always circular (width == height) and size scales with message length.
-3) Expanded bubble stays fully inside `.avatar-boundary` and prefers moving inward (towards aquarium center) when constrained.
-4) Text occupies the circle area with minimal empty space; no “thin column” layout; scroll only when unavoidable.
+1) Lock/unlock flow works as above without disabling history/docs.  
+2) Waiting placeholder appears only while locked.  
+3) Typing balloons show for user/AI while typing.  
+4) Role colors + white icons render as defined.  
+5) Max two previews open; newest is frontmost; all stay inside avatar boundary.
 
 **Completion Criteria:**
-1) Visual verification passes on iPhone SE, iPhone, iPad mini, iPad 11, desktop (portrait + landscape where relevant).
+Manual verification on iPhone SE, iPhone, iPad mini, iPad 11, and desktop (portrait/landscape) with 1 user + 5 AIs; debug history toggle on/off.
 
 ---
 
-## ZD-176e: Chat Circles UX polish (locks, typing, palette, previews)
+## ZD-176e: Chat Circles geometry + bounded hover expansion (matches sketch)
 
 **Overview:**
-Document and accept the extra fixes added while working on ZD‑176 that sit outside the original a–d scope (previews, typing, disabling input, palette).
+Future/optional geometry pass to match the sketch: expanded circle replaces the minimized circle at the same anchor, grows toward the aquarium center, fills the circle with readable text, and never escapes the aquarium+avatars bounds.
 
 **Goal:**
-Keep a clear record of incidental improvements so they are not lost: UX locks, typing bubbles, palette consistency, and localized placeholders.
+Deliver robust hover/tap expansion for AI + user chat circles:
+- stays inside `.avatar-boundary`,
+- prefers expanding inward (toward aquarium center),
+- keeps perfect circle geometry,
+- text fills the circle with minimal empty space; scroll only when unavoidable.
 
-**What was done:**
-- Input bar text + send are temporarily locked while any AI is “thinking”, debounced (~300 ms) to avoid flicker; history/docs buttons remain usable.
-- “Wait while others finish” placeholder is localized (PT/EN) and shown only while locked; normal placeholder restored when unlocked.
-- Typing balloons re-enabled for both user and AIs (AI shows whenever `isTyping`; user shows while typing/sending).
-- Avatar/chat-circle color palette standardized by role (reception sky, research emerald, operations amber, bar red, administration lime, cleaning teal); history/docs icons switched to white.
-- Chat-preview logic keeps within aquarium boundary and respects max‑2 open previews; latest preview is frontmost.
-- Toggle kept to optionally skip loading persisted history for debugging.
+**Implementation Notes / Guardrails:**
+- Bounds source of truth: `.avatar-boundary` in `src/routes/[code]/game/+page.svelte`.
+- Do not break avatar margin rules; circles must stay inside `.avatar-boundary`.
+- Expanded hover shows full text (scroll allowed).
+- Max diameter derived from aquarium/table rect (almost aquarium diameter), not hardcoded.
 
-**Acceptance Criteria:**
-1) Lock/unlock flow behaves as above and never disables history/docs.  
-2) Localized waiting placeholder appears only while locked.  
-3) Typing balloons visible for user and any AI that is typing.  
-4) Role colors and white history/docs icons render as defined.  
-5) Max two previews open; newest appears on top and all stay inside the avatar boundary.
+**Step-by-step Plan (future):**
+1) Capture bounds + aquarium center in the page and pass to `ParticipantsContainer`.
+2) Plumb bounds/center into `ai-agent.svelte` and `player-badge.svelte`.
+3) Reuse `chat-circle-hover.svelte` with props: text, isTyping, colorVariant, anchorEl, boundsRect, aquariumCenter, maxDiameterPx.
+4) Geometry: anchor at minimized circle center; ideal diameter from text, clamped by bounds/center; bias inward on portrait; width==height; justify text; scroll fallback.
+5) Safety: never overflow `.avatar-boundary`; respect safe areas; z-index above avatars but below modals/tutorial.
+6) QA on iPhone SE, iPhone, iPad mini, iPad 11, desktop (hover + tap).
+
+**Acceptance Criteria (when picked up):**
+1) Expanded circle replaces minimized at same anchor.  
+2) Circle size scales with message length; remains circular.  
+3) Circle stays inside `.avatar-boundary`, biased inward on portrait.  
+4) Text fills circle; no thin columns; scroll only if needed.
 
 **Completion Criteria:**
-Manual verification on iPhone SE, iPhone, iPad mini, iPad 11, and desktop (portrait/landscape where relevant) with 1 user + 5 AIs and persisted-history toggle both on/off.
+Visual verification on iPhone SE, iPhone, iPad mini, iPad 11, desktop (portrait + landscape).
 ## ZD-149: Enable player cards and badges with .svg + fix flips + fix long text formatting
 
 **Overview:**
@@ -2624,3 +2559,128 @@ f) UI polish included in the same changeset
    - Finish a discussion with a chosen cargo and final vote, save it, and confirm list + detail show cargo/voto.
    - Confirm proposal filter options update based on existing saved discussions.
 2) Visual QA on mobile + desktop (no major regressions).
+
+---
+
+## ZD-191: Epic - New main page
+
+**Overview:**
+Create a new onboarding/start flow on the existing main URL (`/`) using a containerized dialog (Typeform-style) before revealing the current main page actions. This ticket also includes routing cleanup (`/[code]/assembly`) and a pedagogic-mode timer configuration dialog stored in the DB.
+
+**Goal:**
+Make it easier to start the experience by guiding the user through:
+1) Welcome + Start ("Iniciar"),
+2) Choose cargo (required),
+3) Optionally set name/description,
+4) Then show the current main actions (new proposal, current proposals list, browse discussions) inside the same dialog container.
+
+**Description:**
+a) Same URL as current main page (`/`)
+   - Do not introduce a new route for the entry point.
+   - The first-time experience is handled via an overlay/dialog container on the existing main page.
+
+b) Dialog container flow (Typeform-style)
+   - When the app opens, show a dialog container that includes:
+     - A welcome message (short, friendly) with header only "Bem vindo".
+     - A single primary CTA: "Iniciar".
+   - After clicking "Iniciar", the dialog progresses step-by-step:
+     1) Cargo selector (dropdown) - required.
+        - Styled to match the Browse histories filter dropdown.
+        - Options are sorted alphabetically.
+        - Add a final option "Outro" (always last).
+        - If "Outro" is selected, show a required input to specify the cargo.
+     2) After cargo is chosen, reveal name and description inputs (both optional).
+     3) After completing (or skipping) optional fields, reveal the current main actions inside the same dialog:
+        - "Nova proposta"
+        - List of current proposals
+        - "Ver discussões" (Browse histories)
+        - Show the current "Cargo + Sair" summary below the "Ver discussões" action (not above).
+
+c) Persistence
+   - Persist the selected cargo and optional profile fields so the user does not have to repeat onboarding every refresh.
+   - If the user already completed the onboarding, show the dialog directly in the "main actions" state (or skip the onboarding steps entirely).
+
+d) Session reset (multi-user on same browser)
+   - Replace the old "Editar" action with "Sair".
+   - Clicking "Sair" should:
+     - Clear onboarding storage (so the dialog returns to the "Bem vindo" + "Iniciar" step).
+     - Clear any cached discussion drafts/history in localStorage (keys starting with `discussion:`).
+     - If the user is on an anonymous Supabase session, sign out so a new anonymous user can be created next time (supports multiple participants on one device).
+
+d) Routing cleanup: deprecate lobby and rename game route
+   - Deprecate `http://localhost:5173/[code]/lobby`:
+     - It should redirect directly to `http://localhost:5173/[code]/assembly`.
+   - Rename the old game route:
+     - `http://localhost:5173/[code]/game` -> `http://localhost:5173/[code]/assembly`.
+     - Keep a compatibility redirect from `/[code]/game` to `/[code]/assembly`.
+   - Mode selection navigation:
+     - After selecting a mode, navigate to `/${code}/assembly` (not `/lobby`).
+
+e) Pedagogic mode timer config (per discussion)
+   - When the owner selects "Pedagógico" on `/${code}/mode`, open a small dialog to configure timer durations:
+     - Rounds 1-6 minutes (default prefilled).
+     - Round 7 minutes (default prefilled).
+   - Persist these values to `public.games`:
+     - `pedagogic_rounds_timer_minutes`
+     - `pedagogic_final_timer_minutes`
+   - Ensure timer logic uses these per-game values (fallback to organization defaults when missing).
+
+f) Copy tweaks shipped with this ticket
+   - Update the home tagline:
+     - PT: "A plataforma de governança multiespécie no Aquário Vasco da Gama"
+   - Simplify mode card labels/copy:
+     - Titles: "Pedagógico" / "Tomada de Decisão"
+     - Descriptions: "Com temporizador" / "Sem temporizador" (no trailing punctuation)
+   - Home decorations responsive behavior:
+     - On mobile/vertical layouts, the lateral illustrations move to top/bottom (2 on top, 2 on bottom).
+     - On md+ layouts, keep the lateral positioning.
+
+g) Browse histories improvements shipped with this ticket (`/stories`)
+   - Add a filter dropdown for discussion mode:
+     - "Todos os modos", "Pedagógico", "Tomada de Decisão"
+   - Persist the mode on saved discussions:
+     - Add `saved_discussions.discussion_mode`
+     - Save `discussion_mode` when persisting a discussion
+     - Backfill existing NULLs and set a default (`pedagogic`) so filtering works reliably
+   - Display the mode on discussion cards and on the saved discussion page.
+   - Cargo filter dropdown:
+     - Keep alphabetical ordering and keep "Outro" as the last option (stored as `custom`).
+   - Story card CTA layout:
+     - "Proposta completa" is compact and aligned left on the same row as "Partilhar" and "Ler mais".
+   - Save dialog cargo display:
+     - When the lobby is bypassed (no `player.role`), show the cargo using the onboarding data in localStorage.
+
+**UX Notes (Typeform style):**
+1) Inputs should appear progressively:
+   - First show only the cargo selector.
+   - After cargo is chosen, reveal the optional name/description inputs.
+2) Keep the flow simple and fast; minimize cognitive load.
+3) The dialog should feel like part of the existing main page aesthetic (same layout/typography), just containerized.
+
+**Acceptance Criteria:**
+1) The app opens on `/` and shows a dialog container with a welcome message and a single primary "Iniciar" button.
+2) After "Iniciar", the user must pick a cargo (required) and only then sees optional name/description fields.
+3) The cargo dropdown matches the style used on Browse histories filters; options are alphabetically sorted and include "Outro" (last), which requires a custom cargo input.
+3) After completing the steps, the dialog shows the current main actions (new proposal, proposals list, browse discussions) inside the container.
+4) The onboarding does not introduce a new URL path (no `/lobby` without code; it stays on `/`).
+5) The chosen cargo/name/description are persisted and the user is not asked again on refresh (unless they explicitly reset).
+6) Clicking "Sair" resets the onboarding to the initial welcome ("Bem vindo" + "Iniciar") and allows a new anonymous session/user to start.
+6) Works on mobile + desktop with no major layout regressions.
+7) `/${code}/lobby` redirects to `/${code}/assembly`.
+8) `/${code}/game` redirects to `/${code}/assembly` (compatibility).
+9) When selecting "Pedagógico" in mode selection, the owner sees a dialog to configure timer minutes; saving persists to `games` and the timer uses those values during the discussion.
+10) Browse histories supports filtering by discussion mode and shows mode in cards/detail.
+
+**Completion Criteria:**
+1) Manual verification:
+   - Fresh session: `/` -> dialog shows welcome + "Iniciar" -> choose cargo -> optionally set name/description -> main actions shown.
+   - Returning session: onboarding is skipped or starts already in main actions state.
+2) i18n verified for PT/EN copy ("Iniciar" and any helper text).
+3) Routing verification:
+   - `/${code}/lobby` -> `/${code}/assembly`
+   - `/${code}/game` -> `/${code}/assembly`
+4) Pedagogic mode verification:
+   - Select "Pedagógico" -> set minutes -> proceed to assembly -> timer reflects configured durations (rounds 1-6 vs round 7).
+5) Browse histories verification:
+   - Filter by mode returns expected rows (including after backfill/default).
+   - "Proposta completa" button is on the same CTA row and aligned left.

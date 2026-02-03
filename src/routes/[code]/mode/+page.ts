@@ -27,8 +27,8 @@ export const load: PageLoad = async ({ params, parent }) => {
 	const isOwner = playersData?.some(p => p.is_owner && p.user_id === userId);
 
 	if (!isOwner) {
-		// Non-owners skip mode selection and go directly to lobby
-		return redirect(302, `/${code}/lobby`);
+		// Non-owners skip mode selection and go directly to the assembly
+		return redirect(302, `/${code}/assembly`);
 	}
 
 	return {

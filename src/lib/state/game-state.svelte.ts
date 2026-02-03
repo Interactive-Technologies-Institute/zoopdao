@@ -5,6 +5,7 @@ import {
 	PEDAGOGIC_ROUNDS_TIMER_MINUTES
 } from '$lib/config/organization';
 import { getCharacterCategory } from '../types';
+import { ROLES, type Role } from '../types';
 import type {
 	Card,
 	Game,
@@ -41,9 +42,53 @@ export class GameState {
 
 	roundTimerDuration: number = $state(0);
 	mode: 'pedagogic' | 'decision_making' = $state('pedagogic');
+	pedagogicRoundsTimerMinutes: number = $state(PEDAGOGIC_ROUNDS_TIMER_MINUTES);
+	pedagogicFinalTimerMinutes: number = $state(PEDAGOGIC_FINAL_TIMER_MINUTES);
 	private activityInterval: ReturnType<typeof setInterval> | null = null;
 	private beforeUnloadHandler: (() => void) | null = null;
 	private unloadTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	private getOnboardingProfile(): {
+		roleType: string | null;
+		customRole: string | null;
+		name: string | null;
+		description: string | null;
+	} {
+		// The new home onboarding stores role/name/description in localStorage.
+		// We use it to populate the saved discussion "cargo" even if the legacy lobby is bypassed.
+		if (typeof window === 'undefined') {
+			return { roleType: null, customRole: null, name: null, description: null };
+		}
+		try {
+			const raw = localStorage.getItem('zoopdao:onboarding:v1');
+			if (!raw) return { roleType: null, customRole: null, name: null, description: null };
+			const parsed = JSON.parse(raw) as {
+				role?: Role | 'other' | null;
+				customRole?: string;
+				name?: string;
+				description?: string;
+			};
+
+			const role = parsed.role ?? null;
+			const customRole = (parsed.customRole ?? '').trim();
+			const name = (parsed.name ?? '').trim();
+			const description = (parsed.description ?? '').trim();
+
+			let roleType: string | null = null;
+			if (role && role !== 'other' && (ROLES as string[]).includes(role as string)) {
+				roleType = role as string;
+			}
+
+			return {
+				roleType,
+				customRole: role === 'other' && customRole.length > 0 ? customRole : null,
+				name: name.length > 0 ? name : null,
+				description: description.length > 0 ? description : null
+			};
+		} catch {
+			return { roleType: null, customRole: null, name: null, description: null };
+		}
+	}
 
 	getGameId(): number {
 		// Find a player's game_id (they all share the same game_id)
@@ -71,6 +116,15 @@ export class GameState {
 		this.code = game.code;
 		this.state = game.state as GameStateEnum;
 		this.mode = mode;
+		// Use per-game timer config when present (falls back to organization defaults).
+		const roundsMinutes: unknown = (game as any).pedagogic_rounds_timer_minutes;
+		const finalMinutes: unknown = (game as any).pedagogic_final_timer_minutes;
+		if (typeof roundsMinutes === 'number' && Number.isFinite(roundsMinutes)) {
+			this.pedagogicRoundsTimerMinutes = roundsMinutes;
+		}
+		if (typeof finalMinutes === 'number' && Number.isFinite(finalMinutes)) {
+			this.pedagogicFinalTimerMinutes = finalMinutes;
+		}
 		this.gameRounds = gameRounds;
 		this.playerId = playerId;
 		this.players = players;
@@ -414,6 +468,7 @@ export class GameState {
 	) {
 		const character = this.players.find((player) => player.id === this.playerId);
 		if (!character) return;
+		const onboarding = this.getOnboardingProfile();
 
 		// For round 7, get discussion messages instead of player answer
 		let round7Answer = '';
@@ -495,15 +550,25 @@ export class GameState {
 			p_character: {
 				// Persist the selected role (new system) so it can be shown later in Browse histories.
 				// Fallback keeps compatibility with any legacy `character` field that might exist in older data.
-				type: (character as any).role ?? (character as any).character ?? null,
-				nickname: character.nickname?.trim() ? character.nickname : name,
-				description: character.description
+				// Keep "type" compatible with CharacterCard assets: use role key, or 'custom' when "Outro" is used.
+				// The free-text role name is stored in custom_role for display.
+				type:
+					(onboarding.customRole ? 'custom' : onboarding.roleType) ??
+					(character as any).role ??
+					(character as any).character ??
+					'custom',
+				custom_role: onboarding.customRole ?? null,
+				nickname:
+					(onboarding.name ?? '').trim() ||
+					(character.nickname?.trim() ? character.nickname : name),
+				description: onboarding.description ?? character.description
 			},
 			p_rounds: roundsData,
 			p_card_types: cardTypes,
 			p_full_discussion: fullStory,
 			p_vote: vote ?? null,
-			p_proposal_id: proposalId ?? null
+			p_proposal_id: proposalId ?? null,
+			p_discussion_mode: this.mode
 		});
 
 		if (error) {
@@ -543,8 +608,8 @@ export class GameState {
 		// Rounds 1-6 and round 7 durations are configurable.
 		const durationMinutes =
 			this.currentRound === 7
-				? PEDAGOGIC_FINAL_TIMER_MINUTES
-				: PEDAGOGIC_ROUNDS_TIMER_MINUTES;
+				? this.pedagogicFinalTimerMinutes
+				: this.pedagogicRoundsTimerMinutes;
 		const durationSeconds = durationMinutes * 60;
 
 		const currentGameRound = this.gameRounds.find((r) => r.round === this.currentRound);
@@ -574,7 +639,7 @@ export class GameState {
 			return 0;
 		}
 		const durationMinutes =
-			round === 7 ? PEDAGOGIC_FINAL_TIMER_MINUTES : PEDAGOGIC_ROUNDS_TIMER_MINUTES;
+			round === 7 ? this.pedagogicFinalTimerMinutes : this.pedagogicRoundsTimerMinutes;
 		return durationMinutes * 60;
 	}
 
