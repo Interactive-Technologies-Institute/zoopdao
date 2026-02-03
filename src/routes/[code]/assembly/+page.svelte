@@ -12,6 +12,7 @@
 	import type { PageData } from './$types';
 	import EndDialog from '@/components/end-dialog.svelte';
 	import { m } from '@src/paraglide/messages';
+	import { getLocale } from '@src/paraglide/runtime.js';
 	import fanfare from '@/sounds/fanfare.mp3';
 	import bubbles from '@/sounds/bubbles-sound-effect.mp3';
 	import { onMount, onDestroy } from 'svelte';
@@ -24,6 +25,7 @@
 	import Timer from '@/components/timer.svelte';
 	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
 	import type { AIAgent, AIMessage, Participant, Role } from '@/types';
+	import { getAINonHumanFallbackMessages } from '$lib/data/ai-nonhumans';
 	import { supabase } from '@/supabase';
 	import {
 		storeHumanMessage,
@@ -147,8 +149,8 @@
 	const MAX_USER_MESSAGES_ROUND7 = 5;
 	const MAX_AI_MESSAGES_ROUND7 = 5;
 	const SINGLE_AI_AGENT: AIAgent = {
-		id: 'ai-agent-sam',
-		name: 'Sam',
+		id: 'ai-agent-aquari',
+		name: 'Aquari',
 		role: 'research'
 	};
 
@@ -1062,6 +1064,7 @@ function handleTransitionComplete() {
 								proposalId: proposalId,
 								round: currentRound,
 								agentRole: agent.role,
+								agentName: agent.name,
 								userId: data.userId,
 								inputSource,
 								allowMultipleAiReplies,
@@ -1133,50 +1136,22 @@ function handleTransitionComplete() {
 
 	// Generate fallback message when API rate limit is reached
 	function generateFallbackMessage(agent: AIAgent, userMessage: string): string {
-		const roleMessages: Record<Role, string[]> = {
-			administration: [
-				'From an administrative perspective, we need to consider the practical implementation of this proposal.',
-				'We should evaluate the organizational impact and resource requirements carefully.',
-				'Administrative efficiency is crucial for successful implementation.'
-			],
-			research: [
-				'Research indicates that this approach has potential benefits worth exploring.',
-				'We need more data to fully understand the long-term implications.',
-				'From a research standpoint, this requires further investigation and validation.'
-			],
-			reception: [
-				'This would impact how we interact with visitors and stakeholders.',
-				'We should consider the user experience implications carefully.',
-				'Reception services would need to adapt to ensure smooth visitor experience.'
-			],
-			operations: [
-				'Operational feasibility is a key concern that needs careful assessment.',
-				'We need to evaluate the day-to-day implementation challenges.',
-				'Operations would need to be restructured to accommodate this change effectively.'
-			],
-			bar: [
-				'This could affect our service delivery model and customer satisfaction.',
-				'We should consider the customer-facing aspects of this proposal.',
-				'Service quality must be maintained throughout any transition.'
-			],
-			cleaning: [
-				'Maintenance and sustainability are important factors to consider.',
-				'We need to ensure this doesn\'t create additional workload or complexity.',
-				'From a maintenance perspective, this requires careful planning and resource allocation.'
-			]
-		};
-
-		const messages = roleMessages[agent.role] || roleMessages.administration;
+		// ZD-179: AI agents represent AVG non-humans (not human departments).
+		const messages = getAINonHumanFallbackMessages(agent.name, getLocale());
 		const randomMessage = messages[Math.floor(Math.random() * messages.length)];
 		
 		// Add context about the user's message if available
 		if (userMessage && userMessage.trim().length > 0) {
-			const fallbackMsg = `${randomMessage} Regarding your point about "${userMessage.substring(0, 50)}${userMessage.length > 50 ? '...' : ''}", ${agent.name} agrees this is worth discussing.`;
+			const topic = `${userMessage.substring(0, 50)}${userMessage.length > 50 ? '...' : ''}`;
+			const fallbackMsg =
+				getLocale() === 'pt'
+					? `${randomMessage} Sobre "${topic}", concordo que vale a pena discutir.`
+					: `${randomMessage} Regarding "${topic}", I agree it is worth discussing.`;
 			console.log(`Generated fallback message for ${agent.name} with user context:`, fallbackMsg);
 			return fallbackMsg;
 		}
 		
-		const fallbackMsg = `${randomMessage} ${agent.name} believes this is an important topic for discussion.`;
+		const fallbackMsg = `${randomMessage}`;
 		console.log(`Generated fallback message for ${agent.name} without user context:`, fallbackMsg);
 		return fallbackMsg;
 	}
