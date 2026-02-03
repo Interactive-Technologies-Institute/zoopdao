@@ -263,15 +263,29 @@
 </script>
 
 <div class="h-screen flex flex-col items-center justify-center bg-[#efe7e2] bos-bg relative p-4">
-	<div class="z-10 flex flex-col items-center justify-center max-w-md relative">
-		<div
-			class="absolute -left-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
-		>
+	<!-- Decorative illustrations: on mobile (vertical) show them top/bottom; on md+ keep the lateral layout -->
+	<div class="md:hidden absolute inset-x-0 top-20 flex justify-between px-4 pointer-events-none z-0">
+		<div class="w-16 h-16 flex items-center justify-center">
 			<img src={getHomeIllustrationSrc('step_5_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
-		<div
-			class="absolute -right-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
-		>
+		<div class="w-16 h-16 flex items-center justify-center">
+			<img src={getHomeIllustrationSrc('step_2_1_home')} alt="" class="w-full h-full object-contain" />
+		</div>
+	</div>
+	<div class="md:hidden absolute inset-x-0 bottom-4 flex justify-between px-4 pointer-events-none z-0">
+		<div class="w-16 h-16 flex items-center justify-center">
+			<img src={getHomeIllustrationSrc('step_6_1_home')} alt="" class="w-full h-full object-contain" />
+		</div>
+		<div class="w-16 h-16 flex items-center justify-center">
+			<img src={getHomeIllustrationSrc('step_4_1_home')} alt="" class="w-full h-full object-contain" />
+		</div>
+	</div>
+
+	<div class="z-10 flex flex-col items-center justify-center max-w-md relative">
+		<div class="hidden md:flex absolute -left-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center">
+			<img src={getHomeIllustrationSrc('step_5_1_home')} alt="" class="w-full h-full object-contain" />
+		</div>
+		<div class="hidden md:flex absolute -right-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center">
 			<img src={getHomeIllustrationSrc('step_2_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
 		<h1 class="bos-title flex items-center justify-center text-deep-teal font-black text-5xl md:text-7xl">
@@ -469,14 +483,10 @@
 				</div>
 			{/if}
 		</div>
-		<div
-			class="absolute -right-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
-		>
+		<div class="hidden md:flex absolute -right-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center">
 			<img src={getHomeIllustrationSrc('step_4_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
-		<div
-			class="absolute -left-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 flex items-center justify-center"
-		>
+		<div class="hidden md:flex absolute -left-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center">
 			<img src={getHomeIllustrationSrc('step_6_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
 	</div>

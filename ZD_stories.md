@@ -2631,6 +2631,9 @@ f) Copy tweaks shipped with this ticket
    - Simplify mode card labels/copy:
      - Titles: "Pedagógico" / "Tomada de Decisão"
      - Descriptions: "Com temporizador" / "Sem temporizador" (no trailing punctuation)
+   - Home decorations responsive behavior:
+     - On mobile/vertical layouts, the lateral illustrations move to top/bottom (2 on top, 2 on bottom).
+     - On md+ layouts, keep the lateral positioning.
 
 g) Browse histories improvements shipped with this ticket (`/stories`)
    - Add a filter dropdown for discussion mode:
