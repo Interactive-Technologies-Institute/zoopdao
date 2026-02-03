@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 
 type VoteChoice = 'yes' | 'no' | 'abstain';
 type VoteContext = 'preview' | 'discussion';
+type VoteMode = 'no_discussion' | 'pedagogic' | 'decision_making';
 
 function getClient(accessToken?: string) {
 	if (!accessToken) return supabase;
@@ -53,12 +54,39 @@ async function getTallies(client: ReturnType<typeof getClient>, proposalId: numb
 	return { totals, totalVotes };
 }
 
+async function getVoteRows(client: ReturnType<typeof getClient>, proposalId: number) {
+	const { data, error } = await client
+		.from('proposal_votes')
+		.select('user_id, choice, created_at, cargo, discussion_mode')
+		.eq('proposal_id', proposalId)
+		.order('created_at', { ascending: false });
+
+	if (error) throw error;
+
+	return (data || []).map((row) => ({
+		user_id: row.user_id as string,
+		choice: row.choice as VoteChoice,
+		created_at: row.created_at as string,
+		cargo: (row as any).cargo ?? null,
+		discussion_mode: (row as any).discussion_mode ?? null
+	})) as Array<{
+		user_id: string;
+		choice: VoteChoice;
+		created_at: string;
+		cargo: string | null;
+		discussion_mode: VoteMode | null;
+	}>;
+}
+
 export const GET: RequestHandler = async ({ params, request }) => {
 	try {
 		const proposalId = parseId(params.id);
 		if (!proposalId) {
 			return json({ error: 'Invalid proposal ID' }, { status: 400 });
 		}
+
+		const url = new URL(request.url);
+		const includeVotes = url.searchParams.get('include') === 'votes' || url.searchParams.get('includeVotes') === '1';
 
 		const authHeader = request.headers.get('authorization');
 		const accessToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
@@ -84,12 +112,15 @@ export const GET: RequestHandler = async ({ params, request }) => {
 			}
 		}
 
+		const votes = includeVotes ? await getVoteRows(client, proposalId) : null;
+
 		return json(
 			{
 				totals,
 				totalVotes,
 				userChoice: userVote?.choice ?? null,
-				userContext: userVote?.context ?? null
+				userContext: userVote?.context ?? null,
+				votes
 			},
 			{ status: 200 }
 		);
@@ -109,12 +140,17 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		const body = await request.json().catch(() => null);
 		const choice: VoteChoice | undefined = body?.choice;
 		const context: VoteContext | undefined = body?.context;
+		const cargo: string | undefined = typeof body?.cargo === 'string' ? body.cargo.trim() : undefined;
+		const mode: VoteMode | undefined = body?.mode;
 
 		if (!choice || !['yes', 'no', 'abstain'].includes(choice)) {
 			return json({ error: 'Invalid choice' }, { status: 400 });
 		}
 		if (!context || !['preview', 'discussion'].includes(context)) {
 			return json({ error: 'Invalid context' }, { status: 400 });
+		}
+		if (mode && !['no_discussion', 'pedagogic', 'decision_making'].includes(mode)) {
+			return json({ error: 'Invalid mode' }, { status: 400 });
 		}
 
 		const authHeader = request.headers.get('authorization');
@@ -145,11 +181,17 @@ export const POST: RequestHandler = async ({ params, request }) => {
 			return json({ error: 'Voting closed' }, { status: 400 });
 		}
 
+		const discussionMode: VoteMode =
+			mode ??
+			(context === 'preview' ? 'no_discussion' : 'no_discussion');
+
 		const { error: insertError } = await client.from('proposal_votes').insert({
 			proposal_id: proposalId,
 			user_id: userId,
 			choice,
-			context
+			context,
+			cargo: cargo && cargo.length > 0 ? cargo : null,
+			discussion_mode: discussionMode
 		});
 
 		if (insertError) {

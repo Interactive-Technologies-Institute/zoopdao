@@ -431,7 +431,9 @@ export type Database = {
         Row: {
           choice: string
           context: string
+          cargo: string | null
           created_at: string
+          discussion_mode: string | null
           id: string
           proposal_id: number
           user_id: string
@@ -439,7 +441,9 @@ export type Database = {
         Insert: {
           choice: string
           context: string
+          cargo?: string | null
           created_at?: string
+          discussion_mode?: string | null
           id?: string
           proposal_id: number
           user_id: string
@@ -447,7 +451,9 @@ export type Database = {
         Update: {
           choice?: string
           context?: string
+          cargo?: string | null
           created_at?: string
+          discussion_mode?: string | null
           id?: string
           proposal_id?: number
           user_id?: string
