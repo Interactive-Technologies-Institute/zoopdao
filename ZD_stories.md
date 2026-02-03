@@ -2624,3 +2624,98 @@ f) UI polish included in the same changeset
    - Finish a discussion with a chosen cargo and final vote, save it, and confirm list + detail show cargo/voto.
    - Confirm proposal filter options update based on existing saved discussions.
 2) Visual QA on mobile + desktop (no major regressions).
+
+---
+
+## ZD-191: New main page
+
+**Overview:**
+Create a new onboarding/start flow on the existing main URL (`/`) using a containerized dialog (Typeform-style) before revealing the current main page actions. This ticket also includes routing cleanup (`/[code]/assembly`) and a pedagogic-mode timer configuration dialog stored in the DB.
+
+**Goal:**
+Make it easier to start the experience by guiding the user through:
+1) Welcome + Start ("Iniciar"),
+2) Choose cargo (required),
+3) Optionally set name/description,
+4) Then show the current main actions (new proposal, current proposals list, browse discussions) inside the same dialog container.
+
+**Description:**
+a) Same URL as current main page (`/`)
+   - Do not introduce a new route for the entry point.
+   - The first-time experience is handled via an overlay/dialog container on the existing main page.
+
+b) Dialog container flow (Typeform-style)
+   - When the app opens, show a dialog container that includes:
+     - A welcome message (short, friendly) with header only "Bem vindo".
+     - A single primary CTA: "Iniciar".
+   - After clicking "Iniciar", the dialog progresses step-by-step:
+     1) Cargo selector (dropdown) - required.
+        - Styled to match the Browse histories filter dropdown.
+        - Options are sorted alphabetically.
+        - Add a final option "Outro" (always last).
+        - If "Outro" is selected, show a required input to specify the cargo.
+     2) After cargo is chosen, reveal name and description inputs (both optional).
+     3) After completing (or skipping) optional fields, reveal the current main actions inside the same dialog:
+        - "Nova proposta"
+        - List of current proposals
+        - "Ver discussões" (Browse histories)
+        - Show the current "Cargo + Editar" summary below the "Ver discussões" action (not above).
+
+c) Persistence
+   - Persist the selected cargo and optional profile fields so the user does not have to repeat onboarding every refresh.
+   - If the user already completed the onboarding, show the dialog directly in the "main actions" state (or skip the onboarding steps entirely).
+
+d) Routing cleanup: deprecate lobby and rename game route
+   - Deprecate `http://localhost:5173/[code]/lobby`:
+     - It should redirect directly to `http://localhost:5173/[code]/assembly`.
+   - Rename the old game route:
+     - `http://localhost:5173/[code]/game` -> `http://localhost:5173/[code]/assembly`.
+     - Keep a compatibility redirect from `/[code]/game` to `/[code]/assembly`.
+   - Mode selection navigation:
+     - After selecting a mode, navigate to `/${code}/assembly` (not `/lobby`).
+
+e) Pedagogic mode timer config (per discussion)
+   - When the owner selects "Pedagógico" on `/${code}/mode`, open a small dialog to configure timer durations:
+     - Rounds 1-6 minutes (default prefilled).
+     - Round 7 minutes (default prefilled).
+   - Persist these values to `public.games`:
+     - `pedagogic_rounds_timer_minutes`
+     - `pedagogic_final_timer_minutes`
+   - Ensure timer logic uses these per-game values (fallback to organization defaults when missing).
+
+f) Copy tweaks shipped with this ticket
+   - Update the home tagline:
+     - PT: "A plataforma de governança multiespécie no Aquário Vasco da Gama"
+   - Simplify mode card labels/copy:
+     - Titles: "Pedagógico" / "Tomada de Decisão"
+     - Descriptions: "Com temporizador" / "Sem temporizador" (no trailing punctuation)
+
+**UX Notes (Typeform style):**
+1) Inputs should appear progressively:
+   - First show only the cargo selector.
+   - After cargo is chosen, reveal the optional name/description inputs.
+2) Keep the flow simple and fast; minimize cognitive load.
+3) The dialog should feel like part of the existing main page aesthetic (same layout/typography), just containerized.
+
+**Acceptance Criteria:**
+1) The app opens on `/` and shows a dialog container with a welcome message and a single primary "Iniciar" button.
+2) After "Iniciar", the user must pick a cargo (required) and only then sees optional name/description fields.
+3) The cargo dropdown matches the style used on Browse histories filters; options are alphabetically sorted and include "Outro" (last), which requires a custom cargo input.
+3) After completing the steps, the dialog shows the current main actions (new proposal, proposals list, browse discussions) inside the container.
+4) The onboarding does not introduce a new URL path (no `/lobby` without code; it stays on `/`).
+5) The chosen cargo/name/description are persisted and the user is not asked again on refresh (unless they explicitly reset).
+6) Works on mobile + desktop with no major layout regressions.
+7) `/${code}/lobby` redirects to `/${code}/assembly`.
+8) `/${code}/game` redirects to `/${code}/assembly` (compatibility).
+9) When selecting "Pedagógico" in mode selection, the owner sees a dialog to configure timer minutes; saving persists to `games` and the timer uses those values during the discussion.
+
+**Completion Criteria:**
+1) Manual verification:
+   - Fresh session: `/` -> dialog shows welcome + "Iniciar" -> choose cargo -> optionally set name/description -> main actions shown.
+   - Returning session: onboarding is skipped or starts already in main actions state.
+2) i18n verified for PT/EN copy ("Iniciar" and any helper text).
+3) Routing verification:
+   - `/${code}/lobby` -> `/${code}/assembly`
+   - `/${code}/game` -> `/${code}/assembly`
+4) Pedagogic mode verification:
+   - Select "Pedagógico" -> set minutes -> proceed to assembly -> timer reflects configured durations (rounds 1-6 vs round 7).
