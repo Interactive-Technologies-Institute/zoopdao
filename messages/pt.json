@@ -66,7 +66,7 @@
 	"start_playing": "Começar a participar",
 	"start_participating": "Começar a participar",
 	"welcome": "Bem-vindo à Assembleia ZoopDAO!",
-	"home_tagline": "Participa na governança multiespécie no Aquário Vasco da Gama",
+	"home_tagline": "A plataforma de governança multiespécie no Aquário Vasco da Gama",
 	"welcome_description": "Bem-vindo à assembleia de governança ZoopDAO. Aqui participarás em discussões sobre propostas, partilharás as tuas perspetivas com base no teu cargo organizacional e contribuirás para a tomada de decisões coletiva. Pronto para começar a participar?",
 	"map": "Aquário da Assembleia",
 	"map_description": "Este é o aquário da mesa da assembleia. Aqui verás todos os participantes posicionados à volta da mesa para discussões de governança. O aquário representa o centro da nossa assembleia de governança multiespécie.",
@@ -349,8 +349,13 @@
 	"close": "Fechar",
 	"no_messages_yet": "Ainda não há mensagens. Inicia a discussão!",
 	"select_mode": "Selecionar Modo de Discussão",
-	"pedagogic_mode": "Modo Pedagógico",
-	"pedagogic_mode_description": "Discussão com Temporizador - Abordagem educacional e de aprendizagem com limites de tempo para cada ronda",
-	"decision_making_mode": "Modo de Tomada de Decisão",
-	"decision_making_mode_description": "Discussão sem Temporizador - Tomada de decisão focada sem restrições de tempo"
+	"pedagogic_mode": "Pedagógico",
+	"pedagogic_mode_description": "Com temporizador",
+	"decision_making_mode": "Tomada de Decisão",
+	"decision_making_mode_description": "Sem temporizador",
+	"configure_pedagogic_timer_title": "Definir temporizador",
+	"configure_pedagogic_timer_subtitle": "Escolhe a duração (em minutos) para as rondas 1-6 e para a ronda final.",
+	"configure_pedagogic_timer_rounds_label": "Rondas 1-6 (minutos)",
+	"configure_pedagogic_timer_final_label": "Ronda 7 (minutos)",
+	"save_and_continue": "Guardar e continuar"
 }

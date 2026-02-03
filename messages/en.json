@@ -349,8 +349,13 @@
 	"close": "Close",
 	"no_messages_yet": "No messages yet. Start the discussion!",
 	"select_mode": "Select Discussion Mode",
-	"pedagogic_mode": "Pedagogic Mode",
-	"pedagogic_mode_description": "Discussion with Timer - Educational and learning focused approach with time limits for each round",
-	"decision_making_mode": "Decision-Making Mode",
-	"decision_making_mode_description": "Discussion without Timer - Focused decision-making without time constraints"
+	"pedagogic_mode": "Pedagogic",
+	"pedagogic_mode_description": "With timer",
+	"decision_making_mode": "Decision-making",
+	"decision_making_mode_description": "Without timer",
+	"configure_pedagogic_timer_title": "Set timer",
+	"configure_pedagogic_timer_subtitle": "Choose the duration (in minutes) for rounds 1-6 and for the final round.",
+	"configure_pedagogic_timer_rounds_label": "Rounds 1-6 (minutes)",
+	"configure_pedagogic_timer_final_label": "Round 7 (minutes)",
+	"save_and_continue": "Save and continue"
 }
