@@ -264,19 +264,19 @@
 
 <div class="h-screen flex flex-col items-center justify-center bg-[#efe7e2] bos-bg relative p-4">
 	<!-- Decorative illustrations: on mobile (vertical) show them top/bottom; on md+ keep the lateral layout -->
-	<div class="md:hidden absolute inset-x-0 top-20 flex justify-between px-4 pointer-events-none z-0">
-		<div class="w-16 h-16 flex items-center justify-center">
+	<div class="home-ill-mobile home-ill-mobile--top md:hidden absolute inset-x-0 flex justify-between px-4 pointer-events-none z-0">
+		<div class="home-ill-item flex items-center justify-center">
 			<img src={getHomeIllustrationSrc('step_5_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
-		<div class="w-16 h-16 flex items-center justify-center">
+		<div class="home-ill-item flex items-center justify-center">
 			<img src={getHomeIllustrationSrc('step_2_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
 	</div>
-	<div class="md:hidden absolute inset-x-0 bottom-4 flex justify-between px-4 pointer-events-none z-0">
-		<div class="w-16 h-16 flex items-center justify-center">
+	<div class="home-ill-mobile home-ill-mobile--bottom md:hidden absolute inset-x-0 flex justify-between px-4 pointer-events-none z-0">
+		<div class="home-ill-item flex items-center justify-center">
 			<img src={getHomeIllustrationSrc('step_6_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
-		<div class="w-16 h-16 flex items-center justify-center">
+		<div class="home-ill-item flex items-center justify-center">
 			<img src={getHomeIllustrationSrc('step_4_1_home')} alt="" class="w-full h-full object-contain" />
 		</div>
 	</div>
@@ -502,3 +502,45 @@
 		</select>
 	</div>
 </div>
+
+<style>
+	/* Smoothly adapt decorative illustration positions/sizes between portrait and landscape on mobile. */
+	.home-ill-mobile {
+		--home-ill-size: clamp(56px, 14vmin, 88px);
+	}
+
+	.home-ill-item {
+		width: var(--home-ill-size);
+		height: var(--home-ill-size);
+	}
+
+	/* Keep clear of the language selector (top-right). */
+	.home-ill-mobile--top {
+		top: 4.25rem; /* ~68px */
+	}
+
+	.home-ill-mobile--bottom {
+		bottom: 1rem; /* 16px */
+	}
+
+	@media (max-width: 767px) and (orientation: portrait) {
+		.home-ill-mobile {
+			/* In portrait we can go a bit larger while staying proportional. */
+			--home-ill-size: clamp(72px, 18vmin, 112px);
+		}
+
+		.home-ill-mobile--top {
+			top: 5.25rem; /* more breathing room below the language selector */
+		}
+	}
+
+	@media (max-width: 767px) and (orientation: landscape) {
+		/* In landscape tighten the vertical spacing (top/bottom closer) and keep size stable. */
+		.home-ill-mobile--top {
+			top: 3.75rem;
+		}
+		.home-ill-mobile--bottom {
+			bottom: 0.75rem;
+		}
+	}
+</style>
