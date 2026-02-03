@@ -11,6 +11,7 @@
 	import { ZOOP_THEME, resolveZoopTheme, ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 	import { ROLES, type Role } from '$lib/types';
 	import { Select } from 'bits-ui';
+	import { supabase } from '@/supabase';
 
 	let { data } = $props();
 
@@ -216,8 +217,44 @@
 		onboardingStep = 'actions';
 	}
 
-	function handleEditOnboarding() {
-		onboardingStep = 'role';
+	async function handleExitSession() {
+		click_sound?.play();
+
+		if (typeof window !== 'undefined') {
+			// Clear onboarding so a new "session" can start (multiple users on same browser).
+			localStorage.removeItem(ONBOARDING_KEY);
+
+			// Clear cached discussions/messages so the next session starts fresh.
+			// Keys are written as `discussion:...` in the assembly page.
+			try {
+				for (let i = localStorage.length - 1; i >= 0; i--) {
+					const key = localStorage.key(i);
+					if (!key) continue;
+					if (key.startsWith('discussion:')) localStorage.removeItem(key);
+				}
+			} catch {
+				// Ignore storage errors (quota/private mode).
+			}
+		}
+
+		// Reset local state
+		selectedRole = '';
+		customRole = '';
+		profileName = '';
+		profileDescription = '';
+		onboardingStep = 'welcome';
+
+		// If the current session is anonymous, sign out so Supabase will create a new anonymous user on next load.
+		// This enables multiple participants on the same browser without sharing the same user_id.
+		try {
+			const { data } = await supabase.auth.getSession();
+			const session = data.session;
+			if ((session?.user as any)?.is_anonymous) {
+				await supabase.auth.signOut();
+			}
+		} catch {
+			// Non-fatal
+		}
 	}
 
 	onMount(() => {
@@ -426,8 +463,8 @@
 							</p>
 						{/if}
 					</div>
-					<Button variant="outline" size="sm" onclick={handleEditOnboarding}>
-						{getLocale() === 'pt' ? 'Editar' : 'Edit'}
+					<Button variant="outline" size="sm" onclick={handleExitSession}>
+						{getLocale() === 'pt' ? 'Sair' : 'Exit'}
 					</Button>
 				</div>
 			{/if}
