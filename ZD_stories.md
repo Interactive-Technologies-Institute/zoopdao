@@ -2721,3 +2721,36 @@ As a participant, I want the AI participants to feel like non-human representati
 2) Single-AI mode uses Aquari as the solo agent.
 3) The AI generation endpoint uses the JSON-based system prompt and personalizes it using `agentName`.
 4) Human badge shows cargo and, when present, the participant name; if missing from DB, falls back to onboarding storage.
+ 
+---
+
+## ZD-178: Proposal Preview - Votes List
+
+**Overview:**
+Add a "Ver votos" (View votes) section to the proposal preview page so users can see the full vote list (Snapshot-style) after votes/results.
+
+**User story:**
+As a user viewing a proposal preview, I want to open a list of all votes (who voted, what they voted, when, and in what context/mode) so I can audit participation and outcomes transparently.
+
+**Scope / Implementation notes:**
+- Front-end (proposal preview):
+  - Add a button "Ver votos" under results.
+  - When opened, render a table below with columns: `id`, `voto`, `data`, `cargo`, `modo`.
+  - The Date cell shows relative time (compact) + the absolute date below (e.g. `2h ago` + `02/02/2026`).
+  - The table is loaded on demand via `GET /api/proposals/:id/votes?include=votes`.
+  - Respect the voting-window rules: don't show voting UI before the voting period starts; show results during the voting period and after it ends.
+- Back-end/API:
+  - Extend votes API to optionally return vote rows (`include=votes`) and avoid PostgREST aggregate limitations by computing tallies in code.
+  - Persist vote metadata when voting:
+    - `cargo`: role label saved from onboarding (including "Outro").
+    - `discussion_mode`: `'no_discussion' | 'pedagogic' | 'decision_making'`.
+- Database (Supabase):
+  - Add `cargo` and `discussion_mode` columns to `public.proposal_votes` with defaults and a CHECK constraint.
+  - Backfill existing rows so display works consistently.
+
+**Acceptance criteria:**
+1) On `/proposals/[id]/preview`, after results render, a "Ver votos" button appears when `totalVotes > 0`.
+2) Clicking "Ver votos" expands a table with columns: ID (truncated user id), Vote, Date (relative + absolute), Cargo, Mode.
+3) Voting from preview saves: `context='preview'`, `discussion_mode='no_discussion'`, `cargo` from onboarding role.
+4) Voting from end-of-discussion saves: `context='discussion'`, `discussion_mode` matches the chosen discussion mode, `cargo` from onboarding role.
+5) Existing constraint "one vote per user per proposal" remains enforced (no duplicate votes).

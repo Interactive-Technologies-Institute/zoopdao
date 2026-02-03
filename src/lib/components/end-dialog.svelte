@@ -444,13 +444,26 @@
 		// Persist proposal vote (single vote per user per proposal enforced by DB)
 		if (voteRequired && vote && proposalId) {
 			try {
-				const { data: { session } } = await supabase.auth.getSession();
+				let { data: { session } } = await supabase.auth.getSession();
+				if (!session) {
+					const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
+					if (!anonError && anonData.session) {
+						session = anonData.session;
+					}
+				}
 				const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 				if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+				const cargo = getOnboardingRoleLabel();
+				const mode = gameState?.mode ?? null;
 				const res = await fetch(`/api/proposals/${proposalId}/votes`, {
 					method: 'POST',
 					headers,
-					body: JSON.stringify({ choice: vote, context: 'discussion' })
+					body: JSON.stringify({
+						choice: vote,
+						context: 'discussion',
+						cargo,
+						mode
+					})
 				});
 				// If already voted (e.g. voted in preview), treat as success and continue.
 				if (!res.ok && res.status !== 409) {
