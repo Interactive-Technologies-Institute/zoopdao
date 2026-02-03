@@ -1,4 +1,5 @@
 import type { Player, AIAgent, Participant, Role } from '@/types';
+import { AI_NONHUMAN_PERSONAS } from '$lib/data/ai-nonhumans';
 
 const TOTAL_PARTICIPANTS = 6;
 const MIN_HUMANS = 1;
@@ -38,19 +39,31 @@ export function generateAIAgents(count: number, existingRoles: Role[] = []): AIA
 	const availableRoles = allRoles.filter(role => !existingRoles.includes(role));
 	
 	const agents: AIAgent[] = [];
-	const aiNames = [
-		'Alex', 'Sam', 'Jordan', 'Taylor', 'Morgan',
-		'Casey', 'Riley', 'Quinn', 'Avery', 'Blake'
-	];
+	// ZD-179: Non-human representatives of the Aquarium (AVG).
+	// Keep the same color/position (driven by `role`) but change persona name/cargo.
+	// This mapping is intentionally stable so the assembly feels consistent.
+	const personaNameByRole: Partial<Record<Role, string>> = {
+		administration: 'Galeria', // bottom-left (lime)
+		research: 'Tuga', // top-left (emerald)
+		reception: 'Aquari', // top-center (sky)
+		operations: 'Tropicus', // top-right (amber)
+		bar: 'Doce', // bottom-right (red)
+		// cleaning: (fallback below)
+	};
+
+	const defaultCycleNames = AI_NONHUMAN_PERSONAS.map((p) => p.name);
 	
 	for (let i = 0; i < count; i++) {
 		const roleIndex = i % availableRoles.length;
 		const role = availableRoles[roleIndex] || allRoles[i % allRoles.length];
-		const nameIndex = i % aiNames.length;
+		const fallbackNameIndex = i % defaultCycleNames.length;
+		const name = personaNameByRole[role] ?? defaultCycleNames[fallbackNameIndex] ?? `AI ${i + 1}`;
+		const personaKey =
+			AI_NONHUMAN_PERSONAS.find((p) => p.name === name)?.key ?? AI_NONHUMAN_PERSONAS[fallbackNameIndex]?.key;
 		
 		agents.push({
-			id: `ai-agent-${i + 1}`,
-			name: aiNames[nameIndex] + (i > aiNames.length - 1 ? ` ${Math.floor(i / aiNames.length) + 1}` : ''),
+			id: `ai-agent-${personaKey ?? i + 1}`,
+			name,
 			role: role
 		});
 	}

@@ -3,6 +3,8 @@
 import { Bot } from 'lucide-svelte';
 import { onMount } from 'svelte';
 import ChatCircleHover from './chat-circle-hover.svelte';
+import { getAINonHumanCargoLabel } from '$lib/data/ai-nonhumans';
+import { getLocale } from '@src/paraglide/runtime.js';
 
 interface AIAgentProps {
 	agent: AIAgent;
@@ -96,6 +98,8 @@ const roleColorClass = $derived.by(() => {
 			return 'bg-emerald-500';
 	}
 });
+
+const cargoLabel = $derived.by(() => getAINonHumanCargoLabel(agent.name, getLocale()));
 </script>
 
 <div class="relative inline-block">
@@ -115,8 +119,11 @@ const roleColorClass = $derived.by(() => {
 			{agent.name}
 		</div>
 		<!-- Agent Role Badge -->
-		<div class="text-xs text-gray-600 text-center max-w-[80px] truncate">
-			{agent.role}
+		<div
+			class="text-[11px] md:text-xs leading-tight text-gray-600 text-center max-w-[120px] md:max-w-[140px] whitespace-pre-line break-normal line-clamp-2 min-h-[2.25rem] md:min-h-[2.5rem]"
+			title={cargoLabel}
+		>
+			{cargoLabel}
 		</div>
 	</div>
 	

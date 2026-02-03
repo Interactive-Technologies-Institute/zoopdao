@@ -16,18 +16,13 @@ const DEFAULT_ENDPOINT =
 	'https://api.iaedu.pt/agent-chat//api/v1/agent/cmamvd3n40000c801qeacoad2/stream';
 const USER_INFO_PREFIX = 'zoopdao';
 
-const roleSystemPrompts: Record<AiAgentRole, string> = {
-	administration: `You are an Administration role participant in the Aquário Vasco da Gama governance assembly.`,
-	research: `You are a Research role participant in the Aquário Vasco da Gama governance assembly.`,
-	reception: `You are a Reception role participant in the Aquário Vasco da Gama governance assembly.`,
-	operations: `You are an Operations role participant in the Aquário Vasco da Gama governance assembly.`,
-	bar: `You are a Bar role participant in the Aquário Vasco da Gama governance assembly.`,
-	cleaning: `You are a Cleaning role participant in the Aquário Vasco da Gama governance assembly.`
-};
-
 function buildPrompt(request: AiGenerateRequest): string {
+	const orgName = request.organizationName?.trim();
+	const orgLine = orgName ? `Organization: ${orgName}` : null;
 	const promptParts = [
-		roleSystemPrompts[request.agentRole] ?? roleSystemPrompts.administration,
+		request.systemPrompt?.trim() || null,
+		orgLine,
+		request.agentName?.trim() ? `Agent: ${request.agentName.trim()}` : null,
 		`Round: ${request.round}`,
 		request.proposalPoint ? `Proposal point:\n${request.proposalPoint}` : null,
 		request.ragContext ? `RAG context:\n${request.ragContext}` : null,
