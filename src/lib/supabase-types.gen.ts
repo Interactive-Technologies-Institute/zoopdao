@@ -522,6 +522,7 @@ export type Database = {
           character: Json
           character_search: unknown
           created_at: string
+          discussion_mode: string | null
           discussion_id: string
           discussion_title: string
           full_discussion: string
@@ -537,6 +538,7 @@ export type Database = {
           character: Json
           character_search?: unknown
           created_at?: string
+          discussion_mode?: string | null
           discussion_id?: string
           discussion_title: string
           full_discussion: string
@@ -552,6 +554,7 @@ export type Database = {
           character?: Json
           character_search?: unknown
           created_at?: string
+          discussion_mode?: string | null
           discussion_id?: string
           discussion_title?: string
           full_discussion?: string
@@ -668,6 +671,7 @@ export type Database = {
               p_card_types: string[]
               p_character: Json
               p_discussion_title: string
+              p_discussion_mode?: string
               p_full_discussion: string
               p_player_name: string
               p_proposal_id?: number
@@ -680,6 +684,7 @@ export type Database = {
             Args: {
               p_character: Json
               p_discussion_title: string
+              p_discussion_mode?: string
               p_player_name: string
               p_proposal_id?: number
               p_rounds: Json

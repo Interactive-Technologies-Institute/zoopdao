@@ -33,7 +33,7 @@
 	let cards = data.cards;
 	let proposal = data.proposal;
 
-	let storyCharacter = story.character.type;
+	let storyCharacter = (story.character?.type ?? 'custom') as any;
 
 	let sortedRounds = Object.entries(story.rounds)
 		.map(([key, round]) => ({
@@ -63,6 +63,8 @@
 	}
 
 	function getRoleLabel(): string {
+		const customRole = (story.character as any)?.custom_role as string | null | undefined;
+		if (customRole && customRole.trim().length > 0) return customRole.trim();
 		const type = story.character?.type as unknown as string | null | undefined;
 		if (type) {
 			const roleKey = `character_${type}_title`;
@@ -82,6 +84,12 @@
 		if (vote === 'no') return m.vote_no();
 		if (vote === 'abstain') return m.vote_abstain();
 		return vote;
+	}
+
+	function getModeLabel(mode: string | null | undefined): string {
+		if (mode === 'pedagogic') return m.pedagogic_mode();
+		if (mode === 'decision_making') return m.decision_making_mode();
+		return '-';
 	}
 
 	async function copyToClipboard() {
@@ -208,6 +216,10 @@
 				<p class="text-lg">
 					<span class="text-gray-500">{getLocale() === 'pt' ? 'Cargo' : 'Role'}:</span>
 					<span class="font-bold text-black"> {getRoleLabel()}</span>
+				</p>
+				<p class="text-lg">
+					<span class="text-gray-500">{getLocale() === 'pt' ? 'Modo' : 'Mode'}:</span>
+					<span class="font-bold text-black"> {getModeLabel((story as any)?.discussion_mode ?? null)}</span>
 				</p>
 				<p class="text-lg">
 					<span class="text-gray-500">{getLocale() === 'pt' ? 'Voto final' : 'Final vote'}:</span>

@@ -9,6 +9,7 @@ const mapDiscussionToStory = (discussion: SavedDiscussion): SavedStory => ({
 	story_id: discussion.discussion_id,
 	created_at: discussion.created_at,
 	proposal_id: discussion.proposal_id,
+	discussion_mode: discussion.discussion_mode ?? null,
 	player_name: discussion.player_name,
 	story_title: discussion.discussion_title,
 	character: discussion.character,

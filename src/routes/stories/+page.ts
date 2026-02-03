@@ -16,6 +16,7 @@ const mapDiscussionToStory = (
 		typeof discussion.proposal_id === 'number'
 			? proposalTitleById.get(discussion.proposal_id) ?? null
 			: null,
+	discussion_mode: discussion.discussion_mode ?? null,
 	player_name: discussion.player_name,
 	story_title: discussion.discussion_title,
 	character: discussion.character,
@@ -32,6 +33,7 @@ export const load = (async ({ url }) => {
 	const character = url.searchParams.get('character') ?? '';
 	const proposalIdRaw = url.searchParams.get('proposalId');
 	const proposalId = proposalIdRaw ? parseInt(proposalIdRaw) : null;
+	const mode = url.searchParams.get('mode') ?? '';
 	const sort = url.searchParams.get('sort') ?? 'latest';
 
 	// Start building the query
@@ -61,6 +63,10 @@ export const load = (async ({ url }) => {
 
 	if (proposalId && !Number.isNaN(proposalId)) {
 		query = query.eq('proposal_id', proposalId);
+	}
+
+	if (mode === 'pedagogic' || mode === 'decision_making') {
+		query = query.eq('discussion_mode', mode);
 	}
 
 	// Calculate pagination
@@ -168,6 +174,7 @@ export const load = (async ({ url }) => {
 			search,
 			character,
 			proposalId,
+			mode,
 			sort
 		}
 	};

@@ -30,6 +30,8 @@
 	}
 
 	function getRoleLabel(): string {
+		const customRole = (data.character as any)?.custom_role as string | null | undefined;
+		if (customRole && customRole.trim().length > 0) return customRole.trim();
 		const type = data.character?.type;
 		if (type) {
 			const roleKey = `character_${type}_title`;
@@ -51,6 +53,12 @@
 		if (vote === 'no') return m.vote_no();
 		if (vote === 'abstain') return m.vote_abstain();
 		return vote;
+	}
+
+	function getModeLabel(mode: string | null | undefined): string {
+		if (mode === 'pedagogic') return m.pedagogic_mode();
+		if (mode === 'decision_making') return m.decision_making_mode();
+		return '-';
 	}
 
 	let isCopied = $state(false);
@@ -102,6 +110,10 @@
 				<p>
 					<span class="text-gray-500">{getLocale() === 'pt' ? 'Cargo' : 'Role'}:</span>
 					<span class="font-bold"> {getRoleLabel()}</span>
+				</p>
+				<p>
+					<span class="text-gray-500">{getLocale() === 'pt' ? 'Modo' : 'Mode'}:</span>
+					<span class="font-bold"> {getModeLabel((data as any)?.discussion_mode ?? null)}</span>
 				</p>
 				<p>
 					<span class="text-gray-500">{getLocale() === 'pt' ? 'Voto final' : 'Final vote'}:</span>

@@ -105,6 +105,7 @@ export type PlayerState =
 
 export type StoryCharacter = {
 	type: Character;
+	custom_role?: string | null;
 	nickname: string;
 	description: string;
 };
@@ -123,6 +124,7 @@ export type SavedStory = {
 	proposal_id?: number | null;
 	// Optional display field (not persisted in saved_discussions); used by UI when we join proposals.
 	proposal_title?: string | null;
+	discussion_mode?: 'pedagogic' | 'decision_making' | null;
 	player_name: string;
 	story_title: string;
 	character: StoryCharacter;
@@ -137,6 +139,7 @@ export type SavedDiscussion = {
 	discussion_id: string;
 	created_at: string;
 	proposal_id: number | null;
+	discussion_mode?: 'pedagogic' | 'decision_making' | null;
 	player_name: string;
 	discussion_title: string;
 	character: StoryCharacter;
