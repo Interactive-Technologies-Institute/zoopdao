@@ -2562,7 +2562,7 @@ f) UI polish included in the same changeset
 
 ---
 
-## ZD-191: New main page
+## ZD-191: Epic - New main page
 
 **Overview:**
 Create a new onboarding/start flow on the existing main URL (`/`) using a containerized dialog (Typeform-style) before revealing the current main page actions. This ticket also includes routing cleanup (`/[code]/assembly`) and a pedagogic-mode timer configuration dialog stored in the DB.
