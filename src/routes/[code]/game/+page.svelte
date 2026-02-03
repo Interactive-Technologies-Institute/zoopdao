@@ -28,6 +28,7 @@
 	import {
 		storeHumanMessage,
 		getDiscussionMessages,
+		getProposalMessages,
 		getChatHistoryForAI,
 		storeAIMessage,
 		mapDiscussionMessageRow
@@ -140,6 +141,7 @@
 	let previousRound = $state(0);
 	
 	const enableDiscussionChat = true;
+	const ENABLE_DISCUSSION_RELOAD = true;
 	const chatRound = $derived.by(() => gameState.currentRound === 7);
 	const SINGLE_AI_MODE_ROUND7 = false;
 	const MAX_USER_MESSAGES_ROUND7 = 5;
@@ -466,6 +468,32 @@ function handleTransitionComplete() {
 		return clientTempId;
 	}
 
+	function getDiscussionStorageKeys(round: number) {
+		const keys: string[] = [];
+		if (data.proposalId) keys.push(`proposal:${data.proposalId}`);
+		if (data.game?.code) keys.push(`gamecode:${data.game.code}`);
+		keys.push(`game:${data.game.id}`);
+		return keys.map((base) => `discussion:${base}:round:${round}`);
+	}
+
+	function loadCachedDiscussion(round: number): TimelineMessage[] {
+		if (typeof window === 'undefined') return [];
+		try {
+			const keys = getDiscussionStorageKeys(round);
+			for (const key of keys) {
+				const raw = window.localStorage.getItem(key);
+				if (!raw) continue;
+				const parsed = JSON.parse(raw);
+				if (Array.isArray(parsed) && parsed.length > 0) {
+					return parsed as TimelineMessage[];
+				}
+			}
+			return [];
+		} catch {
+			return [];
+		}
+	}
+
 	const discussionMessages = $derived.by(() =>
 		discussionTimeline.messages.map((msg) => ({
 			id: msg.key,
@@ -478,9 +506,40 @@ function handleTransitionComplete() {
 		}))
 	);
 
+	const aiIsThinking = $derived.by(() => typingAgents.size > 0);
+	let debouncedAiIsThinking = $state(false);
+	let aiThinkingClearTimer: ReturnType<typeof setTimeout> | null = null;
+	$effect(() => {
+		if (aiIsThinking) {
+			if (aiThinkingClearTimer) {
+				clearTimeout(aiThinkingClearTimer);
+				aiThinkingClearTimer = null;
+			}
+			debouncedAiIsThinking = true;
+			return;
+		}
+		if (aiThinkingClearTimer) clearTimeout(aiThinkingClearTimer);
+		aiThinkingClearTimer = setTimeout(() => {
+			debouncedAiIsThinking = false;
+			aiThinkingClearTimer = null;
+		}, 300);
+	});
+
+	$effect(() => {
+		if (!enableDiscussionChat || !chatRound || !ENABLE_DISCUSSION_RELOAD) return;
+		if (typeof window === 'undefined') return;
+		try {
+			for (const key of getDiscussionStorageKeys(gameState.currentRound)) {
+				window.localStorage.setItem(key, JSON.stringify(discussionTimeline.messages));
+			}
+		} catch {
+			// Ignore storage errors (quota, private mode).
+		}
+	});
+
 	// Derive per-agent messages for the participants ring from the same timeline.
 	$effect(() => {
-		if (!enableDiscussionChat || !chatRound || !hasUserChattedThisRound) {
+		if (!enableDiscussionChat || !chatRound) {
 			aiMessages = [];
 			return;
 		}
@@ -510,14 +569,116 @@ function handleTransitionComplete() {
 			}));
 	});
 
+	const latestAiMessageById = $derived.by(() => {
+		const map: Record<string, string> = {};
+		if (!enableDiscussionChat || !chatRound) return map;
+		aiAgents.length;
+		const resolveAgentId = (msg: TimelineMessage) => {
+			if (msg.senderType !== 'ai') return msg.senderId;
+			const role =
+				msg.senderRole ??
+				(msg.senderId.startsWith('role:') ? (msg.senderId.slice(5) as Role) : null);
+			if (role) {
+				const found = aiAgents.find((a) => a.role === role);
+				if (found) return found.id;
+			}
+			return msg.senderId.startsWith('role:') ? msg.senderId.slice(5) : msg.senderId;
+		};
+		for (const msg of discussionTimeline.messages) {
+			if (msg.senderType !== 'ai') continue;
+			if (msg.round !== gameState.currentRound) continue;
+			const id = resolveAgentId(msg);
+			map[id] = msg.content;
+		}
+		// Fallback to aiMessages if timeline is empty
+		if (Object.keys(map).length === 0 && aiMessages.length > 0) {
+			for (const m of aiMessages) {
+				if (m.round !== gameState.currentRound) continue;
+				map[m.agent_id] = m.content;
+			}
+		}
+		return map;
+	});
+
+	const DEBUG_PREVIEW = false;
+
+	const previewStateBySender = $derived.by(() => {
+		const state: Record<string, { open: boolean; rank: number }> = {};
+		if (!enableDiscussionChat || !chatRound) return state;
+
+		// Gather messages (AI + user) from timeline; fallback to aiMessages + userLastSentMessage
+		let pool = discussionTimeline.messages.filter(
+			(msg) => msg.round === gameState.currentRound && msg.content.trim().length > 3
+		);
+
+		// Fallback if timeline is empty
+		if (pool.length === 0) {
+			pool = aiMessages
+				.filter((m) => m.round === gameState.currentRound && m.content.trim().length > 3)
+				.map((m) => ({
+					key: m.id,
+					dbId: undefined,
+					clientTempId: undefined,
+					round: m.round,
+					senderType: 'ai',
+					senderId: m.agent_id,
+					content: m.content,
+					createdAt: m.created_at,
+					status: 'sent'
+				})) as any;
+			if (userLastSentMessage && userLastSentMessage.trim().length > 3) {
+				pool.push({
+					key: 'user-latest',
+					round: gameState.currentRound,
+					senderType: 'human',
+					senderId: String(data.playerId),
+					content: userLastSentMessage,
+					createdAt: new Date().toISOString(),
+					status: 'sent'
+				} as any);
+			}
+		}
+
+		const resolveAgentId = (msg: TimelineMessage) => {
+			if (msg.senderType !== 'ai') return msg.senderId;
+			const role =
+				msg.senderRole ??
+				(msg.senderId.startsWith('role:') ? (msg.senderId.slice(5) as Role) : null);
+			if (role) {
+				const found = aiAgents.find((a) => a.role === role);
+				if (found) return found.id;
+			}
+			return msg.senderId.startsWith('role:') ? msg.senderId.slice(5) : msg.senderId;
+		};
+
+		const sorted = [...pool].sort(
+			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+		);
+		const lastTwo = sorted.slice(-2);
+		lastTwo.forEach((msg, idx) => {
+			const senderId = msg.senderType === 'ai' ? resolveAgentId(msg as any) : String(data.playerId);
+			state[senderId] = { open: true, rank: idx };
+		});
+		return state;
+	});
+
+	$effect(() => {
+		if (!DEBUG_PREVIEW) return;
+		console.info('previewStateBySender', previewStateBySender);
+	});
+
+	$effect(() => {
+		if (!DEBUG_PREVIEW) return;
+		console.info('previewStateBySender', previewStateBySender);
+	});
+
 	// Load existing round messages when entering the chat round.
 	$effect(() => {
-		if (!enableDiscussionChat || !chatRound) {
+		if (!enableDiscussionChat || !chatRound || !ENABLE_DISCUSSION_RELOAD) {
 			discussionTimeline.reset();
 			lastLoadedDiscussionRound = null;
 			return;
 		}
-		if (gameState.state !== 'playing' && gameState.state !== 'finished') return;
 
 		const currentRound = gameState.currentRound;
 		if (lastLoadedDiscussionRound === currentRound) return;
@@ -527,8 +688,31 @@ function handleTransitionComplete() {
 		let cancelled = false;
 		(async () => {
 			try {
-				const dbMessages = await getDiscussionMessages(supabase, gameId, { round: currentRound });
+				let dbMessages = await getDiscussionMessages(supabase, gameId, { round: currentRound });
 				if (cancelled) return;
+				if (dbMessages.length === 0 && data.proposalId) {
+					const proposalMessages = await getProposalMessages(supabase, data.proposalId, {
+						round: currentRound
+					});
+					if (cancelled) return;
+					if (proposalMessages.length > 0) {
+						dbMessages = proposalMessages;
+					}
+				}
+
+				if (dbMessages.length === 0) {
+					const cached = loadCachedDiscussion(currentRound);
+					if (cached.length > 0) {
+						discussionTimeline.upsert(cached);
+						const lastHuman = [...cached]
+							.reverse()
+							.find((m) => m.senderType === 'human' && m.senderId === String(data.playerId));
+						if (lastHuman?.content) {
+							userLastSentMessage = lastHuman.content;
+						}
+						return;
+					}
+				}
 
 				const nextTimeline: TimelineMessage[] = [];
 				for (const dbMsg of dbMessages) {
@@ -1091,6 +1275,10 @@ function handleTransitionComplete() {
 				round={gameState.currentRound}
 				userId={data.userId}
 				disabled={!tourCompleted}
+				historyDisabled={!tourCompleted}
+				documentsDisabled={!tourCompleted}
+				inputDisabled={!tourCompleted || debouncedAiIsThinking}
+				lockedPlaceholder={debouncedAiIsThinking ? m.discussion_waiting_placeholder() : null}
 			/>
 			<button
 				type="button"
@@ -1135,16 +1323,18 @@ function handleTransitionComplete() {
 	<ParticipantsContainer
 		participants={participants}
 		playersState={gameState.playersState}
-		aiMessages={chatRound && hasUserChattedThisRound ? aiMessages : []}
+		aiMessages={chatRound ? aiMessages : []}
 		currentRound={gameState.currentRound}
 		{tourCompleted}
 		{transitionState}
 		currentPlayerId={data.playerId}
-		typingAgents={chatRound && hasUserChattedThisRound ? typingAgents : new Set()}
+		typingAgents={chatRound ? typingAgents : new Set()}
 		userChatIsTyping={chatRound ? userIsTyping : false}
 		userChatDraft={chatRound ? userDraft : ''}
 		userChatMessage={chatRound ? userLastSentMessage : null}
 		userChatIsSending={chatRound ? userIsSending : false}
+		latestAiMessageById={latestAiMessageById}
+		previewStateBySender={previewStateBySender}
 		layout={aquariumLayout}
 	/>
 

@@ -2250,27 +2250,377 @@ Deliver a robust, predictable hover expansion for AI + user chat circles that:
 
 ---
 
-## ZD-176e (Optional): Chat Circles advanced layout rules (portrait-inward + multi-message stacks)
+## ZD-176e: Chat Circles UX polish (locks, typing, palette, previews)
 
 **Overview:**
-Extend the Round 7 “chat circles” UI with smarter placement and multi-message handling inspired by Chat Circles, without implementing full clustering.
+Document and accept the extra fixes added while working on ZD‑176 that sit outside the original a–d scope (previews, typing, disabling input, palette).
 
 **Goal:**
-Improve readability and reduce collisions on constrained layouts (portrait/mobile) and in larger groups, while preserving the existing hard bounds (no circles outside the avatar boundary).
+Keep a clear record of incidental improvements so they are not lost: UX locks, typing bubbles, palette consistency, and localized placeholders.
 
-**Description:**
-a) Portrait rule: when the viewport is portrait (or otherwise narrow), force chat circles to render **towards the inside of the aquarium** (invert side automatically) so they don’t run off-screen.\n
-b) Multi-message rule: when a participant has multiple recent messages, render a **stack of 2–3 circles** (most recent on top) with decreasing opacity/scale; if more, show a `+N` indicator.\n
-c) Collision safety: add simple collision/overlap avoidance (or fallback) so stacks don’t overlap key UI or each other on small screens.\n
-d) Clamp: enforce that circles/snippets never escape the existing `.avatar-boundary` limits.\n
-e) Optional: decide whether “inside” means toward the aquarium center (radial) vs. toward screen center; validate on iPhone SE + iPad mini portrait.
+**What was done:**
+- Input bar text + send are temporarily locked while any AI is “thinking”, debounced (~300 ms) to avoid flicker; history/docs buttons remain usable.
+- “Wait while others finish” placeholder is localized (PT/EN) and shown only while locked; normal placeholder restored when unlocked.
+- Typing balloons re-enabled for both user and AIs (AI shows whenever `isTyping`; user shows while typing/sending).
+- Avatar/chat-circle color palette standardized by role (reception sky, research emerald, operations amber, bar red, administration lime, cleaning teal); history/docs icons switched to white.
+- Chat-preview logic keeps within aquarium boundary and respects max‑2 open previews; latest preview is frontmost.
+- Toggle kept to optionally skip loading persisted history for debugging.
 
 **Acceptance Criteria:**
-1) In portrait, chat circles consistently render inward (towards aquarium center) for all participants.\n
-2) With multiple messages per participant, stacks render up to 3 circles and `+N` appears when overflow.\n
-3) Circles never overflow the screen or escape `.avatar-boundary`.\n
-4) No major overlaps with round title/status pill/input bar on iPhone SE and iPad mini.
+1) Lock/unlock flow behaves as above and never disables history/docs.  
+2) Localized waiting placeholder appears only while locked.  
+3) Typing balloons visible for user and any AI that is typing.  
+4) Role colors and white history/docs icons render as defined.  
+5) Max two previews open; newest appears on top and all stay inside the avatar boundary.
 
 **Completion Criteria:**
-1) Manual verification on iPhone SE, iPhone, iPad mini (portrait + landscape), and desktop.\n
-2) Verified with 6 participants (1 user + 5 AIs) and multiple messages each.
+Manual verification on iPhone SE, iPhone, iPad mini, iPad 11, and desktop (portrait/landscape where relevant) with 1 user + 5 AIs and persisted-history toggle both on/off.
+## ZD-149: Enable player cards and badges with .svg + fix flips + fix long text formatting
+
+**Overview:**
+Re-enable SVG-based player cards and badges in ZoopDAO (as in Loga Culture), audit and fix card flip behavior, and improve text formatting for oversized card content.
+
+**Goal:**
+Match the Loga Culture SVG card/badge pipeline, ensure flips are correct and consistent, and keep long card text readable without overflow.
+
+**Description:**
+a) Audit current card/badge rendering and compare with Loga Culture SVG path rules (player.character and card.type based).
+b) Implement/restore SVG mapping for badges and cards using string interpolation paths.
+c) Define role/user color palette applied to user badge circle and chat balloon, distinct per user and different from AI colors; use darker tones aligned with BoS base colors.
+d) Simplify role card colors to black/gray/white only, keeping text contrast readable.
+e) Audit flip behavior and fix regressions (rotation, backface visibility, click handlers).
+f) When the UI shows a single-card view, switch that view to a 3-row x 2-column grid layout (mobile-first).
+g) Fix long-text formatting on cards (clamp, wrap, or scale), ensuring readability on small screens.
+h) Modules/scripts to review: player badge component, character card/option components, card rendering component, CSS flip rules, text styles, card grid layout styles, role color mapping utilities.
+
+**Acceptance Criteria:**
+1) Player badges render SVGs using player.character-based paths.
+2) Character cards render SVGs using character-based paths; game cards render SVGs using card.type.
+3) User badge circle and chat balloon use role/user colors that are distinct per user and different from AI colors, aligned with darker BoS tones.
+4) Role card colors use only black/gray/white with readable contrast.
+5) Card flip works reliably after selection (front/back visibility correct, no mirrored text).
+6) In the single-card view, lobby, the layout displays a 3x2 grid arrangement (mobile-first).
+7) Long card text does not overflow; remains readable on mobile and desktop.
+8) No layout regressions in lobby, map, or round views.
+
+**Completion Criteria:**
+1) Visual verification of badges/cards/flip on mobile + desktop.
+2) Long-text case verified with at least one oversized card title/body.
+
+---
+
+## ZD-149a: Audit current card/badge SVG rendering (Loga Culture parity)
+
+**Overview:**
+Inventory current card and badge rendering paths and compare with Loga Culture’s SVG mapping rules.
+
+**Goal:**
+Identify all components and data fields needed to restore SVG-based rendering.
+
+**Description:**
+a) Locate current badge and card renderers in ZoopDAO.
+b) Compare to Loga Culture path mapping rules (player.character, character, card.type).
+c) List missing SVG assets or broken paths.
+d) Document the final mapping table for use in implementation.
+
+**Acceptance Criteria:**
+1) All badge/card render locations are identified.
+2) Required SVG path mapping rules are documented.
+
+**Completion Criteria:**
+1) Mapping table reviewed and ready for implementation.
+
+---
+
+## ZD-149b: Restore SVG mapping for badges and cards
+
+**Overview:**
+Re-enable SVG rendering for player badges, character cards, and game cards using path interpolation.
+
+**Goal:**
+Match Loga Culture’s SVG pipeline for consistent visual assets.
+
+**Description:**
+a) Map player.character to badge SVG paths.
+b) Map character to character card SVG paths.
+c) Map card.type to game card SVG paths.
+d) Ensure fallbacks are handled when assets are missing.
+
+**Acceptance Criteria:**
+1) Badges render via player.character SVGs.
+2) Character cards render via character SVGs.
+3) Game cards render via card.type SVGs.
+
+**Completion Criteria:**
+1) Visual check confirms SVGs appear in lobby + gameplay screens.
+
+---
+
+## ZD-149c: Role/user palette for badge circle + chat balloon
+
+**Overview:**
+Apply role/user color palette to user badge circle and chat balloon, distinct per user and different from AI.
+
+**Goal:**
+Make user identity colors consistent and readable, aligned to darker BoS tones.
+
+**Description:**
+a) Define a role/user color palette aligned to BoS base colors (darker tones).
+b) Ensure each user’s color is distinct from other users.
+c) Ensure user colors differ from AI colors.
+d) Apply to badge circle and chat balloon.
+
+**Acceptance Criteria:**
+1) User badge circles and chat balloons use the role/user palette.
+2) Colors are distinct per user and different from AI.
+3) Contrast remains readable (black/white where needed).
+
+**Completion Criteria:**
+1) Visual verification across multiple users in a round.
+
+---
+
+## ZD-149d: Simplify role card colors to black/gray/white
+
+**Overview:**
+Reduce role card colors to a black/gray/white palette for clarity and consistency.
+
+**Goal:**
+Keep role cards minimal and readable regardless of theme.
+
+**Description:**
+a) Replace role card colors with black/gray/white palette.
+b) Ensure text and icon contrast remains readable.
+
+**Acceptance Criteria:**
+1) Role cards use only black/gray/white.
+2) Text remains readable on mobile and desktop.
+
+**Completion Criteria:**
+1) Visual verification on at least two screen sizes.
+
+---
+
+## ZD-149e: Fix card flip behavior after selection
+
+**Overview:**
+Audit and correct card flip behavior to ensure clean front/back transitions.
+
+**Goal:**
+Eliminate flip regressions and mirrored text.
+
+**Description:**
+a) Audit flip CSS (rotateY, preserve-3d, backface-visibility).
+b) Ensure click handler triggers flip only when valid.
+c) Validate front/back visibility and orientation.
+
+**Acceptance Criteria:**
+1) Flip works reliably after selection.
+2) No mirrored or inverted text appears.
+
+**Completion Criteria:**
+1) Manual verification in the lobby selection flow.
+
+---
+
+## ZD-149f: Single-card view → 3x2 grid layout
+
+**Overview:**
+Update the single-card view layout to a 3-row x 2-column grid (mobile-first).
+
+**Goal:**
+Improve readability and structure for single-card presentation.
+
+**Description:**
+a) Define a 3x2 grid layout for single-card view content.
+b) Apply responsive rules for mobile-first scaling.
+c) Ensure layout does not break in desktop view.
+
+**Acceptance Criteria:**
+1) Single-card view renders as a 3x2 grid.
+2) Layout remains readable on mobile and desktop.
+
+**Completion Criteria:**
+1) Visual verification on mobile + desktop.
+
+---
+
+## ZD-149g: Long-text formatting on cards
+
+**Overview:**
+Prevent long card text from overflowing and ensure readability.
+
+**Goal:**
+Keep text legible across devices without layout breaks.
+
+**Description:**
+a) Add wrapping/clamping rules for long titles and body text.
+b) Apply responsive font sizing if needed.
+c) Validate with oversized text examples.
+
+**Acceptance Criteria:**
+1) Long text does not overflow card bounds.
+2) Text remains readable on small screens.
+
+**Completion Criteria:**
+1) Long-text case verified with at least one oversized card title/body.
+
+---
+
+## ZD-149h: Visual QA and regression check
+
+**Overview:**
+Final pass to verify all updates do not regress key screens.
+
+**Goal:**
+Confirm badges, cards, colors, flips, layout, and text formatting work together.
+
+**Description:**
+a) Verify badge and card SVGs in lobby and gameplay.
+b) Check user badge + chat balloon colors with multiple users.
+c) Validate flip behavior and text formatting.
+d) Confirm no regressions in lobby, map, or round views.
+
+**Acceptance Criteria:**
+1) All visual elements render as expected.
+2) No regressions detected across key screens.
+
+**Completion Criteria:**
+1) Manual verification on mobile and desktop.
+
+---
+
+## ZD-177: Voting on proposal preview + end-of-discussion (single vote)
+
+**Overview:**
+Add direct voting (yes/no/abstain) on each proposal preview page, show results during the voting window, and enforce a single vote per user per proposal across both the preview and end-of-discussion dialog.
+
+**Goal:**
+Enable participants to vote either before starting the discussion or at the end of the discussion (round 7), while guaranteeing they can only vote once per proposal and keeping results consistent with the voting period.
+
+**Description:**
+a) Proposal Preview UI (`/proposals/{id}/preview`)
+   - Add a vote card with 3 options: yes/no/abstain.
+   - Vote submit button is disabled unless an option is selected and the period is open.
+   - Disabled vote state uses a neutral gray (consistent with other disabled CTA buttons).
+   - Show a results panel (counts + percentages) only while the proposal is in an open voting period.
+   - Show localized voting period range in the header (PT should be Portuguese formatting).
+   - Show creation date in the header:
+     - For `february-2026-exceptional`, treat as created on **December 11, 2025**.
+     - Otherwise, use the `created_at` returned from the DB for proposals created in the platform.
+   - Do not show voting UI or results when the voting period is closed (or not started).
+
+b) End-of-discussion vote (Save Dialog)
+   - In the “end dialog” (after discussion), display vote options matching the preview sizing and selection colors.
+   - Before showing vote options, query if the current user already voted for the proposal:
+     - If already voted (e.g., in preview), hide vote controls and update the submit CTA copy to remove “and vote”.
+     - If not voted yet, allow voting here and persist to DB as a “discussion” context vote.
+
+c) Data + API
+   - Create `proposal_votes` table (RLS-enabled) enforcing one vote per `(proposal_id, user_id)`:
+     - `choice`: `yes | no | abstain`
+     - `context`: `preview | discussion`
+     - `created_at` timestamp
+   - Add API endpoints:
+     - `GET /api/proposals/{id}/votes` returns totals and (when authorized) the user’s vote + context.
+     - `POST /api/proposals/{id}/votes` inserts a vote and rejects duplicates (409).
+   - Vote persistence must be guarded by voting period status:
+     - Votes can only be submitted while the proposal is in an open voting period.
+
+d) Exceptional voting period correctness
+   - Ensure `february-2026-exceptional` is **February 1–28, 2026**.
+   - Ensure any UI date labels match this period.
+
+**Acceptance Criteria:**
+1) Preview vote card renders on `/proposals/{id}/preview` and offers yes/no/abstain with consistent selection styling.
+2) Vote submission is only possible during an open voting period; outside the period voting controls/results are hidden.
+3) Results (counts + %) are shown only during an open voting period and update after a successful vote.
+4) Each user can vote only once per proposal:
+   - If a user votes in preview, the end-of-discussion dialog hides vote controls and the submit button text does not include “and vote”.
+   - If a user votes at the end-of-discussion, preview vote is disabled for that user.
+5) `proposal_votes` enforces uniqueness on `(proposal_id, user_id)` at the database level.
+6) API behavior:
+   - `POST` duplicates return 409.
+   - `POST` outside an open voting window returns 400.
+   - `GET` returns totals and returns user vote/context when authorized.
+7) Creation date shown in preview:
+   - For `february-2026-exceptional` proposals it displays **December 11, 2025**.
+   - For other proposals it displays the proposal `created_at` from the DB.
+8) Portuguese mode shows Portuguese date formatting for the voting period and created date.
+
+**Completion Criteria:**
+1) DB migration applied and verified (table exists, RLS enabled, uniqueness index present).
+2) Manual verification:
+   - Vote in preview then open end dialog: vote controls hidden; submit CTA copy excludes “e votar”.
+   - Vote in end dialog then open preview: preview voting disabled for that user.
+   - Open vs closed periods correctly show/hide voting UI/results.
+3) Smoke test API endpoints returning expected responses (200/201, 400, 409).
+
+---
+
+## ZD-190: Browse histories + saved discussion metadata (cargo + voto final)
+
+**Overview:**
+Improve the saved discussions (Browse histories) experience so that it reflects the ZoopDAO role-based model and makes it easy to understand who participated, in which role (cargo), and what the final vote was.
+
+**Goal:**
+When browsing or opening a saved discussion, users can immediately see:
+1) Proposal context (title / proposal filter),
+2) Role (cargo) used in the discussion,
+3) Final vote (yes/no/abstain).
+
+**Description:**
+a) Browse histories filters + proposal context (`/stories`)
+   - Remove/disable the text search input.
+   - Rename filters:
+     - "Filtrar por personagem" -> "Filtrar por cargo"
+     - "Filtrar por carta" -> "Filtrar por proposta"
+   - Replace the previous "card type" filter with a proposal filter:
+     - Show proposal options as chips (label = first 3 words + ellipsis).
+     - Only include proposals that already have at least one public saved discussion.
+   - Show proposal title on discussion cards when `proposal_id` exists (instead of generic "Discussao Final").
+
+b) Story cards (list view) (`/stories`)
+   - Show metadata on each card:
+     - Cargo (from saved discussion role key)
+     - Voto final (yes/no/abstain; "-" when missing)
+   - Update the player badge to match the live discussion user badge:
+     - User icon on gray background with a black ring (no inner white ring).
+
+c) Saved discussion page (`/stories/{story_id}`)
+   - Show title as the proposal title when available.
+   - Display metadata in this order:
+     1) Cargo
+     2) Voto final
+     3) Participante (name)
+   - Do not show "Sem descricao..." placeholder when the description is empty.
+
+d) Save dialog (end-of-discussion)
+   - Replace "Unknown Character" with the correct cargo label (from `player.role`).
+   - Ensure the current user badge matches the discussion user badge (icon + black circle).
+
+e) Persist role into saved discussions
+   - When saving a discussion, persist the selected role into `p_character.type` so it can be shown later in Browse histories and the saved discussion page.
+
+f) UI polish included in the same changeset
+   - Card long text: add "Ver mais" expansion behavior (hover/click) instead of overflow.
+   - Discussion input bar: "History" and "Documents" buttons are white with black icons; active state is yellow; yellow ring around the button.
+   - Timer: warning/ticking behavior starts at half of the configured duration (instead of always below 1 minute).
+   - Browse histories dropdown: role filter dropdown height fits content (no oversized empty dropdown).
+   - i18n: add role title keys (PT/EN) for administration/research/reception/operations/bar/cleaning.
+   - Seeds: fix Portuguese prompt typo in SQL seeds.
+
+**Acceptance Criteria:**
+1) Browse histories has no visible search input.
+2) Browse histories filters are "Filtrar por cargo" and "Filtrar por proposta".
+3) Proposal filter only lists proposals that have at least one public saved discussion.
+4) Discussion cards show cargo + voto final, and use proposal title when available.
+5) Saved discussion page shows cargo + voto final + participante (in that order) and hides empty description placeholder.
+6) Save dialog shows cargo (not "Unknown Character") and uses the user icon badge with black ring.
+7) New saved discussions persist role so cargo is not empty when browsing later.
+
+**Completion Criteria:**
+1) Manual test:
+   - Finish a discussion with a chosen cargo and final vote, save it, and confirm list + detail show cargo/voto.
+   - Confirm proposal filter options update based on existing saved discussions.
+2) Visual QA on mobile + desktop (no major regressions).

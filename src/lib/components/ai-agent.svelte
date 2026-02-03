@@ -1,36 +1,40 @@
 <script lang="ts">
 	import type { AIAgent, AIMessage } from '@/types';
-	import { Bot } from 'lucide-svelte';
-	import TypingIndicator from './typing-indicator.svelte';
-	import { onMount } from 'svelte';
+import { Bot } from 'lucide-svelte';
+import { onMount } from 'svelte';
+import ChatCircleHover from './chat-circle-hover.svelte';
 
-	interface AIAgentProps {
-		agent: AIAgent;
-		messages?: AIMessage[];
-		round: number;
-		isActive?: boolean;
-		isTyping?: boolean;
-		bubbleSide?: 'left' | 'right';
-	}
+interface AIAgentProps {
+	agent: AIAgent;
+	messages?: AIMessage[];
+	latestMessage?: string;
+	previewOpen?: boolean;
+	previewRank?: number;
+	round: number;
+	isActive?: boolean;
+	isTyping?: boolean;
+	bubbleSide?: 'left' | 'right';
+	chatBoundsRect?: { left: number; top: number; right: number; bottom: number } | null;
+	aquariumCenter?: { x: number; y: number } | null;
+	maxBubbleDiameter?: number | null;
+}
 
 	let {
 		agent,
 		messages = [],
-		round,
-		isActive = false,
-		isTyping = false,
-		bubbleSide = 'right'
-	}: AIAgentProps = $props();
+		latestMessage = '',
+	previewOpen = false,
+	previewRank = 0,
+	round,
+	isActive = false,
+	isTyping = false,
+	bubbleSide = 'right',
+	chatBoundsRect = null,
+	aquariumCenter = null,
+	maxBubbleDiameter = null
+}: AIAgentProps = $props();
 
 	let canHover = $state(false);
-	let showChatModal = $state(false);
-
-	function snippet(text: string, maxChars = 12) {
-		const t = text.trim().replace(/\s+/g, ' ');
-		if (t.length <= maxChars) return t;
-		return `${t.slice(0, Math.max(0, maxChars - 1))}…`;
-	}
-
 	onMount(() => {
 		if (typeof window === 'undefined') return;
 		const mql = window.matchMedia('(hover: hover) and (pointer: fine)');
@@ -40,7 +44,7 @@
 		return () => mql.removeEventListener?.('change', update);
 	});
 	
-	// Filter messages for current round
+	// Filter messages for current round (fallback when latestMessage is not provided)
 	const currentRoundMessages = $derived(
 		messages.filter(msg => {
 			// Ensure both are numbers for comparison
@@ -62,13 +66,43 @@
 			});
 		}
 	});
+
+const resolvedLatestMessage = $derived(
+	latestMessage && latestMessage.trim().length > 0
+		? latestMessage.trim()
+		: currentRoundMessages.length > 0
+			? currentRoundMessages[currentRoundMessages.length - 1].content.trim()
+			: ''
+);
+
+const showTypingBubble = $derived(isTyping);
+
+const roleColorClass = $derived.by(() => {
+	// Fixed tailwind tokens to avoid theme overrides (no black)
+		switch (agent.role) {
+			case 'reception':
+				return 'bg-sky-400';
+			case 'research':
+				return 'bg-emerald-500';
+			case 'operations':
+				return 'bg-amber-500';
+			case 'bar':
+				return 'bg-red-500';
+			case 'administration':
+				return 'bg-lime-500';
+			case 'cleaning':
+				return 'bg-teal-500';
+			default:
+			return 'bg-emerald-500';
+	}
+});
 </script>
 
 <div class="relative inline-block">
 	<div data-badge-core class="flex flex-col items-center">
 		<!-- AI Agent Avatar -->
 		<div class="relative">
-			<div class="h-12 w-12 md:h-14 md:w-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center border-2 border-blue-500 shadow-lg relative z-20">
+			<div class="h-12 w-12 md:h-14 md:w-14 rounded-full {roleColorClass} flex items-center justify-center border-2 border-white/30 shadow-lg relative z-20">
 				<Bot class="h-6 w-6 md:h-7 md:w-7 text-white" />
 			</div>
 			{#if isActive}
@@ -87,79 +121,24 @@
 	</div>
 	
 	<!-- Chat circle: snippet by default; hover expands; tap opens centered modal on touch devices -->
-	{#if isTyping || currentRoundMessages.length > 0}
-		{@const lastText = currentRoundMessages.length > 0
-			? currentRoundMessages[currentRoundMessages.length - 1].content.trim()
-			: ''}
+	{#if showTypingBubble || resolvedLatestMessage.length > 0}
+		{@const lastText = resolvedLatestMessage}
 		{@const circleSide = bubbleSide === 'left' ? 'right-full mr-2' : 'left-full ml-2'}
 		<div class="absolute top-1/2 -translate-y-1/2 z-30 {circleSide}">
-			<div class="relative group">
-				<button
-					type="button"
-					class="h-9 w-9 rounded-full bg-blue-500 text-white shadow-lg flex items-center justify-center overflow-hidden select-none"
-					aria-label="Open message"
-					onclick={() => {
-						if (!canHover && lastText.length > 0) showChatModal = true;
-					}}
-				>
-					{#if isTyping}
-						<div class="flex items-center gap-1">
-							<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:0ms]"></span>
-							<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:150ms]"></span>
-							<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:300ms]"></span>
-						</div>
-					{:else}
-						<span class="px-1 text-[10px] font-semibold leading-none whitespace-nowrap overflow-hidden text-ellipsis"
-							>{snippet(lastText)}</span
-						>
-					{/if}
-				</button>
-
-				{#if canHover && !isTyping && lastText.length > 0}
-					<div
-						class="pointer-events-none opacity-0 group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity absolute -top-2 {bubbleSide === 'left'
-							? 'right-full mr-2'
-							: 'left-full ml-2'}"
-					>
-						<div
-							class="rounded-2xl bg-blue-500 text-white shadow-xl px-4 py-3 max-w-[min(22rem,calc(100vw-6rem))] whitespace-normal break-words"
-						>
-							<span class="text-xs">{lastText}</span>
-						</div>
-					</div>
-				{/if}
-			</div>
+			<ChatCircleHover
+				text={lastText}
+				isTyping={showTypingBubble}
+				typingStyle="dots"
+				variant="ai"
+				bubbleClass={roleColorClass}
+				forcePreview={previewOpen}
+				previewRank={previewRank}
+				canHover={canHover}
+				boundsRect={chatBoundsRect}
+				aquariumCenter={aquariumCenter}
+				maxDiameter={maxBubbleDiameter}
+			/>
 		</div>
-
-		{#if showChatModal && lastText.length > 0}
-			<div
-				class="fixed inset-0 z-[200] flex items-center justify-center p-4"
-				role="dialog"
-				aria-modal="true"
-				onclick={() => (showChatModal = false)}
-				onkeydown={(e) => {
-					if (e.key === 'Escape') showChatModal = false;
-				}}
-				tabindex="0"
-			>
-				<div class="absolute inset-0 bg-black/40"></div>
-				<div
-					class="relative w-full max-w-[560px] rounded-2xl bg-blue-500 text-white shadow-2xl px-5 py-4"
-					onclick={(e) => e.stopPropagation()}
-				>
-					<button
-						type="button"
-						class="absolute right-3 top-3 h-9 w-9 rounded-full bg-white/15 hover:bg-white/25"
-						aria-label="Close"
-						onclick={() => (showChatModal = false)}
-					>
-						<span class="sr-only">Close</span>
-						<span aria-hidden="true" class="text-lg leading-none">×</span>
-					</button>
-					<div class="text-sm whitespace-normal break-words pr-10">{lastText}</div>
-				</div>
-			</div>
-		{/if}
 	{/if}
 </div>
 

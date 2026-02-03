@@ -62,6 +62,28 @@
 		}
 	}
 
+	function getRoleLabel(): string {
+		const type = story.character?.type as unknown as string | null | undefined;
+		if (type) {
+			const roleKey = `character_${type}_title`;
+			const translated = getTranslation(roleKey);
+			if (translated && translated !== 'Translation missing') return translated;
+			return type
+				.split('-')
+				.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+				.join(' ');
+		}
+		return '-';
+	}
+
+	function getVoteLabel(vote: string | null | undefined): string {
+		if (!vote) return '-';
+		if (vote === 'yes') return m.vote_yes();
+		if (vote === 'no') return m.vote_no();
+		if (vote === 'abstain') return m.vote_abstain();
+		return vote;
+	}
+
 	async function copyToClipboard() {
 		const url = window.location.href;
 		await navigator.clipboard.writeText(url);
@@ -135,11 +157,19 @@
 		return [];
 	}
 
-function getProposalTextForRound(roundNumber: number): string {
-	const points = getProposalPointsForRound(roundNumber);
-	if (points.length === 0) return '';
-	return points.join(' • ');
-}
+	function getProposalTextForRound(roundNumber: number): string {
+		const points = getProposalPointsForRound(roundNumber);
+		if (points.length === 0) return '';
+		return points.join(' • ');
+	}
+
+	function splitChatMessages(text: string): string[] {
+		// Round 7 is stored as "Name: message\n\nName: message..."
+		return text
+			.split(/\n{2,}/)
+			.map((s) => s.trim())
+			.filter(Boolean);
+	}
 </script>
 
 <div class="flex flex-col p-6 lg:p-24 w-screen mx-auto">
@@ -157,7 +187,7 @@ function getProposalTextForRound(roundNumber: number): string {
 		<div class="flex flex-col gap-4">
 			<div class="flex">
 				<div class="flex mt-4 flex-wrap w-full items-center justify-between">
-					<h1 class="font-bold text-deep-teal text-4xl">{data.story.story_title}</h1>
+					<h1 class="font-bold text-deep-teal text-4xl">{proposal?.title ?? data.story.story_title}</h1>
 					<div class="flex gap-4 items-center mt-4">
 						<Button
 							variant={'outline'}
@@ -176,15 +206,19 @@ function getProposalTextForRound(roundNumber: number): string {
 			</div>
 			<div class="flex flex-col gap-2">
 				<p class="text-lg">
-					<span class="text-gray-500">{story.player_name} as</span>
-					<span class="font-bold text-black">{story.character.nickname}</span>
+					<span class="text-gray-500">{getLocale() === 'pt' ? 'Cargo' : 'Role'}:</span>
+					<span class="font-bold text-black"> {getRoleLabel()}</span>
 				</p>
-				{#if story.character.description !== ''}
+				<p class="text-lg">
+					<span class="text-gray-500">{getLocale() === 'pt' ? 'Voto final' : 'Final vote'}:</span>
+					<span class="font-bold text-black"> {getVoteLabel((story as any).vote ?? null)}</span>
+				</p>
+				<p class="text-lg">
+					<span class="text-gray-500">{getLocale() === 'pt' ? 'Participante' : 'Participant'}:</span>
+					<span class="font-bold text-black"> {story.player_name}</span>
+				</p>
+				{#if story.character.description?.trim()}
 					<p class="text-gray-500 text-sm">"{story.character.description}"</p>
-				{:else}
-					<p class="text-gray-500 text-sm italic">
-						{getLocale() === 'pt' ? 'Sem descrição...' : 'No description...'}
-					</p>
 				{/if}
 			</div>
 			<div>
@@ -237,7 +271,24 @@ function getProposalTextForRound(roundNumber: number): string {
 					</div>
 
 					<div class="flex-1 max-w-[75ch]">
-						<p class="text-pretty">{round.answer}</p>
+						{#if round.roundNumber === 7}
+							{@const msgs = splitChatMessages(round.answer)}
+							{#if msgs.length > 3}
+								<div class="max-h-56 overflow-y-scroll pr-2 space-y-3">
+									{#each msgs as msg}
+										<p class="text-pretty whitespace-pre-wrap break-words">{msg}</p>
+									{/each}
+								</div>
+							{:else}
+								<div class="space-y-3">
+									{#each msgs as msg}
+										<p class="text-pretty whitespace-pre-wrap break-words">{msg}</p>
+									{/each}
+								</div>
+							{/if}
+						{:else}
+							<p class="text-pretty whitespace-pre-wrap break-words">{round.answer}</p>
+						{/if}
 						{#if getProposalPointsForRound(round.roundNumber).length > 0}
 							<div class="mt-3 rounded-lg border border-deep-teal border-opacity-10 bg-gray-50 px-4 py-3">
 								<p class="text-xs font-semibold uppercase tracking-wide text-deep-teal text-opacity-70">

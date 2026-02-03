@@ -12,7 +12,6 @@
 		X,
 		ChevronLeft,
 		ChevronRight,
-		Search
 	} from 'lucide-svelte';
 
 	import { Button } from '@/components/ui/button';
@@ -56,28 +55,25 @@
 	];
 	let { data } = $props();
 	const stories = $derived(data.stories);
+	const proposals = $derived(data.proposals ?? []);
 
-	let search = $state(page.url.searchParams.get('search') || '');
 	let value = $state(page.url.searchParams.get('character') || '');
-	let selectedCardTypes = $state<CardType[]>(
-		(page.url.searchParams.get('cardType')?.split(',') ?? []).filter((t): t is CardType =>
-			['nature', 'sense', 'action', 'history', 'landmark'].includes(t)
-		)
-	);
+	let selectedProposalId = $state(page.url.searchParams.get('proposalId') || '');
 	let currentPage = $state(parseInt(page.url.searchParams.get('page') ?? '1'));
 	let sort = $state(page.url.searchParams.get('sort') || 'latest');
 	const perPage = 5;
-	let searchInput: HTMLInputElement;
 	const selectedLabel = $derived(characterOptions.find((option) => option.value === value)?.label);
 	let loading = $state(false);
 
-	const cardTypes: CardType[] = ['nature', 'sense', 'action', 'history', 'landmark'];
-	function toggleCardType(type: CardType) {
-		if (selectedCardTypes.includes(type)) {
-			selectedCardTypes = selectedCardTypes.filter((t) => t !== type);
-		} else {
-			selectedCardTypes = [...selectedCardTypes, type];
-		}
+	function formatProposalLabel(title: string): string {
+		const words = title.trim().split(/\s+/).filter(Boolean);
+		const short = words.slice(0, 3).join(' ');
+		return words.length > 3 ? `${short}…` : short;
+	}
+
+	function toggleProposalId(id: number) {
+		const str = String(id);
+		selectedProposalId = selectedProposalId === str ? '' : str;
 	}
 	let searchTimeout: ReturnType<typeof setTimeout>;
 
@@ -86,42 +82,34 @@
 			clearTimeout(searchTimeout);
 		}
 
-		const shouldTrigger = search.length === 0 || search.length > 2;
-		if (value || search || selectedCardTypes.length > 0 || sort) {
-			currentPage;
-			if (shouldTrigger) {
-				searchTimeout = setTimeout(async () => {
-					loading = true;
-					try {
-						const params = new URLSearchParams();
-						if (search.length > 2) params.set('search', search);
-						if (value) params.set('character', value);
-						if (selectedCardTypes.length > 0) params.set('cardType', selectedCardTypes.join(','));
-						if (sort) params.set('sort', sort);
-						if (currentPage) params.set('page', currentPage.toString());
+		// Debounce navigation when filters change (search disabled on purpose).
+		if (value || selectedProposalId || sort) {
+			searchTimeout = setTimeout(async () => {
+				loading = true;
+				try {
+					const params = new URLSearchParams();
+					if (value) params.set('character', value);
+					if (selectedProposalId) params.set('proposalId', selectedProposalId);
+					if (sort) params.set('sort', sort);
+					if (currentPage) params.set('page', currentPage.toString());
 
-						await goto(`?${params.toString()}`, { replaceState: true });
-
-						searchInput?.focus();
-					} finally {
-						loading = false;
-					}
-				}, 500);
-			}
+					await goto(`?${params.toString()}`, { replaceState: true });
+				} finally {
+					loading = false;
+				}
+			}, 300);
 		}
 	});
 
 	async function handleClearFilters() {
-		search = '';
 		value = '';
-		selectedCardTypes = [];
+		selectedProposalId = '';
 		currentPage = 1;
 		sort = 'latest';
 		const url = new URL(page.url);
-		url.searchParams.delete('search');
 		url.searchParams.delete('character');
+		url.searchParams.delete('proposalId');
 		await goto(url);
-		searchInput?.focus();
 	}
 </script>
 
@@ -139,18 +127,6 @@
 	</div>
 
 	<div class="flex flex-wrap gap-4 mt-8">
-		<div class="relative self-end">
-			<div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-				<Search class="w-5 h-5 text-deep-teal" />
-			</div>
-			<input
-				type="text"
-				placeholder={m.search_by()}
-				bind:value={search}
-				bind:this={searchInput}
-				class="p-2 pl-10 w-fit h-10 border-gray-300 rounded-md border focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none"
-			/>
-		</div>
 		<div class="flex flex-col items-center gap-2">
 			<p class="self-start text-deep-teal text-sm font-medium">{m.filter_by_character()}</p>
 			<Select.Root type="single" onValueChange={(v) => (value = v)} items={characterOptions}>
@@ -163,7 +139,7 @@
 				</Select.Trigger>
 				<Select.Portal>
 					<Select.Content
-						class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 h-96 max-h-[var(--bits-select-content-available-height)] w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-3 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
+						class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 max-h-[var(--bits-select-content-available-height)] w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-2 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
 						sideOffset={10}
 					>
 						<Select.ScrollUpButton class="flex w-full items-center justify-center">
@@ -197,24 +173,25 @@
 		<div class="flex flex-col items-center gap-2 h-full">
 			<p class="self-start text-deep-teal text-sm font-medium">{m.filter_by_card()}</p>
 			<div class="h-full flex flex-wrap gap-2">
-				{#each cardTypes as type}
+				{#each proposals as p (p.id)}
 					<button
-						class="flex gap-1 items-center justify-center h-10 px-3 capitalize text-sm rounded-md transition-colors {selectedCardTypes.includes(
-							type
+						class="flex gap-1 items-center justify-center h-10 px-3 text-sm rounded-md transition-colors {selectedProposalId === String(
+							p.id
 						)
-							? `${buttonColor[type]} text-white`
+							? `bg-deep-teal text-white`
 							: ` bg-gray-200 text-gray-500`}"
-						onclick={() => toggleCardType(type)}
+						onclick={() => toggleProposalId(p.id)}
+						title={p.title}
 					>
-						{#if selectedCardTypes.includes(type)}
+						{#if selectedProposalId === String(p.id)}
 							<Check class="w-4 h-4 text-white" />
 						{/if}
-						{m[`${type}_type`]()}
+						{formatProposalLabel(p.title)}
 					</button>
 				{/each}
 			</div>
 		</div>
-		{#if search || value || selectedCardTypes.length > 0}
+		{#if value || selectedProposalId}
 			<div class="self-end">
 				<Button
 					class="flex items-center h-10 font-normal"

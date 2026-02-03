@@ -17,6 +17,10 @@
 		round: number;
 		userId?: string | null;
 		disabled?: boolean;
+		historyDisabled?: boolean;
+		documentsDisabled?: boolean;
+		inputDisabled?: boolean;
+		lockedPlaceholder?: string | null;
 		inline?: boolean;
 	}
 
@@ -29,8 +33,17 @@
 		round,
 		userId = null,
 		disabled = false,
+		historyDisabled = undefined,
+		documentsDisabled = undefined,
+		inputDisabled = undefined,
+		lockedPlaceholder = null,
 		inline = false
 	}: DiscussionInputBarProps = $props();
+
+// Default fallbacks: if per-control flags are not provided, fall back to `disabled`
+historyDisabled = historyDisabled ?? disabled;
+documentsDisabled = documentsDisabled ?? disabled;
+inputDisabled = inputDisabled ?? disabled;
 
 	let message = $state('');
 	let attachments = $state<
@@ -392,67 +405,67 @@
 		<!-- Background bar with shadow -->
 		<div class="bg-surface rounded-full px-4 py-3 sm:px-5 sm:py-4 shadow-2xl border border-border/40">
 			<div class="flex items-center gap-3 sm:gap-4">
-				<!-- History Button -->
-				<button
-					onclick={onOpenHistory}
-					disabled={disabled}
-					class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-tertiary hover:bg-tertiary-hover active:bg-tertiary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-					aria-label={m.open_message_history()}
-					title={m.open_message_history()}
-				>
-					<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-text" />
-				</button>
+		<!-- History Button -->
+		<button
+			onclick={onOpenHistory}
+			disabled={historyDisabled}
+			class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-neutral-100 active:bg-yellow-300 transition-colors flex items-center justify-center border-2 border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+			aria-label={m.open_message_history()}
+			title={m.open_message_history()}
+		>
+			<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+		</button>
 
 				<!-- Divider -->
 				<div class="h-8 sm:h-10 w-px bg-border/30"></div>
 
 				<!-- Add Documents Button -->
-				<input
-					bind:this={fileInput}
-					type="file"
-					class="hidden"
-					multiple
-					accept={RAG_ALLOWED_EXTENSIONS.join(',')}
-					onchange={handleFileSelect}
-					disabled={disabled}
-				/>
-				<button
-					type="button"
-					onclick={() => fileInput?.click()}
-					disabled={
-						disabled ||
-						!proposalId ||
-						!userId ||
-						attachments.length >= RAG_MAX_FILES_PER_ROUND
-					}
-					class="images flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-tertiary hover:bg-tertiary-hover active:bg-tertiary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-					aria-label={m.add_documents()}
-					title={m.add_documents()}
-				>
-					<Plus class="w-5 h-5 sm:w-6 sm:h-6 text-text" />
-				</button>
+		<input
+			bind:this={fileInput}
+			type="file"
+			class="hidden"
+			multiple
+			accept={RAG_ALLOWED_EXTENSIONS.join(',')}
+			onchange={handleFileSelect}
+			disabled={documentsDisabled}
+		/>
+		<button
+			type="button"
+			onclick={() => fileInput?.click()}
+			disabled={
+				documentsDisabled ||
+				!proposalId ||
+				!userId ||
+				attachments.length >= RAG_MAX_FILES_PER_ROUND
+			}
+			class="images flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-neutral-100 active:bg-yellow-300 transition-colors flex items-center justify-center border-2 border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+			aria-label={m.add_documents()}
+			title={m.add_documents()}
+		>
+			<Plus class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+		</button>
 
 				<!-- Divider -->
 				<div class="h-8 sm:h-10 w-px bg-border/30"></div>
 
 				<!-- Input Field -->
-				<input
-					type="text"
-					bind:value={message}
-					onkeydown={handleKeydown}
-					disabled={disabled}
-					placeholder={m.discussion_input_placeholder()}
-					class="flex-1 bg-transparent text-text text-base sm:text-lg placeholder:text-text-muted outline-none disabled:opacity-50"
-				/>
+		<input
+			type="text"
+			bind:value={message}
+			onkeydown={handleKeydown}
+			disabled={inputDisabled}
+			placeholder={inputDisabled && lockedPlaceholder ? lockedPlaceholder : m.discussion_input_placeholder()}
+			class="flex-1 bg-transparent text-text text-base sm:text-lg placeholder:text-text-muted outline-none disabled:opacity-50"
+		/>
 
 				<!-- Send Button -->
-				<button
-					onclick={handleSend}
-					disabled={disabled || !message.trim()}
-					class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary hover:bg-primary-hover active:bg-primary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-					aria-label={m.send_message()}
-					title={m.send_message()}
-				>
+		<button
+			onclick={handleSend}
+			disabled={inputDisabled || !message.trim()}
+			class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary hover:bg-primary-hover active:bg-primary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+			aria-label={m.send_message()}
+			title={m.send_message()}
+		>
 					<Send class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
 				</button>
 			</div>
