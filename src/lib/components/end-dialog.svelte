@@ -295,11 +295,49 @@
 		return [];
 	}
 
+	function getOnboardingRoleLabel(): string | null {
+		// ZD-191: lobby is no longer used; the role/cargo is chosen on the home onboarding flow
+		// and stored in localStorage. Use it for display in the save dialog.
+		if (typeof window === 'undefined') return null;
+		try {
+			const raw = localStorage.getItem('zoopdao:onboarding:v1');
+			if (!raw) return null;
+			const parsed = JSON.parse(raw) as {
+				role?: string | null;
+				customRole?: string;
+			};
+
+			const role = parsed.role ?? null;
+			const customRole = (parsed.customRole ?? '').trim();
+
+			if (role === 'other') {
+				return customRole.length > 0 ? customRole : null;
+			}
+
+			if (role && role !== 'other') {
+				const roleKey = `character_${role}_title`;
+				const translated = getTranslation(roleKey);
+				if (translated && translated !== 'Translation missing') return translated;
+				return role
+					.split('-')
+					.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+					.join(' ');
+			}
+			return null;
+		} catch {
+			return null;
+		}
+	}
+
 	function getPlayerRoleLabel(player: Player): string {
 		// New system: players.role stores the organizational role.
 		// Legacy system: some older data used `player.character`.
 		const raw = ((player as any).role ?? (player as any).character) as string | null | undefined;
-		if (!raw) return getLocale() === 'pt' ? 'Cargo não definido' : 'Role not set';
+		if (!raw) {
+			const onboardingLabel = getOnboardingRoleLabel();
+			if (onboardingLabel) return onboardingLabel;
+			return getLocale() === 'pt' ? 'Cargo não definido' : 'Role not set';
+		}
 
 		// Prefer i18n role titles (we store them under character_<role>_title).
 		const roleKey = `character_${raw}_title`;
