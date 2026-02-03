@@ -2684,3 +2684,40 @@ g) Browse histories improvements shipped with this ticket (`/stories`)
 5) Browse histories verification:
    - Filter by mode returns expected rows (including after backfill/default).
    - "Proposta completa" button is on the same CTA row and aligned left.
+ 
+---
+
+## ZD-179: AVG nonhuman AI personas + Zoop Speaker system prompt
+
+**Overview:**
+Replace the default human-department AI agents with fixed non-human representatives of the Aquário Vasco da Gama (AVG), and wire a reusable Zoop "Speaker for the Living" system prompt (loaded from JSON) into the AI generation pipeline.
+
+**User story:**
+As a participant, I want the AI participants to feel like non-human representatives of the aquarium ecosystem (with clear names and roles/cargos) so the discussion reflects Zoop governance and not generic human departments.
+
+**Scope / Implementation notes:**
+- AI personas (names + cargos):
+  - Aquari: Não-humanos do AVG
+  - Tuga: Fauna marinha Portuguesa
+  - Tropicus: Fauna marinha Tropical
+  - Galeria: Invertebrados
+  - Doce: Fauna dulçaquícola Tropical (force line-break so "Fauna dulçaquícola" stays on line 1 and "Tropical" on line 2)
+- Keep existing visual placement/colors:
+  - Preserve the current color scheme and positioning driven by `agent.role` (administration/research/reception/operations/bar).
+  - Only change the displayed names/cargos and the single-AI persona to match Aquari.
+- UI display:
+  - AI badge shows the cargo in up to 2 lines (no ellipsis truncation), with tooltip for full text.
+  - Human player badge shows cargo and shows name if not empty (fallback from onboarding localStorage when DB values are missing).
+- AI prompting:
+  - Store the reusable "Speaker for the Living" system prompt template in a JSON file.
+  - AI requests include `agentName` so the backend can personalize the prompt per non-human persona.
+  - Backend composes the final system prompt from the JSON template + persona and passes it to the active provider (IAEDU/Gemini).
+
+**Database:**
+- No DB schema changes required for this ticket.
+
+**Acceptance criteria:**
+1) In the assembly participant ring, AI agents appear with the new names (Aquari/Tuga/Tropicus/Doce/Galeria) and cargos readable in 1-2 lines (no "...").
+2) Single-AI mode uses Aquari as the solo agent.
+3) The AI generation endpoint uses the JSON-based system prompt and personalizes it using `agentName`.
+4) Human badge shows cargo and, when present, the participant name; if missing from DB, falls back to onboarding storage.
