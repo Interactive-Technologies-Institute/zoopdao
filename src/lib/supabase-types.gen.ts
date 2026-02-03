@@ -235,6 +235,8 @@ export type Database = {
           id: number
           inserted_at: string
           mode: Database["public"]["Enums"]["game_mode"] | null
+          pedagogic_final_timer_minutes: number
+          pedagogic_rounds_timer_minutes: number
           proposal_id: number | null
           state: Database["public"]["Enums"]["game_state"]
         }
@@ -243,6 +245,8 @@ export type Database = {
           id?: number
           inserted_at?: string
           mode?: Database["public"]["Enums"]["game_mode"] | null
+          pedagogic_final_timer_minutes?: number
+          pedagogic_rounds_timer_minutes?: number
           proposal_id?: number | null
           state?: Database["public"]["Enums"]["game_state"]
         }
@@ -251,6 +255,8 @@ export type Database = {
           id?: number
           inserted_at?: string
           mode?: Database["public"]["Enums"]["game_mode"] | null
+          pedagogic_final_timer_minutes?: number
+          pedagogic_rounds_timer_minutes?: number
           proposal_id?: number | null
           state?: Database["public"]["Enums"]["game_state"]
         }

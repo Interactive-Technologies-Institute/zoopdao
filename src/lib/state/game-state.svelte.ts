@@ -41,6 +41,8 @@ export class GameState {
 
 	roundTimerDuration: number = $state(0);
 	mode: 'pedagogic' | 'decision_making' = $state('pedagogic');
+	pedagogicRoundsTimerMinutes: number = $state(PEDAGOGIC_ROUNDS_TIMER_MINUTES);
+	pedagogicFinalTimerMinutes: number = $state(PEDAGOGIC_FINAL_TIMER_MINUTES);
 	private activityInterval: ReturnType<typeof setInterval> | null = null;
 	private beforeUnloadHandler: (() => void) | null = null;
 	private unloadTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -71,6 +73,15 @@ export class GameState {
 		this.code = game.code;
 		this.state = game.state as GameStateEnum;
 		this.mode = mode;
+		// Use per-game timer config when present (falls back to organization defaults).
+		const roundsMinutes: unknown = (game as any).pedagogic_rounds_timer_minutes;
+		const finalMinutes: unknown = (game as any).pedagogic_final_timer_minutes;
+		if (typeof roundsMinutes === 'number' && Number.isFinite(roundsMinutes)) {
+			this.pedagogicRoundsTimerMinutes = roundsMinutes;
+		}
+		if (typeof finalMinutes === 'number' && Number.isFinite(finalMinutes)) {
+			this.pedagogicFinalTimerMinutes = finalMinutes;
+		}
 		this.gameRounds = gameRounds;
 		this.playerId = playerId;
 		this.players = players;
@@ -543,8 +554,8 @@ export class GameState {
 		// Rounds 1-6 and round 7 durations are configurable.
 		const durationMinutes =
 			this.currentRound === 7
-				? PEDAGOGIC_FINAL_TIMER_MINUTES
-				: PEDAGOGIC_ROUNDS_TIMER_MINUTES;
+				? this.pedagogicFinalTimerMinutes
+				: this.pedagogicRoundsTimerMinutes;
 		const durationSeconds = durationMinutes * 60;
 
 		const currentGameRound = this.gameRounds.find((r) => r.round === this.currentRound);
@@ -574,7 +585,7 @@ export class GameState {
 			return 0;
 		}
 		const durationMinutes =
-			round === 7 ? PEDAGOGIC_FINAL_TIMER_MINUTES : PEDAGOGIC_ROUNDS_TIMER_MINUTES;
+			round === 7 ? this.pedagogicFinalTimerMinutes : this.pedagogicRoundsTimerMinutes;
 		return durationMinutes * 60;
 	}
 
