@@ -54,15 +54,81 @@
 		mql.addEventListener?.('change', update);
 		return () => mql.removeEventListener?.('change', update);
 	});
+
+	function getTranslation(key: string | null | undefined): string {
+		if (!key) return '';
+		const translation = (m as any)[key];
+		return typeof translation === 'function' ? translation() : '';
+	}
+
+	const nicknameTrim = $derived.by(() => (player.nickname ?? '').trim());
+	const roleLabel = $derived.by(() => {
+		const roleRaw = ((player as any).role ?? null) as string | null;
+		if (!roleRaw) return '-';
+		const translated = getTranslation(`character_${roleRaw}_title`);
+		return translated?.trim()?.length ? translated : roleRaw;
+	});
+
+	const onboardingFallback = $derived.by(() => {
+		if (!isCurrentPlayer) return { name: null as string | null, role: null as string | null };
+		if (typeof window === 'undefined') return { name: null as string | null, role: null as string | null };
+		try {
+			const raw = window.localStorage.getItem('zoopdao:onboarding:v1');
+			if (!raw) return { name: null as string | null, role: null as string | null };
+			const parsed = JSON.parse(raw) as { name?: string; role?: string | null; customRole?: string };
+
+			const name = (parsed.name ?? '').trim();
+			const role = parsed.role ?? null;
+			const customRole = (parsed.customRole ?? '').trim();
+
+			let roleLabel: string | null = null;
+			if (role === 'other') {
+				roleLabel = customRole.length > 0 ? customRole : null;
+			} else if (role) {
+				const translated = getTranslation(`character_${role}_title`);
+				roleLabel = translated?.trim()?.length ? translated : role;
+			}
+
+			return {
+				name: name.length > 0 ? name : null,
+				role: roleLabel
+			};
+		} catch {
+			return { name: null as string | null, role: null as string | null };
+		}
+	});
+
+	const displayName = $derived.by(() => nicknameTrim.length > 0 ? nicknameTrim : onboardingFallback.name);
+	const displayRole = $derived.by(() => {
+		if (roleLabel !== '-') return roleLabel;
+		return onboardingFallback.role ?? roleLabel;
+	});
 </script>
 
 <div data-badge-core class="relative inline-block {isCurrentPlayer ? 'player-badges' : ''}">
-	<div
-		class="h-12 w-12 md:h-14 md:w-14 relative rounded-full z-20 flex items-center justify-center bg-gray-200 {isCurrentPlayer
-			? 'border-4 border-deep-teal'
-			: ''}"
-	>
-		<User class="h-6 w-6 md:h-7 md:w-7 text-gray-600" />
+	<div class="flex flex-col items-center">
+		<div
+			class="h-12 w-12 md:h-14 md:w-14 relative rounded-full z-20 flex items-center justify-center bg-gray-200 {isCurrentPlayer
+				? 'border-4 border-deep-teal'
+				: ''}"
+		>
+			<User class="h-6 w-6 md:h-7 md:w-7 text-gray-600" />
+		</div>
+
+		<!-- Show role for other participants and name when set -->
+		<div class="mt-1 flex flex-col items-center max-w-[120px] md:max-w-[140px]">
+			{#if displayName}
+				<div class="text-xs font-semibold text-deep-teal text-center truncate w-full" title={displayName}>
+					{displayName}
+				</div>
+			{/if}
+			<div
+				class="text-[11px] md:text-xs leading-tight text-gray-600 text-center whitespace-normal break-words line-clamp-2 min-h-[1.4rem]"
+				title={displayRole}
+			>
+				{displayRole}
+			</div>
+		</div>
 	</div>
 	{#if currentRound === 7 && isCurrentPlayer}
 		{@const lastText = (chatMessage ?? '').trim()}
