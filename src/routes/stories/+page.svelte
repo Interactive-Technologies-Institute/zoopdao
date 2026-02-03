@@ -41,13 +41,24 @@
 			.join(' ');
 	}
 
-	let characterOptions = [
-		{ value: '', label: m.all_characters() },
-		...CHARACTER_OPTIONS.map((type) => ({
+	const characterOptions = $derived.by(() => {
+		const all = { value: '', label: m.all_characters() };
+		const other = { value: 'custom', label: getLocale() === 'pt' ? 'Outro' : 'Other' };
+
+		const items = CHARACTER_OPTIONS.map((type) => ({
 			value: type,
 			label: formatCharacterLabel(type)
 		}))
-	];
+			// Alphabetical by label; keep "Outro" separate at the end.
+			.slice()
+			.sort((a, b) =>
+				a.label.localeCompare(b.label, getLocale() === 'pt' ? 'pt-PT' : 'en', {
+					sensitivity: 'base'
+				})
+			);
+
+		return [all, ...items, other];
+	});
 
 	let sortOptions = [
 		{ value: 'latest', label: m.latest_first() },
@@ -69,7 +80,7 @@
 	let currentPage = $state(parseInt(page.url.searchParams.get('page') ?? '1'));
 	let sort = $state(page.url.searchParams.get('sort') || 'latest');
 	const perPage = 5;
-	const selectedLabel = $derived(characterOptions.find((option) => option.value === value)?.label);
+	const selectedLabel = $derived.by(() => characterOptions.find((option) => option.value === value)?.label);
 	const selectedModeLabel = $derived(modeOptions.find((option) => option.value === selectedMode)?.label);
 	let loading = $state(false);
 
@@ -82,32 +93,34 @@
 	function toggleProposalId(id: number) {
 		const str = String(id);
 		selectedProposalId = selectedProposalId === str ? '' : str;
+		currentPage = 1;
 	}
 	let searchTimeout: ReturnType<typeof setTimeout>;
 
 	$effect(() => {
-		if (searchTimeout) {
-			clearTimeout(searchTimeout);
-		}
+		if (searchTimeout) clearTimeout(searchTimeout);
 
 		// Debounce navigation when filters change (search disabled on purpose).
-		if (value || selectedProposalId || sort) {
-			searchTimeout = setTimeout(async () => {
-				loading = true;
-				try {
-					const params = new URLSearchParams();
-					if (value) params.set('character', value);
-					if (selectedProposalId) params.set('proposalId', selectedProposalId);
-					if (selectedMode) params.set('mode', selectedMode);
-					if (sort) params.set('sort', sort);
-					if (currentPage) params.set('page', currentPage.toString());
+		// Compare against the current URL to avoid no-op navigations.
+		const params = new URLSearchParams();
+		if (value) params.set('character', value);
+		if (selectedProposalId) params.set('proposalId', selectedProposalId);
+		if (selectedMode) params.set('mode', selectedMode);
+		if (sort) params.set('sort', sort);
+		if (currentPage) params.set('page', currentPage.toString());
 
-					await goto(`?${params.toString()}`, { replaceState: true });
-				} finally {
-					loading = false;
-				}
-			}, 300);
-		}
+		const next = params.toString();
+		const current = page.url.searchParams.toString();
+		if (next === current) return;
+
+		searchTimeout = setTimeout(async () => {
+			loading = true;
+			try {
+				await goto(`?${next}`, { replaceState: true });
+			} finally {
+				loading = false;
+			}
+		}, 250);
 	});
 
 	async function handleClearFilters() {
@@ -140,7 +153,14 @@
 	<div class="flex flex-wrap gap-4 mt-8">
 		<div class="flex flex-col items-center gap-2">
 			<p class="self-start text-deep-teal text-sm font-medium">{m.filter_by_character()}</p>
-			<Select.Root type="single" onValueChange={(v) => (value = v)} items={characterOptions}>
+			<Select.Root
+				type="single"
+				onValueChange={(v) => {
+					value = v;
+					currentPage = 1;
+				}}
+				items={characterOptions}
+			>
 				<Select.Trigger
 					class="h-10 rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex w-64 select-none items-center border px-3 text-sm transition-colors"
 					aria-label="Select a character"
@@ -185,7 +205,15 @@
 			<p class="self-start text-deep-teal text-sm font-medium">
 				{getLocale() === 'pt' ? 'Filtrar por modo' : 'Filter by mode'}
 			</p>
-			<Select.Root type="single" value={selectedMode} onValueChange={(v) => (selectedMode = v)} items={modeOptions}>
+			<Select.Root
+				type="single"
+				value={selectedMode}
+				onValueChange={(v) => {
+					selectedMode = v;
+					currentPage = 1;
+				}}
+				items={modeOptions}
+			>
 				<Select.Trigger
 					class="h-10 rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex w-64 select-none items-center border px-3 text-sm transition-colors"
 					aria-label="Select a mode"

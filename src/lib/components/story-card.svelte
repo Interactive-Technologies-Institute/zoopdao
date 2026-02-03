@@ -135,26 +135,32 @@
 					</span>
 				{/each}
 			</div>
-			<div class="flex gap-2 items-center self-end">
-				<Button variant={'outline'} onclick={copyToClipboard} class="transition-all duration-200">
+			<div class="flex items-center gap-2 self-end w-full">
+				<button
+					class="h-10 px-3 text-sm whitespace-nowrap rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-tertiary/40 transition-colors text-deep-teal font-medium inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mr-auto"
+					onclick={() => (openProposalDialog = true)}
+					disabled={!hasProposal}
+					aria-disabled={!hasProposal}
+				>
+					<FileText class="h-4 w-4" />
+					{m.view_full_proposal()}
+				</button>
+				<Button
+					variant={'outline'}
+					onclick={copyToClipboard}
+					class="h-10 transition-all duration-200 shrink-0"
+				>
 					{#if isCopied}
 						<Check class="w-4 h-4 mr-2" /> {m.copied()}
 					{:else}
 						<Share2 class="w-4 h-4 mr-2" /> {m.share()}
 					{/if}
 				</Button>
-				<Button href={localizeHref(`/stories/${data.story_id}`)}>{m.read_more()}</Button>
+				<Button class="h-10 shrink-0" href={localizeHref(`/stories/${data.story_id}`)}
+					>{m.read_more()}</Button
+				>
 			</div>
 		</div>
-	<button
-		class="w-full mt-2 px-4 py-3 text-left rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-tertiary/40 transition-colors text-deep-teal font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-		onclick={() => (openProposalDialog = true)}
-		disabled={!hasProposal}
-		aria-disabled={!hasProposal}
-	>
-			<FileText class="h-4 w-4" />
-			{m.view_full_proposal()}
-		</button>
 	</div>
 </div>
 
