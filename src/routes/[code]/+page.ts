@@ -18,9 +18,6 @@ export const load = async ({ params }) => {
 
 	const game = await getGame();
 
-	if (game.state === 'waiting' || game.state === 'ready') {
-		return redirect(302, '/lobby');
-	} else {
-		return redirect(302, '/game');
-	}
+	// Lobby is deprecated; the main experience lives at /[code]/assembly.
+	return redirect(302, `/${code}/assembly`);
 };
