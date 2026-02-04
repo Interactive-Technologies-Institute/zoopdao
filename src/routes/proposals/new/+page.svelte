@@ -74,6 +74,19 @@
 		() => votingPeriods.find((p) => p.id === votingPeriod)?.label ?? m.select_voting_period()
 	);
 
+	let functionalitiesRef: HTMLTextAreaElement | null = null;
+
+	function autosizeFunctionalities() {
+		if (!functionalitiesRef) return;
+		functionalitiesRef.style.height = 'auto';
+		functionalitiesRef.style.height = `${functionalitiesRef.scrollHeight}px`;
+	}
+
+	$effect(() => {
+		functionalities;
+		autosizeFunctionalities();
+	});
+
 	function validateForm(): boolean {
 		if (!title.trim()) return false;
 		if (objectives.length < 2) return false;
@@ -150,7 +163,8 @@
 
 		<!-- Form -->
 		<div class="bg-white rounded-lg border-2 border-deep-teal border-opacity-20 p-6 md:p-8">
-			<h1 class="bos-title text-3xl font-bold text-deep-teal mb-6">{m.new_proposal()}</h1>
+			<h1 class="bos-title text-3xl font-bold text-deep-teal">{m.new_proposal()}</h1>
+			<p class="text-deep-teal/70 text-sm mt-1 mb-6">{m.theory_of_change()}</p>
 
 			<form
 				onsubmit={(e) => {
@@ -176,8 +190,6 @@
 
 				<!-- Theory of Change Section -->
 				<div class="space-y-6">
-					<h2 class="bos-title text-2xl font-bold text-deep-teal">{m.theory_of_change()}</h2>
-
 					<!-- Long-term Objectives -->
 					<div class="space-y-4">
 						<div class="bos-title block text-lg font-semibold text-deep-teal">
@@ -276,9 +288,12 @@
 						<Textarea
 							id="functionalities"
 							bind:value={functionalities}
+							bind:ref={functionalitiesRef}
+							oninput={autosizeFunctionalities}
 							placeholder={m.functionalities_placeholder()}
 							required
-							class="w-full min-h-[150px]"
+							rows={3}
+							class="w-full min-h-24 max-h-72 overflow-y-auto resize-none"
 						/>
 					</div>
 				</div>
