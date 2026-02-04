@@ -317,7 +317,9 @@
 	</div>
 
 	<div
-		class={`z-10 flex flex-col items-center max-w-md w-full relative flex-1 ${isActionsStep ? 'justify-start' : 'justify-center'}`}
+		class={`z-10 flex flex-col items-center max-w-md w-full relative flex-1 ${
+			isActionsStep ? 'justify-start md:justify-center' : 'justify-center'
+		}`}
 	>
 		<div class="w-full flex justify-center pb-3">
 			<select
