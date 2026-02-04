@@ -319,7 +319,7 @@
 	<div
 		class={`z-10 flex flex-col items-center max-w-md w-full relative flex-1 ${isActionsStep ? 'justify-start' : 'justify-center'}`}
 	>
-		<div class="w-full flex justify-end pb-3">
+		<div class="w-full flex justify-center pb-3">
 			<select
 				class="p-2 border rounded bg-white/80 backdrop-blur-sm"
 				bind:value={selectedLanguage}
@@ -476,7 +476,11 @@
 				</div>
 				<div class="flex items-center gap-4 w-full">
 					<div class="h-px w-full bg-deep-teal"></div>
-					<p class="text-deep-teal text-center text-lg font-bold">{m.current_proposals()}</p>
+					<p
+						class="text-deep-teal text-center font-bold whitespace-nowrap text-[clamp(1rem,3.2vw,1.125rem)]"
+					>
+						{m.current_proposals()}
+					</p>
 					<div class="h-px w-full bg-deep-teal"></div>
 				</div>
 				<!-- Proposals List -->
@@ -512,10 +516,7 @@
 						</div>
 					{/if}
 				</div>
-				<div class="flex items-center gap-4 w-full">
-					<div class="h-px w-full bg-deep-teal"></div>
-					<div class="h-px w-full bg-deep-teal"></div>
-				</div>
+				<div class="h-px w-full bg-deep-teal"></div>
 				<div class="flex flex-col items-center justify-center">
 					<Button
 						variant="outline"
