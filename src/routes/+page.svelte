@@ -6,8 +6,19 @@
 	import type { Locale } from '../paraglide/runtime.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
-	import { getVotingPeriods, getExceptionalVotingPeriods, getProposalStatus } from '$lib/data/voting-periods';
-	import { Circle, CheckCircle2, ChevronsUpDown, Check, ChevronDown, ChevronUp } from 'lucide-svelte';
+	import {
+		getVotingPeriods,
+		getExceptionalVotingPeriods,
+		getProposalStatus
+	} from '$lib/data/voting-periods';
+	import {
+		Circle,
+		CheckCircle2,
+		ChevronsUpDown,
+		Check,
+		ChevronDown,
+		ChevronUp
+	} from 'lucide-svelte';
 	import { ZOOP_THEME, resolveZoopTheme, ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 	import { ROLES, type Role } from '$lib/types';
 	import { Select } from 'bits-ui';
@@ -26,42 +37,36 @@
 	const currentYear = new Date().getFullYear();
 	const votingPeriods = [...getVotingPeriods(currentYear), ...getExceptionalVotingPeriods()];
 	const currentLocale = $derived(getLocale() as string);
-	
+
 	function getVotingPeriodLabel(periodId: string): string {
-		const period = votingPeriods.find(p => p.id === periodId);
+		const period = votingPeriods.find((p) => p.id === periodId);
 		return period?.label || periodId;
 	}
-	
+
 	function getProposalStatusIcon(status: 'open' | 'closed') {
-		return status === 'open' 
-			? CheckCircle2 
-			: Circle;
+		return status === 'open' ? CheckCircle2 : Circle;
 	}
-	
+
 	function getProposalStatusColor(status: 'open' | 'closed'): string {
-		return status === 'open' 
-			? 'text-green-600' 
-			: 'text-gray-400';
+		return status === 'open' ? 'text-green-600' : 'text-gray-400';
 	}
-	
+
 	function getProposalStatusText(status: 'open' | 'closed'): string {
-		return status === 'open' 
-			? m.proposal_status_open() 
-			: m.proposal_status_closed();
+		return status === 'open' ? m.proposal_status_open() : m.proposal_status_closed();
 	}
-	
+
 	function translateProposal(proposal: any, targetLang: string): any {
 		// If proposal is already in target language, return as is
 		if (!proposal.language || proposal.language === targetLang) {
 			return proposal;
 		}
-		
+
 		// For now, return original (translation will be implemented later with translation API/service)
 		// TODO: Implement actual translation logic using translation API or service
 		// This could translate: title, objectives, functionalities, discussion
 		return proposal;
-		}
-	
+	}
+
 	function handleProposalClick(proposalId: number) {
 		click_sound.play();
 		goto(localizeUrl(`/proposals/${proposalId}/preview`).toString());
@@ -105,6 +110,7 @@
 
 	const ONBOARDING_KEY = 'zoopdao:onboarding:v1';
 	let onboardingStep = $state<OnboardingStep>('welcome');
+	const isActionsStep = $derived(onboardingStep === 'actions');
 	let selectedRole = $state<Role | 'other' | ''>('');
 	let customRole = $state('');
 	let profileName = $state('');
@@ -262,38 +268,96 @@
 	});
 </script>
 
-<div class="h-screen flex flex-col items-center justify-center bg-[#efe7e2] bos-bg relative p-4">
+<div
+	class="flex flex-col items-center bg-[#efe7e2] bos-bg relative px-4 overflow-x-hidden"
+	style="
+		min-height: 100vh;
+		min-height: 100svh;
+		min-height: 100dvh;
+		padding-top: calc(env(safe-area-inset-top) + 1rem);
+		padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+	"
+>
 	<!-- Decorative illustrations: on mobile (vertical) show them top/bottom; on md+ keep the lateral layout -->
-	<div class="home-ill-mobile home-ill-mobile--top md:hidden absolute inset-x-0 flex justify-between px-4 pointer-events-none z-0">
+	<div
+		class="home-ill-mobile home-ill-mobile--top md:hidden absolute inset-x-0 flex justify-between px-4 pointer-events-none z-0"
+	>
 		<div class="home-ill-item flex items-center justify-center">
-			<img src={getHomeIllustrationSrc('step_5_1_home')} alt="" class="w-full h-full object-contain" />
+			<img
+				src={getHomeIllustrationSrc('step_5_1_home')}
+				alt=""
+				class="w-full h-full object-contain"
+			/>
 		</div>
 		<div class="home-ill-item flex items-center justify-center">
-			<img src={getHomeIllustrationSrc('step_2_1_home')} alt="" class="w-full h-full object-contain" />
+			<img
+				src={getHomeIllustrationSrc('step_2_1_home')}
+				alt=""
+				class="w-full h-full object-contain"
+			/>
 		</div>
 	</div>
-	<div class="home-ill-mobile home-ill-mobile--bottom md:hidden absolute inset-x-0 flex justify-between px-4 pointer-events-none z-0">
+	<div
+		class="home-ill-mobile home-ill-mobile--bottom md:hidden absolute inset-x-0 flex justify-between px-4 pointer-events-none z-0"
+	>
 		<div class="home-ill-item flex items-center justify-center">
-			<img src={getHomeIllustrationSrc('step_6_1_home')} alt="" class="w-full h-full object-contain" />
+			<img
+				src={getHomeIllustrationSrc('step_6_1_home')}
+				alt=""
+				class="w-full h-full object-contain"
+			/>
 		</div>
 		<div class="home-ill-item flex items-center justify-center">
-			<img src={getHomeIllustrationSrc('step_4_1_home')} alt="" class="w-full h-full object-contain" />
+			<img
+				src={getHomeIllustrationSrc('step_4_1_home')}
+				alt=""
+				class="w-full h-full object-contain"
+			/>
 		</div>
 	</div>
 
-	<div class="z-10 flex flex-col items-center justify-center max-w-md relative">
-		<div class="hidden md:flex absolute -left-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center">
-			<img src={getHomeIllustrationSrc('step_5_1_home')} alt="" class="w-full h-full object-contain" />
+	<div
+		class={`z-10 flex flex-col items-center max-w-md w-full relative flex-1 ${isActionsStep ? 'justify-start' : 'justify-center'}`}
+	>
+		<div class="w-full flex justify-end pb-3">
+			<select
+				class="p-2 border rounded bg-white/80 backdrop-blur-sm"
+				bind:value={selectedLanguage}
+				onchange={(e) => changeLanguage((e.currentTarget as HTMLSelectElement).value as Locale)}
+			>
+				{#each languages as { code, label }}
+					<option value={code}>{label}</option>
+				{/each}
+			</select>
 		</div>
-		<div class="hidden md:flex absolute -right-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center">
-			<img src={getHomeIllustrationSrc('step_2_1_home')} alt="" class="w-full h-full object-contain" />
+		<div
+			class="hidden md:flex absolute -left-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center"
+		>
+			<img
+				src={getHomeIllustrationSrc('step_5_1_home')}
+				alt=""
+				class="w-full h-full object-contain"
+			/>
 		</div>
-		<h1 class="bos-title flex items-center justify-center text-deep-teal font-black text-5xl md:text-7xl">
+		<div
+			class="hidden md:flex absolute -right-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center"
+		>
+			<img
+				src={getHomeIllustrationSrc('step_2_1_home')}
+				alt=""
+				class="w-full h-full object-contain"
+			/>
+		</div>
+		<h1
+			class="bos-title flex items-center justify-center text-deep-teal font-black text-5xl md:text-7xl"
+		>
 			ZoopDAO
 		</h1>
 		<p class="text-deep-teal text-center text-lg mb-5 px-4 italic">{m.home_tagline()}</p>
 		<!-- Containerized start flow (Typeform-style) -->
-		<div class="w-full flex flex-col items-stretch justify-center gap-5 mt-4 p-5 rounded-xl border-2 bg-white/70 backdrop-blur-sm">
+		<div
+			class="w-full flex flex-col items-stretch justify-center gap-5 mt-4 p-5 rounded-xl border-2 bg-white/70 backdrop-blur-sm"
+		>
 			{#if onboardingStep === 'welcome'}
 				<div class="flex flex-col gap-2 text-center">
 					<p class="text-deep-teal font-bold text-xl">
@@ -369,13 +433,20 @@
 							placeholder={getLocale() === 'pt' ? 'Escreve o teu cargo...' : 'Type your role...'}
 						/>
 					{/if}
-					<Button size="lg" onclick={handleRoleContinue} disabled={!canContinueRoleStep} class="w-full">
+					<Button
+						size="lg"
+						onclick={handleRoleContinue}
+						disabled={!canContinueRoleStep}
+						class="w-full"
+					>
 						{m.continue()}
 					</Button>
 				</div>
 			{:else if onboardingStep === 'profile'}
 				<div class="flex flex-col gap-3">
-					<p class="text-deep-teal font-bold text-lg">{getLocale() === 'pt' ? 'Opcional' : 'Optional'}</p>
+					<p class="text-deep-teal font-bold text-lg">
+						{getLocale() === 'pt' ? 'Opcional' : 'Optional'}
+					</p>
 					<label class="text-sm text-deep-teal/80">
 						{m.nickname()} ({getLocale() === 'pt' ? 'opcional' : 'optional'})
 					</label>
@@ -440,7 +511,7 @@
 										</div>
 									</div>
 								</button>
-								{/each}
+							{/each}
 						</div>
 					{/if}
 				</div>
@@ -483,23 +554,24 @@
 				</div>
 			{/if}
 		</div>
-		<div class="hidden md:flex absolute -right-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center">
-			<img src={getHomeIllustrationSrc('step_4_1_home')} alt="" class="w-full h-full object-contain" />
-		</div>
-		<div class="hidden md:flex absolute -left-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center">
-			<img src={getHomeIllustrationSrc('step_6_1_home')} alt="" class="w-full h-full object-contain" />
-		</div>
-	</div>
-	<div class="absolute top-4 right-4">
-		<select
-			class="p-2 border rounded"
-			bind:value={selectedLanguage}
-			onchange={(e) => changeLanguage((e.currentTarget as HTMLSelectElement).value as Locale)}
+		<div
+			class="hidden md:flex absolute -right-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center"
 		>
-			{#each languages as { code, label }}
-				<option value={code}>{label}</option>
-			{/each}
-		</select>
+			<img
+				src={getHomeIllustrationSrc('step_4_1_home')}
+				alt=""
+				class="w-full h-full object-contain"
+			/>
+		</div>
+		<div
+			class="hidden md:flex absolute -left-56 bottom-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center"
+		>
+			<img
+				src={getHomeIllustrationSrc('step_6_1_home')}
+				alt=""
+				class="w-full h-full object-contain"
+			/>
+		</div>
 	</div>
 </div>
 
