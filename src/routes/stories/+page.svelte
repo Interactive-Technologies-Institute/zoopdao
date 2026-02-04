@@ -154,8 +154,8 @@
 		<p class="text-sm text-deep-teal">{m.explore_stories()}</p>
 	</div>
 
-	<div class="flex flex-wrap gap-4 mt-8">
-		<div class="flex flex-col items-center gap-2">
+	<div class="flex flex-wrap gap-3 mt-8 items-start">
+		<div class="flex flex-col items-center gap-2 w-[calc(50%-0.375rem)] min-w-0 md:w-auto">
 			<p class="self-start text-deep-teal text-sm font-medium">{m.filter_by_character()}</p>
 			<Select.Root
 				type="single"
@@ -166,10 +166,12 @@
 				items={characterOptions}
 			>
 				<Select.Trigger
-					class="h-10 rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex w-64 select-none items-center border px-3 text-sm transition-colors"
+					class="h-10 w-full rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex select-none items-center border px-3 text-sm transition-colors"
 					aria-label="Select a character"
 				>
-					<span class={value ? 'text-black' : 'text-gray-400'}>{selectedLabel}</span>
+					<span class={`flex-1 truncate ${value ? 'text-black' : 'text-gray-400'}`}>
+						{selectedLabel}
+					</span>
 					<ChevronsUpDown class="text-gray-300 ml-auto size-6" />
 				</Select.Trigger>
 				<Select.Portal>
@@ -205,7 +207,7 @@
 				</Select.Portal>
 			</Select.Root>
 		</div>
-		<div class="flex flex-col items-center gap-2">
+		<div class="flex flex-col items-center gap-2 w-[calc(50%-0.375rem)] min-w-0 md:w-auto">
 			<p class="self-start text-deep-teal text-sm font-medium">
 				{getLocale() === 'pt' ? 'Filtrar por modo' : 'Filter by mode'}
 			</p>
@@ -219,10 +221,12 @@
 				items={modeOptions}
 			>
 				<Select.Trigger
-					class="h-10 rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex w-64 select-none items-center border px-3 text-sm transition-colors"
+					class="h-10 w-full rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex select-none items-center border px-3 text-sm transition-colors"
 					aria-label="Select a mode"
 				>
-					<span class={selectedMode ? 'text-black' : 'text-gray-400'}>{selectedModeLabel}</span>
+					<span class={`flex-1 truncate ${selectedMode ? 'text-black' : 'text-gray-400'}`}>
+						{selectedModeLabel}
+					</span>
 					<ChevronsUpDown class="text-gray-300 ml-auto size-6" />
 				</Select.Trigger>
 				<Select.Portal>
@@ -258,7 +262,7 @@
 				</Select.Portal>
 			</Select.Root>
 		</div>
-		<div class="flex flex-col items-center gap-2 h-full">
+		<div class="flex flex-col items-center gap-2 h-full w-full md:w-auto">
 			<p class="self-start text-deep-teal text-sm font-medium">{m.filter_by_card()}</p>
 			<div class="h-full flex flex-wrap gap-2">
 				{#each proposals as p (p.id)}
@@ -279,7 +283,7 @@
 			</div>
 		</div>
 		{#if value || selectedProposalId || selectedMode}
-			<div class="self-end">
+			<div class="self-end w-full md:w-auto">
 				<Button
 					class="flex items-center h-10 font-normal"
 					variant="outline"
@@ -361,21 +365,21 @@
 		<div class="self-center">
 			<Pagination.Root count={data.totalStories} {perPage} bind:page={currentPage}>
 				{#snippet children({ pages, range })}
-					<div class="my-8 flex items-center">
+					<div class="my-8 flex flex-wrap items-center justify-center gap-2 max-w-full px-1">
 						<Pagination.PrevButton
-							class="hover:bg-gray-200 disabled:text-gray-400 mr-[25px] inline-flex gap-1 items-center justify-center rounded-lg bg-transparent active:scale-[0.98] disabled:cursor-not-allowed hover:disabled:bg-transparent p-2"
+							class="hover:bg-gray-200 disabled:text-gray-400 sm:mr-[25px] inline-flex gap-1 items-center justify-center rounded-lg bg-transparent active:scale-[0.98] disabled:cursor-not-allowed hover:disabled:bg-transparent p-2"
 						>
 							<ChevronLeft />
-							{m.previous()}
+							<span class="hidden sm:inline">{m.previous()}</span>
 						</Pagination.PrevButton>
-						<div class="flex items-center gap-2.5">
+						<div class="flex items-center justify-center flex-wrap gap-2.5">
 							{#each pages as page (page.key)}
 								{#if page.type === 'ellipsis'}
 									<div class="select-none font-medium">...</div>
 								{:else}
 									<Pagination.Page
 										{page}
-										class="hover:bg-gray-200 data-[selected]:bg-deep-teal data-[selected]:text-white inline-flex size-10 select-none items-center justify-center rounded-lg bg-transparent font-medium active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent"
+										class="hover:bg-gray-200 data-[selected]:bg-deep-teal data-[selected]:text-white inline-flex size-9 sm:size-10 select-none items-center justify-center rounded-lg bg-transparent font-medium active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 hover:disabled:bg-transparent"
 									>
 										{page.value}
 									</Pagination.Page>
@@ -383,9 +387,9 @@
 							{/each}
 						</div>
 						<Pagination.NextButton
-							class="hover:bg-gray-200 disabled:text-gray-400 ml-[25px] inline-flex gap-1 items-center justify-center rounded-lg bg-transparent active:scale-[0.98] disabled:cursor-not-allowed hover:disabled:bg-transparent p-2"
+							class="hover:bg-gray-200 disabled:text-gray-400 sm:ml-[25px] inline-flex gap-1 items-center justify-center rounded-lg bg-transparent active:scale-[0.98] disabled:cursor-not-allowed hover:disabled:bg-transparent p-2"
 						>
-							<span>{m.next()}</span>
+							<span class="hidden sm:inline">{m.next()}</span>
 							<ChevronRight />
 						</Pagination.NextButton>
 					</div>

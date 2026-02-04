@@ -452,7 +452,7 @@
 						{getLocale() === 'pt' ? 'Opcional' : 'Optional'}
 					</p>
 					<label class="text-sm text-deep-teal/80">
-						{m.nickname()} ({getLocale() === 'pt' ? 'opcional' : 'optional'})
+						{m.nickname()}
 					</label>
 					<input
 						class="p-3 border-2 border-deep-teal/20 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-deep-teal/30"
@@ -460,7 +460,7 @@
 						placeholder={getLocale() === 'pt' ? 'O teu nome...' : 'Your name...'}
 					/>
 					<label class="text-sm text-deep-teal/80">
-						{m.description()} ({getLocale() === 'pt' ? 'opcional' : 'optional'})
+						{m.description()}
 					</label>
 					<textarea
 						class="p-3 border-2 border-deep-teal/20 rounded-lg bg-white min-h-24 resize-none focus:outline-none focus:ring-2 focus:ring-deep-teal/30"
