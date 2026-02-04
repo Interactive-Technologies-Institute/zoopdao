@@ -3,7 +3,8 @@
 	import { Button } from '@/components/ui/button';
 	import { Input } from '@/components/ui/input';
 	import { Textarea } from '@/components/ui/textarea';
-	import { X } from 'lucide-svelte';
+	import { Check, ChevronDown, ChevronUp, ChevronsUpDown, X } from 'lucide-svelte';
+	import { Select } from 'bits-ui';
 	import { m } from '@src/paraglide/messages';
 	import { localizeUrl, getLocale } from '@src/paraglide/runtime.js';
 	import clickSound from '@/sounds/click.mp3';
@@ -66,6 +67,12 @@
 	// Get voting periods for current year only (excluding exceptional periods)
 	const currentYear = new Date().getFullYear();
 	const votingPeriods = getVotingPeriods(currentYear);
+	const votingPeriodOptions = $derived.by(() =>
+		votingPeriods.map((p) => ({ value: p.id, label: p.label }))
+	);
+	const votingPeriodLabel = $derived.by(
+		() => votingPeriods.find((p) => p.id === votingPeriod)?.label ?? m.select_voting_period()
+	);
 
 	function validateForm(): boolean {
 		if (!title.trim()) return false;
@@ -281,17 +288,56 @@
 					<label for="votingPeriod" class="bos-title block text-sm font-medium text-deep-teal mb-2">
 						{m.voting_period()}
 					</label>
-					<select
-						id="votingPeriod"
-						bind:value={votingPeriod}
-						required
-						class="border-deep-teal bg-white ring-offset-white focus-visible:ring-deep-teal flex h-10 w-full rounded-md border px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+					<Select.Root
+						type="single"
+						value={votingPeriod}
+						onValueChange={(v) => {
+							votingPeriod = v;
+						}}
+						items={votingPeriodOptions}
 					>
-						<option value="">{m.select_voting_period()}</option>
-						{#each votingPeriods as period}
-							<option value={period.id}>{period.label}</option>
-						{/each}
-					</select>
+						<Select.Trigger
+							id="votingPeriod"
+							class="h-10 rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex w-full select-none items-center border px-3 text-sm transition-colors"
+							aria-label="Select a voting period"
+						>
+							<span class={`flex-1 truncate ${votingPeriod ? 'text-black' : 'text-gray-400'}`}>
+								{votingPeriodLabel}
+							</span>
+							<ChevronsUpDown class="text-gray-300 ml-auto size-6" />
+						</Select.Trigger>
+						<Select.Portal>
+							<Select.Content
+								class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 max-h-[var(--bits-select-content-available-height)] w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-2 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
+								sideOffset={10}
+							>
+								<Select.ScrollUpButton class="flex w-full items-center justify-center">
+									<ChevronUp class="size-3" />
+								</Select.ScrollUpButton>
+								<Select.Viewport class="p-1">
+									{#each votingPeriodOptions as option (option.value)}
+										<Select.Item
+											class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 text-sm outline-none transition-colors data-[highlighted]:bg-gray-100 data-[selected]:bg-deep-teal data-[selected]:text-white"
+											value={option.value}
+											label={option.label}
+										>
+											{#snippet children({ selected })}
+												<span class="flex-1">{option.label}</span>
+												{#if selected}
+													<div class="ml-2">
+														<Check aria-label="check" />
+													</div>
+												{/if}
+											{/snippet}
+										</Select.Item>
+									{/each}
+								</Select.Viewport>
+								<Select.ScrollDownButton class="flex w-full items-center justify-center">
+									<ChevronDown class="size-3" />
+								</Select.ScrollDownButton>
+							</Select.Content>
+						</Select.Portal>
+					</Select.Root>
 				</div>
 
 				<!-- Submit Button -->

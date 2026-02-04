@@ -85,6 +85,10 @@
 		{ code: 'pt', label: '🇵🇹 Português' }
 	];
 
+	const selectedLanguageLabel = $derived.by(
+		() => languages.find((l) => l.code === selectedLanguage)?.label ?? ''
+	);
+
 	// Function to change the language
 	function changeLanguage(lang: Locale) {
 		selectedLanguage = lang;
@@ -322,15 +326,51 @@
 		}`}
 	>
 		<div class="w-full flex justify-center pb-3">
-			<select
-				class="p-2 border rounded bg-white/80 backdrop-blur-sm"
-				bind:value={selectedLanguage}
-				onchange={(e) => changeLanguage((e.currentTarget as HTMLSelectElement).value as Locale)}
+			<Select.Root
+				type="single"
+				value={selectedLanguage}
+				onValueChange={(v) => changeLanguage(v as Locale)}
+				items={languages.map((l) => ({ value: l.code, label: l.label }))}
 			>
-				{#each languages as { code, label }}
-					<option value={code}>{label}</option>
-				{/each}
-			</select>
+				<Select.Trigger
+					class="h-10 min-w-[12rem] rounded-md border-gray-300 bg-white/80 backdrop-blur-sm focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex select-none items-center border px-3 text-sm transition-colors"
+					aria-label="Select a language"
+				>
+					<span class="flex-1 truncate">{selectedLanguageLabel}</span>
+					<ChevronsUpDown class="text-gray-300 ml-auto size-6" />
+				</Select.Trigger>
+				<Select.Portal>
+					<Select.Content
+						class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 max-h-[var(--bits-select-content-available-height)] w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-2 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
+						sideOffset={10}
+					>
+						<Select.ScrollUpButton class="flex w-full items-center justify-center">
+							<ChevronUp class="size-3" />
+						</Select.ScrollUpButton>
+						<Select.Viewport class="p-1">
+							{#each languages as option (option.code)}
+								<Select.Item
+									class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 text-sm outline-none transition-colors data-[highlighted]:bg-gray-100 data-[selected]:bg-deep-teal data-[selected]:text-white"
+									value={option.code}
+									label={option.label}
+								>
+									{#snippet children({ selected })}
+										<span class="flex-1">{option.label}</span>
+										{#if selected}
+											<div class="ml-2">
+												<Check aria-label="check" />
+											</div>
+										{/if}
+									{/snippet}
+								</Select.Item>
+							{/each}
+						</Select.Viewport>
+						<Select.ScrollDownButton class="flex w-full items-center justify-center">
+							<ChevronDown class="size-3" />
+						</Select.ScrollDownButton>
+					</Select.Content>
+				</Select.Portal>
+			</Select.Root>
 		</div>
 		<div
 			class="hidden md:flex absolute -left-56 top-0 w-32 h-32 md:w-48 md:h-48 lg:w-52 lg:h-52 items-center justify-center"
