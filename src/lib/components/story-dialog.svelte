@@ -11,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import paperSound from '@/sounds/rustling-paper.mp3';
 	import clickSound from '@/sounds/ui-click.mp3';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 	import { Flag, FileText } from 'lucide-svelte';
 	import Timer from './timer.svelte';
 	import PostStory from './post-story-icon.svelte';
@@ -20,14 +21,12 @@
 	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 	import { getProposalCardType } from '$lib/utils/proposal-cards';
 
-	let audio: HTMLAudioElement;
-	let click_sound: HTMLAudioElement;
+	let audio: HTMLAudioElement | null = null;
+	let click_sound: HTMLAudioElement | null = null;
 
 	onMount(() => {
-		click_sound = new Audio(clickSound);
-		click_sound.volume = 0.5;
-		audio = new Audio(paperSound);
-		audio.volume = 0.5;
+		click_sound = createAudio(clickSound, 0.5);
+		audio = createAudio(paperSound, 0.5);
 	});
 	interface StoryDialogProps {
 		open: boolean;
@@ -114,7 +113,9 @@
 	);
 	const preconditions = $derived.by(() =>
 		objectives
-			.flatMap((objective: { preconditions?: { value?: string }[] }) => objective.preconditions ?? [])
+			.flatMap(
+				(objective: { preconditions?: { value?: string }[] }) => objective.preconditions ?? []
+			)
 			.map((precondition) => precondition.value)
 			.filter((value: string | undefined): value is string => !!value)
 	);
@@ -177,13 +178,13 @@
 			// Start timer only when dialog is actually open
 			// Use setTimeout to ensure dialog is fully rendered before starting timer
 			setTimeout(() => {
-			const currentGameRound = gameState.gameRounds.find((r) => r.round === currentRound);
-			if (currentGameRound && !currentGameRound.timer_duration) {
-				gameState.startRoundTimer();
-			}
+				const currentGameRound = gameState.gameRounds.find((r) => r.round === currentRound);
+				if (currentGameRound && !currentGameRound.timer_duration) {
+					gameState.startRoundTimer();
+				}
 			}, 100);
-			
-			audio.play();
+
+			playAudio(audio);
 			setTimeout(() => {
 				const round = document.getElementById(`round-${currentRound}`);
 				if (round) {
@@ -201,12 +202,14 @@
 	async function submitAnswer() {
 		if (playerState === 'writing') {
 			// Check if there's only one human player
-			const humanPlayers = gameState.players.filter(p => p.is_active !== false);
+			const humanPlayers = gameState.players.filter((p) => p.is_active !== false);
 			const isSinglePlayer = humanPlayers.length === 1;
 			const currentRoundBefore = gameState.currentRound;
-			
+
 			if (currentAnswer.trim() === '') {
-				await gameState.submitAnswer(getLocale() === 'pt' ? '(Submissão vazia)' : '(Empty submission)');
+				await gameState.submitAnswer(
+					getLocale() === 'pt' ? '(Submissão vazia)' : '(Empty submission)'
+				);
 				alert(
 					getLocale() === 'pt'
 						? 'Não escreveste nada nesta ronda! Podes editar a tua discussão no final da participação.'
@@ -215,7 +218,7 @@
 			} else {
 				await gameState.submitAnswer(currentAnswer);
 			}
-			
+
 			// If single player, wait for the round to advance
 			if (isSinglePlayer) {
 				// Wait for the database to process the answer and check round completion
@@ -223,32 +226,35 @@
 				// The subscription will pick up the new round automatically
 				let attempts = 0;
 				const maxAttempts = 10; // Wait up to 2 seconds (10 * 200ms)
-				
+
 				while (attempts < maxAttempts) {
-					await new Promise(resolve => setTimeout(resolve, 200));
-					
+					await new Promise((resolve) => setTimeout(resolve, 200));
+
 					// Check if the round has advanced
 					if (gameState.currentRound > currentRoundBefore) {
 						console.log('Round advanced from', currentRoundBefore, 'to', gameState.currentRound);
 						break;
 					}
-					
+
 					attempts++;
 				}
-				
+
 				// If round didn't advance, log for debugging
 				if (gameState.currentRound === currentRoundBefore) {
-					console.warn('Round did not advance after submit. Current round:', gameState.currentRound);
+					console.warn(
+						'Round did not advance after submit. Current round:',
+						gameState.currentRound
+					);
 				}
 			}
-			
+
 			open = false;
 			currentAnswer = '';
 		}
 	}
 
 	function onSubmit() {
-		click_sound.play();
+		playAudio(click_sound);
 		submitAnswer();
 	}
 
@@ -305,123 +311,131 @@
 				</p>
 			</div>
 		{:else}
-		{#each sortedRounds as round (round.index)}
-			{@const answer = playerAnswers.find((answer) => answer.round === round.index)}
-			{@const proposalText = getProposalTextForRound(round.index)}
-			{@const displayCard = proposalText ? buildProposalCard(round.index, proposalText) : null}
-			{@const isCurrentRound = round.index === currentRound}
-			{@const isFutureRound = round.index > (currentRound ?? -1)}
-			<div
-				id={`round-${round.index}`}
-				class="flex flex-col items-center lg:flex-row lg:items-stretch gap-8 w-full {round.index >
-				(currentRound ?? -1)
-					? 'opacity-30 grayscale'
-					: ''}"
-			>
-				<div class="shrink-0 flex flex-col items-stretch">
-					{#if round.index === 0}
-						{#if displayCard}
-							<Card card={displayCard} />
-						{:else}
-							<CharacterCard character={player?.character ?? 'child'} />
-						{/if}
-						{#if player && isNonHumanCharacter(player.character)}
-							<Button variant="outline" class="mt-2" onclick={() => (showSpeciesDialog = true)}
-								>{getLocale() === 'pt'
-									? 'Saber mais sobre a tua personagem'
-									: 'Learn more about your character'}</Button
-							>
-							<SpeciesInfoDialog
-								bind:open={showSpeciesDialog}
-								character={player?.character ?? 'child'}
-							/>
-						{/if}
-					{:else if round.index === 7}
-						<div
-							class="w-64 h-96 bg-white rounded-xl bg-center border-2 border-gray-400/50 relative"
-							style={`background-image: url('${ZOOP_THEME_ASSET_PREFIX}/cards/post-story.svg');`}
-						>
-							<div class="absolute inset-0 pb-32 px-4 flex flex-col justify-end text-center gap-3">
-								<h3 class={`text-2xl font-bold text-white`}>{m.post_story()}</h3>
-								<p class="text-xs font-medium">{m.write_post_story()}</p>
-							</div>
-						</div>
-					{:else if displayCard}
-						<Card card={displayCard} />
-					{:else}
-						<div
-							class="w-64 h-96 rounded-lg border-black border-dashed border-2 flex items-center justify-center"
-						>
-							<p class="text-sm text-center">{m.card_not_selected()}</p>
-						</div>
-					{/if}
-					{#if isCurrentRound}
-						<Button
-							variant="outline"
-							class="mt-2 w-full flex items-center justify-center gap-2 hover:bg-tertiary/40"
-							onclick={() => (openProposalDialog = true)}
-							disabled={!proposalId}
-						>
-							<FileText class="h-4 w-4" />
-							{m.view_full_proposal()}
-						</Button>
-					{/if}
-				</div>
-				<div class="flex flex-col items-stretch w-full">
-					<div class="flex items-center gap-2">
+			{#each sortedRounds as round (round.index)}
+				{@const answer = playerAnswers.find((answer) => answer.round === round.index)}
+				{@const proposalText = getProposalTextForRound(round.index)}
+				{@const displayCard = proposalText ? buildProposalCard(round.index, proposalText) : null}
+				{@const isCurrentRound = round.index === currentRound}
+				{@const isFutureRound = round.index > (currentRound ?? -1)}
+				<div
+					id={`round-${round.index}`}
+					class="flex flex-col items-center lg:flex-row lg:items-stretch gap-8 w-full {round.index >
+					(currentRound ?? -1)
+						? 'opacity-30 grayscale'
+						: ''}"
+				>
+					<div class="shrink-0 flex flex-col items-stretch">
 						{#if round.index === 0}
-							<div class="w-8 h-8 rounded-full bg-[#FF6157] bos-accent-bg grid place-items-center">
-								<Flag class="w-4 h-4 text-white flex items-center justify-center" />
-							</div>
-						{:else if round.index === 7}
-							<div
-								class="w-8 h-8 rounded-full grid place-items-center {isFutureRound ? 'bg-red-500' : 'bg-deep-teal'}"
-							>
-								<div class="w-4 h-4 flex items-center justify-center">
-									<PostStory color={'white'} />
-								</div>
-							</div>
-						{:else}
-							<div
-								class="w-8 h-8 rounded-full grid place-items-center {isFutureRound ? 'bg-red-500' : 'bg-deep-teal'}"
-							>
-								<span
-									class="text-white font-medium text-center text-base flex items-center justify-center"
-									>{round.index}</span
+							{#if displayCard}
+								<Card card={displayCard} />
+							{:else}
+								<CharacterCard character={player?.character ?? 'child'} />
+							{/if}
+							{#if player && isNonHumanCharacter(player.character)}
+								<Button variant="outline" class="mt-2" onclick={() => (showSpeciesDialog = true)}
+									>{getLocale() === 'pt'
+										? 'Saber mais sobre a tua personagem'
+										: 'Learn more about your character'}</Button
 								>
-							</div>
-						{/if}
-						<p class="text-xl font-bold text-deep-teal">
-							{getTranslation(ROUNDS[round.index].title)}
-						</p>
-					</div>
-					<p class="font-medium py-1">
-						{getTranslation(ROUNDS[round.index].description)}
-					</p>
-					{#if round.index === currentRound && playerState === 'writing'}
-						<div class="flex-1 relative mb-4">
-							<Textarea class="min-h-64 h-full mt-2" bind:value={currentAnswer} />
-						</div>
-						<div class=" flex items-center justify-between gap-3 bg-white">
-							{#if open && playerState === 'writing' && gameState.mode === 'pedagogic'}
-								<Timer 
-									onTimeUp={handleTimeUp} 
-									duration={gameState.getTimerDurationForRound(currentRound)}
+								<SpeciesInfoDialog
+									bind:open={showSpeciesDialog}
+									character={player?.character ?? 'child'}
 								/>
 							{/if}
-							<Button onclick={onSubmit}>{m.submit()}</Button>
+						{:else if round.index === 7}
+							<div
+								class="w-64 h-96 bg-white rounded-xl bg-center border-2 border-gray-400/50 relative"
+								style={`background-image: url('${ZOOP_THEME_ASSET_PREFIX}/cards/post-story.svg');`}
+							>
+								<div
+									class="absolute inset-0 pb-32 px-4 flex flex-col justify-end text-center gap-3"
+								>
+									<h3 class={`text-2xl font-bold text-white`}>{m.post_story()}</h3>
+									<p class="text-xs font-medium">{m.write_post_story()}</p>
+								</div>
+							</div>
+						{:else if displayCard}
+							<Card card={displayCard} />
+						{:else}
+							<div
+								class="w-64 h-96 rounded-lg border-black border-dashed border-2 flex items-center justify-center"
+							>
+								<p class="text-sm text-center">{m.card_not_selected()}</p>
+							</div>
+						{/if}
+						{#if isCurrentRound}
+							<Button
+								variant="outline"
+								class="mt-2 w-full flex items-center justify-center gap-2 hover:bg-tertiary/40"
+								onclick={() => (openProposalDialog = true)}
+								disabled={!proposalId}
+							>
+								<FileText class="h-4 w-4" />
+								{m.view_full_proposal()}
+							</Button>
+						{/if}
+					</div>
+					<div class="flex flex-col items-stretch w-full">
+						<div class="flex items-center gap-2">
+							{#if round.index === 0}
+								<div
+									class="w-8 h-8 rounded-full bg-[#FF6157] bos-accent-bg grid place-items-center"
+								>
+									<Flag class="w-4 h-4 text-white flex items-center justify-center" />
+								</div>
+							{:else if round.index === 7}
+								<div
+									class="w-8 h-8 rounded-full grid place-items-center {isFutureRound
+										? 'bg-red-500'
+										: 'bg-deep-teal'}"
+								>
+									<div class="w-4 h-4 flex items-center justify-center">
+										<PostStory color={'white'} />
+									</div>
+								</div>
+							{:else}
+								<div
+									class="w-8 h-8 rounded-full grid place-items-center {isFutureRound
+										? 'bg-red-500'
+										: 'bg-deep-teal'}"
+								>
+									<span
+										class="text-white font-medium text-center text-base flex items-center justify-center"
+										>{round.index}</span
+									>
+								</div>
+							{/if}
+							<p class="text-xl font-bold text-deep-teal">
+								{getTranslation(ROUNDS[round.index].title)}
+							</p>
 						</div>
-					{:else}
-						<Textarea class="min-h-64 flex-1 mt-2" value={answer?.answer ?? ''} disabled />
-					{/if}
+						<p class="font-medium py-1">
+							{getTranslation(ROUNDS[round.index].description)}
+						</p>
+						{#if round.index === currentRound && playerState === 'writing'}
+							<div class="flex-1 relative mb-4">
+								<Textarea class="min-h-64 h-full mt-2" bind:value={currentAnswer} />
+							</div>
+							<div class=" flex items-center justify-between gap-3 bg-white">
+								{#if open && playerState === 'writing' && gameState.mode === 'pedagogic'}
+									<Timer
+										onTimeUp={handleTimeUp}
+										duration={gameState.getTimerDurationForRound(currentRound)}
+									/>
+								{/if}
+								<Button onclick={onSubmit}>{m.submit()}</Button>
+							</div>
+						{:else}
+							<Textarea class="min-h-64 flex-1 mt-2" value={answer?.answer ?? ''} disabled />
+						{/if}
+					</div>
 				</div>
-			</div>
-			{#if round.index !== 7}
-				<div class="h-0.5 border-t-2 border-gray-200"></div>
-			{/if}
-		{/each}
+				{#if round.index !== 7}
+					<div class="h-0.5 border-t-2 border-gray-200"></div>
+				{/if}
+			{/each}
 		{/if}
 	</Dialog.Content>
 </Dialog.Root>
 
-<ProposalDialog bind:open={openProposalDialog} proposalId={proposalId} />
+<ProposalDialog bind:open={openProposalDialog} {proposalId} />

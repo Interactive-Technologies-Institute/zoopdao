@@ -16,6 +16,7 @@
 	import fanfare from '@/sounds/fanfare.mp3';
 	import bubbles from '@/sounds/bubbles-sound-effect.mp3';
 	import { onMount, onDestroy } from 'svelte';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 	import { createGameTour } from '@/components/ui/shepherd/game-tour.svelte.js';
 	import type { Tour } from 'shepherd.js';
 	import RoundTransition from '@/components/round-transition.svelte';
@@ -23,7 +24,11 @@
 	import StatusPill from '@/components/status-pill.svelte';
 	import ProposalDialog from '@/components/proposal-dialog.svelte';
 	import Timer from '@/components/timer.svelte';
-	import { calculateAIAgentsCount, generateAIAgents, createParticipants } from '@/utils/participants';
+	import {
+		calculateAIAgentsCount,
+		generateAIAgents,
+		createParticipants
+	} from '@/utils/participants';
 	import type { AIAgent, AIMessage, Participant, Role } from '@/types';
 	import { getAINonHumanFallbackMessages } from '$lib/data/ai-nonhumans';
 	import { supabase } from '@/supabase';
@@ -36,12 +41,15 @@
 		mapDiscussionMessageRow
 	} from '@/utils/discussion-messages';
 	import { AquariumLayoutState } from '@/state/aquarium-layout.svelte';
-	import { DiscussionTimelineState, type TimelineMessage } from '@/state/discussion-timeline.svelte';
+	import {
+		DiscussionTimelineState,
+		type TimelineMessage
+	} from '@/state/discussion-timeline.svelte';
 
 	let tour: Tour | undefined;
 
-	let fanfareAudio: HTMLAudioElement;
-	let startupAudio: HTMLAudioElement;
+	let fanfareAudio: HTMLAudioElement | null = null;
+	let startupAudio: HTMLAudioElement | null = null;
 
 	let tourCompleted = $state(false);
 
@@ -56,16 +64,14 @@
 				}
 				// Also remove any shepherd elements
 				const shepherdElements = document.querySelectorAll('.shepherd-element');
-				shepherdElements.forEach(el => el.remove());
+				shepherdElements.forEach((el) => el.remove());
 			}, 100);
 		}
 	});
 
 	onMount(() => {
-		fanfareAudio = new Audio(fanfare);
-		fanfareAudio.volume = 0.;
-		startupAudio = new Audio(bubbles);
-		startupAudio.volume = 0.0;
+		fanfareAudio = createAudio(fanfare);
+		startupAudio = createAudio(bubbles);
 
 		if (gameState.state === 'starting') {
 			tour = createGameTour();
@@ -101,7 +107,6 @@
 		}
 	});
 
-
 	onDestroy(() => {
 		if (tour) {
 			tour.complete();
@@ -123,7 +128,6 @@
 		console.log('Rounds length:', data.rounds?.length || 0);
 	});
 
-
 	let gameState = new GameState(
 		data.cards,
 		data.rounds,
@@ -141,7 +145,7 @@
 	type TransitionState = 'starting' | 'transitioning' | 'ending' | 'ended';
 	let transitionState: TransitionState = $state('starting');
 	let previousRound = $state(0);
-	
+
 	const enableDiscussionChat = true;
 	const ENABLE_DISCUSSION_RELOAD = true;
 	const chatRound = $derived.by(() => gameState.currentRound === 7);
@@ -154,14 +158,13 @@
 		role: 'research'
 	};
 
-	
 	// Configurable variable for number of discussion rounds with message exchanges
 	// This controls how many rounds of messages are exchanged between user and AIs
 	// before showing the save history popup
 	const DISCUSSION_ROUNDS_COUNT = $derived.by(() =>
 		SINGLE_AI_MODE_ROUND7 ? MAX_USER_MESSAGES_ROUND7 : 1
 	);
-	
+
 	let hasUserChattedThisRound = $state(false);
 	let userDraft = $state('');
 	let userLastSentMessage = $state<string | null>(null);
@@ -174,7 +177,7 @@
 	let aiAgents = $state<AIAgent[]>([]);
 	let aiMessages = $state<AIMessage[]>([]);
 	let typingAgents = $state<Set<string>>(new Set()); // Track which agents are currently typing
-	
+
 	// Initialize AI agents based on human players count
 	$effect(() => {
 		if (!enableDiscussionChat) {
@@ -187,7 +190,7 @@
 			aiAgents = [SINGLE_AI_AGENT];
 			return;
 		}
-		const humanPlayers = gameState.players.filter(p => p.is_active !== false);
+		const humanPlayers = gameState.players.filter((p) => p.is_active !== false);
 		if (humanPlayers.length > 0 && aiAgents.length === 0) {
 			try {
 				const aiCount = calculateAIAgentsCount(humanPlayers.length);
@@ -197,14 +200,14 @@
 			}
 		}
 	});
-	
+
 	// Create participants list (humans + AI)
 	const participants = $derived.by(() => {
-		const humanPlayers = gameState.players.filter(p => p.is_active !== false);
+		const humanPlayers = gameState.players.filter((p) => p.is_active !== false);
 		const agents = enableDiscussionChat ? aiAgents : [];
 		return createParticipants(humanPlayers, agents);
 	});
-	
+
 	// Generate AI messages after each round completion
 	$effect(() => {
 		if (gameState.currentRound !== lastChatRound) {
@@ -252,12 +255,12 @@
 		}
 	});
 
-function handleTransitionComplete() {
-	showRoundTransition = false;
-	if (keepStoryDialogOpen && !chatRound) {
-		openStoryDialog = true;
+	function handleTransitionComplete() {
+		showRoundTransition = false;
+		if (keepStoryDialogOpen && !chatRound) {
+			openStoryDialog = true;
+		}
 	}
-}
 
 	let playerState = $derived.by(() => {
 		return gameState.playersState[gameState.playerId].state;
@@ -332,7 +335,9 @@ function handleTransitionComplete() {
 			// Use the contained rect so avatar math stays stable across aspect ratios (e.g. iPad landscape).
 			const rect = mapEl.getBoundingClientRect();
 			const naturalAspect =
-				mapEl.naturalWidth && mapEl.naturalHeight ? mapEl.naturalWidth / mapEl.naturalHeight : 1200 / 800;
+				mapEl.naturalWidth && mapEl.naturalHeight
+					? mapEl.naturalWidth / mapEl.naturalHeight
+					: 1200 / 800;
 			const boxAspect = rect.width / rect.height;
 
 			let contentLeft = rect.left;
@@ -390,7 +395,7 @@ function handleTransitionComplete() {
 		chatRound;
 		requestAnimationFrame(attachSafeAreaObservers);
 	});
-	
+
 	// Discussion timeline (single source of truth for history + avatar chat UI)
 	let discussionTimeline = new DiscussionTimelineState();
 	let lastLoadedDiscussionRound = $state<number | null>(null);
@@ -718,18 +723,20 @@ function handleTransitionComplete() {
 
 				const nextTimeline: TimelineMessage[] = [];
 				for (const dbMsg of dbMessages) {
-					nextTimeline.push(...timelineMessagesFromDbMessage({
-						id: dbMsg.id,
-						game_id: dbMsg.gameId,
-						proposal_id: dbMsg.proposalId,
-						round: dbMsg.round,
-						participant_type: dbMsg.participantType,
-						participant_id: dbMsg.participantId,
-						agent_role: dbMsg.agentRole,
-						content: dbMsg.content,
-						created_at: dbMsg.createdAt,
-						metadata: dbMsg.metadata
-					}));
+					nextTimeline.push(
+						...timelineMessagesFromDbMessage({
+							id: dbMsg.id,
+							game_id: dbMsg.gameId,
+							proposal_id: dbMsg.proposalId,
+							round: dbMsg.round,
+							participant_type: dbMsg.participantType,
+							participant_id: dbMsg.participantId,
+							agent_role: dbMsg.agentRole,
+							content: dbMsg.content,
+							created_at: dbMsg.createdAt,
+							metadata: dbMsg.metadata
+						})
+					);
 				}
 
 				// Replace timeline with DB snapshot for this round. We keep any optimistic entries
@@ -738,7 +745,10 @@ function handleTransitionComplete() {
 
 				// If we're coming back/reloading, infer "has user chatted" from persisted messages.
 				const hasSelfMessage = dbMessages.some(
-					(m) => m.participantType === 'human' && m.participantId === data.playerId && m.round === currentRound
+					(m) =>
+						m.participantType === 'human' &&
+						m.participantId === data.playerId &&
+						m.round === currentRound
 				);
 				if (hasSelfMessage) {
 					hasUserChattedThisRound = true;
@@ -796,11 +806,9 @@ function handleTransitionComplete() {
 		};
 	});
 
-	
-
 	$effect(() => {
 		if (gameState.state === 'starting') {
-			startupAudio.play();
+			playAudio(startupAudio);
 		}
 	});
 
@@ -813,18 +821,18 @@ function handleTransitionComplete() {
 	// 		openEndDialog = true;
 	// 	}
 	// });
-	
+
 	// New logic: Show end dialog after discussion rounds complete
 	// Check if discussion round is complete (user sent message + all AIs sent messages + no typing)
 	$effect(() => {
 		if (chatRound && hasUserChattedThisRound && aiAgents.length > 0) {
 			// Check if all AI agents have sent their messages for this round
-			const currentRoundMessages = aiMessages.filter(msg => msg.round === gameState.currentRound);
-			
+			const currentRoundMessages = aiMessages.filter((msg) => msg.round === gameState.currentRound);
+
 			// Get unique agent IDs that have sent messages in this round
-			const agentsWhoResponded = new Set(currentRoundMessages.map(msg => msg.agent_id));
+			const agentsWhoResponded = new Set(currentRoundMessages.map((msg) => msg.agent_id));
 			// Check if all agents have responded (each agent should have at least one message)
-			const allAgentsResponded = aiAgents.every(agent => agentsWhoResponded.has(agent.id));
+			const allAgentsResponded = aiAgents.every((agent) => agentsWhoResponded.has(agent.id));
 			const noAgentsTyping = typingAgents.size === 0;
 			const userMessageCount = discussionMessages.filter(
 				(msg) => msg.senderType === 'human' && msg.round === gameState.currentRound
@@ -839,7 +847,7 @@ function handleTransitionComplete() {
 					userMessageCount >= MAX_USER_MESSAGES_ROUND7 &&
 					aiMessageCount >= MAX_AI_MESSAGES_ROUND7
 				) {
-					fanfareAudio?.play();
+					playAudio(fanfareAudio);
 					openEndDialog = true;
 				}
 				return;
@@ -849,7 +857,7 @@ function handleTransitionComplete() {
 				discussionRoundCount++;
 				// If we've reached the configured number of discussion rounds, show save dialog
 				if (discussionRoundCount >= DISCUSSION_ROUNDS_COUNT) {
-					fanfareAudio?.play();
+					playAudio(fanfareAudio);
 					openEndDialog = true;
 				}
 			}
@@ -873,11 +881,7 @@ function handleTransitionComplete() {
 			).length;
 			const aiMessageCount = aiMessages.filter((msg) => msg.round === currentRound).length;
 
-			if (
-				chatRound &&
-				SINGLE_AI_MODE_ROUND7 &&
-				userMessageCount >= MAX_USER_MESSAGES_ROUND7
-			) {
+			if (chatRound && SINGLE_AI_MODE_ROUND7 && userMessageCount >= MAX_USER_MESSAGES_ROUND7) {
 				userIsSending = false;
 				alert(m.message_limit_reached());
 				return;
@@ -924,7 +928,6 @@ function handleTransitionComplete() {
 				userDraft = '';
 				userIsSending = false;
 			}
-
 
 			// Get chat history for AI context (including current round)
 			const chatHistory = await getChatHistoryForAI(supabase, gameId, currentRound); // Includes current round messages
@@ -980,7 +983,8 @@ function handleTransitionComplete() {
 					// Best-effort persistence after UI update
 					try {
 						const fallbackTurnIndex = discussionTimeline.messages.filter(
-							(msg) => msg.round === currentRound && msg.senderType === 'ai' && msg.senderId === agent.id
+							(msg) =>
+								msg.round === currentRound && msg.senderType === 'ai' && msg.senderId === agent.id
 						).length;
 						const persisted = await storeAIMessage(
 							supabase,
@@ -1023,10 +1027,10 @@ function handleTransitionComplete() {
 				const totalTime = 60000; // 1 minute in milliseconds
 				const minDelay = 10000; // 10 seconds minimum
 				const baseDelay = Math.max(minDelay, Math.floor(totalTime / aiAgents.length));
-				
+
 				// Shuffle agents for random order
 				const shuffledAgents = [...aiAgents].sort(() => Math.random() - 0.5);
-				
+
 				// Process each agent sequentially
 				for (let i = 0; i < shuffledAgents.length; i++) {
 					const agent = shuffledAgents[i];
@@ -1035,23 +1039,21 @@ function handleTransitionComplete() {
 					if (i > 0) {
 						await waitForAiDelay(200);
 					}
-					
+
 					// Only show the current agent typing
 					typingAgents = new Set([agent.id]);
 
 					// Calculate random delay between minDelay and baseDelay * 1.5
 					const delay = Math.floor(minDelay + Math.random() * (baseDelay * 1.5 - minDelay));
-					
+
 					// Wait before processing next agent (except for first agent)
 					if (i > 0) {
 						await waitForAiDelay(delay);
 					}
-					
+
 					try {
 						const inputSource = message.trim() ? 'manual' : 'auto';
-						const allowMultipleAiReplies =
-							chatRound &&
-							MAX_AI_MESSAGES_ROUND7 > 1;
+						const allowMultipleAiReplies = chatRound && MAX_AI_MESSAGES_ROUND7 > 1;
 
 						// Generate message in backend first (respects rate limit)
 						const response = await fetch('/api/ai/messages', {
@@ -1088,12 +1090,12 @@ function handleTransitionComplete() {
 							try {
 								// Wait a bit before showing the actual message (simulate typing)
 								await waitForAiDelay(2000 + Math.random() * 2000); // 2-4 seconds
-								
+
 								// Split content if it contains multiple messages (separated by \n\n)
 								const messageContents = result.message.content
 									.split('\n\n')
 									.filter((m: string) => m.trim());
-								
+
 								messageContents.forEach((content: string, index: number) => {
 									discussionTimeline.upsert({
 										key: `db:${result.message.id}:${index}`,
@@ -1139,7 +1141,7 @@ function handleTransitionComplete() {
 		// ZD-179: AI agents represent AVG non-humans (not human departments).
 		const messages = getAINonHumanFallbackMessages(agent.name, getLocale());
 		const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-		
+
 		// Add context about the user's message if available
 		if (userMessage && userMessage.trim().length > 0) {
 			const topic = `${userMessage.substring(0, 50)}${userMessage.length > 50 ? '...' : ''}`;
@@ -1150,7 +1152,7 @@ function handleTransitionComplete() {
 			console.log(`Generated fallback message for ${agent.name} with user context:`, fallbackMsg);
 			return fallbackMsg;
 		}
-		
+
 		const fallbackMsg = `${randomMessage}`;
 		console.log(`Generated fallback message for ${agent.name} without user context:`, fallbackMsg);
 		return fallbackMsg;
@@ -1171,20 +1173,16 @@ function handleTransitionComplete() {
 	$inspect(playerState);
 </script>
 
-	<div class="w-screen h-[100dvh] relative">
-		<Map layout={aquariumLayout} />
-		<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
-		<StatusPill
-			playerState={currentPlayerState}
-			currentRound={gameState.currentRound}
-		/>
-	<ProposalDialog 
-		bind:open={openProposalDialog} 
-		proposalId={data.proposalId ?? null} 
-	/>
-	
+<div class="w-screen h-[100dvh] relative">
+	<Map layout={aquariumLayout} />
+	<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
+	<StatusPill playerState={currentPlayerState} currentRound={gameState.currentRound} />
+	<ProposalDialog bind:open={openProposalDialog} proposalId={data.proposalId ?? null} />
+
 	{#if !chatRound}
-		<div class="discussion-entry-controls fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[520px] z-50 pointer-events-auto flex flex-col gap-3">
+		<div
+			class="discussion-entry-controls fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[520px] z-50 pointer-events-auto flex flex-col gap-3"
+		>
 			<Button
 				size="lg"
 				onclick={async () => {
@@ -1217,7 +1215,9 @@ function handleTransitionComplete() {
 			class="fixed left-3 right-3 z-[90] pointer-events-none border-2 border-dashed border-fuchsia-500/70 rounded-2xl bg-fuchsia-500/5"
 			style={`top:${aquariumLayout.safeTopPx}px; bottom:${aquariumLayout.safeBottomPx}px;`}
 		></div>
-		<div class="fixed left-3 bottom-3 z-[91] rounded-lg bg-black/80 px-3 py-2 text-xs text-white pointer-events-none">
+		<div
+			class="fixed left-3 bottom-3 z-[91] rounded-lg bg-black/80 px-3 py-2 text-xs text-white pointer-events-none"
+		>
 			safeTop: {Math.round(aquariumLayout.safeTopPx)}px · safeBottom:{' '}
 			{Math.round(aquariumLayout.safeBottomPx)}px
 		</div>
@@ -1228,17 +1228,26 @@ function handleTransitionComplete() {
 		aria-hidden="true"
 	></div>
 	<StoryDialog bind:open={openStoryDialog} {gameState} proposalId={data.proposalId ?? null} />
-	
+
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
 	{#if enableDiscussionChat && chatRound}
 		{#if gameState.mode === 'pedagogic'}
-			<div class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[560px] z-50 pointer-events-auto">
-				<div class="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg border border-black/5">
-					<Timer onTimeUp={() => {}} duration={gameState.getTimerDurationForRound(gameState.currentRound)} />
+			<div
+				class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[560px] z-50 pointer-events-auto"
+			>
+				<div
+					class="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg border border-black/5"
+				>
+					<Timer
+						onTimeUp={() => {}}
+						duration={gameState.getTimerDurationForRound(gameState.currentRound)}
+					/>
 				</div>
 			</div>
 		{/if}
-		<div class="discussion-controls fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto flex flex-col gap-3">
+		<div
+			class="discussion-controls fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto flex flex-col gap-3"
+		>
 			<!-- Discussion Input Bar (Round 7 only) -->
 			<DiscussionInputBar
 				inline
@@ -1266,7 +1275,7 @@ function handleTransitionComplete() {
 			</button>
 		</div>
 	{/if}
-	
+
 	<!-- Discussion History Dialog -->
 	{#if enableDiscussionChat && chatRound}
 		<DiscussionHistoryDialog
@@ -1292,11 +1301,12 @@ function handleTransitionComplete() {
 		onclick={handleLeaveGame}
 		disabled={!tourCompleted}
 	>
-		{m.exit()} <LogOut size={16} />
+		{m.exit()}
+		<LogOut size={16} />
 	</Button>
 	<!-- Participants (Humans + AI Agents) positioned around aquarium -->
 	<ParticipantsContainer
-		participants={participants}
+		{participants}
 		playersState={gameState.playersState}
 		aiMessages={chatRound ? aiMessages : []}
 		currentRound={gameState.currentRound}
@@ -1308,8 +1318,8 @@ function handleTransitionComplete() {
 		userChatDraft={chatRound ? userDraft : ''}
 		userChatMessage={chatRound ? userLastSentMessage : null}
 		userChatIsSending={chatRound ? userIsSending : false}
-		latestAiMessageById={latestAiMessageById}
-		previewStateBySender={previewStateBySender}
+		{latestAiMessageById}
+		{previewStateBySender}
 		layout={aquariumLayout}
 	/>
 

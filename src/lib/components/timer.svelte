@@ -2,6 +2,7 @@
 	import { Hourglass } from 'lucide-svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import tick_sound from '@/sounds/tick_sound.mp3';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 
 	interface TimerProps {
 		onTimeUp: () => void;
@@ -13,8 +14,7 @@
 	let tickSound: HTMLAudioElement | null = null;
 
 	onMount(() => {
-		tickSound = new Audio(tick_sound); // Use your tick sound file
-		tickSound.volume = 0.2;
+		tickSound = createAudio(tick_sound, 0.2);
 	});
 
 	// Use provided duration or default to 2 minutes
@@ -42,7 +42,7 @@
 			timeLeft = Math.max(0, timeLeft - 1);
 
 			if (timeLeft <= warningThreshold && timeLeft > 0 && tickSound) {
-				tickSound.play().catch((err) => console.error('Error playing warning sound:', err));
+				playAudio(tickSound);
 			}
 
 			if (timeLeft <= 0) {
@@ -96,7 +96,9 @@
 	<span class="hourglass-animation {isUnderWarningThreshold ? 'flash-text' : 'text-deep-teal'}">
 		<Hourglass strokeWidth={2.5} absoluteStrokeWidth={true} size={24} />
 	</span>
-	<p class="text-xl font-bold text-left {isUnderWarningThreshold ? 'flash-time' : 'text-deep-teal'}">
+	<p
+		class="text-xl font-bold text-left {isUnderWarningThreshold ? 'flash-time' : 'text-deep-teal'}"
+	>
 		{formattedTime}
 	</p>
 	<div class="relative flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">

@@ -5,6 +5,7 @@
 	import { m } from '@src/paraglide/messages.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 	import { Clock, Users } from 'lucide-svelte';
 	import * as Dialog from '@/components/ui/dialog';
 	import {
@@ -12,11 +13,10 @@
 		PEDAGOGIC_ROUNDS_TIMER_MINUTES
 	} from '$lib/config/organization';
 
-	let click: HTMLAudioElement;
+	let click: HTMLAudioElement | null = null;
 
 	onMount(() => {
-		click = new Audio(clickSound);
-		click.volume = 0.5;
+		click = createAudio(clickSound, 0.5);
 	});
 
 	let { data }: { data: PageData } = $props();
@@ -45,7 +45,7 @@
 	) {
 		if (isUpdating) return;
 
-		click.play();
+		playAudio(click);
 		isUpdating = true;
 
 		try {
@@ -78,7 +78,9 @@
 </script>
 
 <div class="h-full flex flex-col items-center justify-center bg-white relative p-4">
-	<div class="sticky top-0 z-10 w-full bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center">
+	<div
+		class="sticky top-0 z-10 w-full bg-white border-b shadow-sm py-2 px-4 flex justify-between items-center"
+	>
 		<div class="bg-deep-teal p-2 flex flex-col items-center justify-center rounded-lg text-center">
 			<p class="text-white md:text-sm text-xs font-medium">{m.discussion_code_label()}</p>
 			<p class="text-white lg:text-4xl md:text-xl text-md font-bold">{data.game.code}</p>
@@ -87,7 +89,7 @@
 
 	<div class="flex flex-col items-center justify-center max-w-2xl w-full">
 		<h2 class="bos-title text-deep-teal text-2xl font-bold mb-8">{m.select_mode()}</h2>
-		
+
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
 			<!-- Pedagogic Mode -->
 			<button
@@ -122,7 +124,9 @@
 	<Dialog.Content class="w-[calc(100vw-2rem)] max-w-lg">
 		<div class="flex flex-col gap-4">
 			<div class="flex flex-col gap-1">
-				<p class="bos-title text-deep-teal text-xl font-bold">{m.configure_pedagogic_timer_title()}</p>
+				<p class="bos-title text-deep-teal text-xl font-bold">
+					{m.configure_pedagogic_timer_title()}
+				</p>
 				<p class="text-sm text-gray-600">{m.configure_pedagogic_timer_subtitle()}</p>
 			</div>
 
@@ -170,19 +174,16 @@
 				<button
 					type="button"
 					class="px-4 py-2 rounded-md bg-deep-teal text-white text-sm font-semibold hover:bg-deep-teal/90 disabled:opacity-50 disabled:cursor-not-allowed"
-					disabled={
-						isUpdating ||
+					disabled={isUpdating ||
 						!Number.isFinite(pedagogicRoundsMinutes) ||
 						!Number.isFinite(pedagogicFinalMinutes) ||
 						pedagogicRoundsMinutes <= 0 ||
-						pedagogicFinalMinutes <= 0
-					}
+						pedagogicFinalMinutes <= 0}
 					onclick={() =>
 						selectMode('pedagogic', {
 							roundsMinutes: pedagogicRoundsMinutes,
 							finalMinutes: pedagogicFinalMinutes
-						})
-					}
+						})}
 				>
 					{m.save_and_continue()}
 				</button>

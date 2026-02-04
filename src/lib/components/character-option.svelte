@@ -9,15 +9,14 @@
 	import { onMount } from 'svelte';
 	import flipSound from '@/sounds/flipcard.mp3';
 	import clickSound from '@/sounds/click.mp3';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 
-	let click: HTMLAudioElement;
-	let flip: HTMLAudioElement;
+	let click: HTMLAudioElement | null = null;
+	let flip: HTMLAudioElement | null = null;
 
 	onMount(() => {
-		click = new Audio(clickSound);
-		click.volume = 0.5;
-		flip = new Audio(flipSound);
-		flip.volume = 0.5;
+		click = createAudio(clickSound, 0.5);
+		flip = createAudio(flipSound, 0.5);
 	});
 
 	interface CharacterOptionProps {
@@ -39,17 +38,17 @@
 	}: CharacterOptionProps = $props();
 
 	let taken = $derived(player?.character === character && !selected);
-let ready = $derived(player?.character === character);
+	let ready = $derived(player?.character === character);
 
 	function onSelect() {
-		flip.play();
+		playAudio(flip);
 		if (taken) return;
 		selected = true;
 		onSelectCallBack();
 	}
 
 	function onReady() {
-		click.play();
+		playAudio(click);
 		if (taken) return;
 		onReadyCallBack(nickname, description);
 	}
@@ -117,7 +116,7 @@ let ready = $derived(player?.character === character);
 			<Button onclick={onReady}>{m.ready()}</Button>
 		</div>
 	</div>
-	{#if taken || selected && ready}
+	{#if taken || (selected && ready)}
 		<div
 			class="absolute -top-5 -right-5 w-16 h-16 rounded-full bg-deep-teal bg-opacity-50 z-20 flex items-center justify-center"
 		>

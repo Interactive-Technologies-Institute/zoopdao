@@ -8,6 +8,7 @@
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
 	import { supabase } from '$lib/supabase';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -23,7 +24,7 @@
 		discussion_mode: VoteMode | null;
 	};
 
-	let click_sound: HTMLAudioElement;
+	let click_sound: HTMLAudioElement | null = null;
 	let isCreatingGame = $state(false);
 	let voteSelection: VoteChoice | '' = $state('');
 	let voteLoading = $state(false);
@@ -39,34 +40,35 @@
 	let votesTableRows = $state<VoteRow[]>([]);
 
 	onMount(() => {
-		click_sound = new Audio(clickSound);
-		click_sound.volume = 0.5;
+		click_sound = createAudio(clickSound, 0.5);
 		refreshVotesWithAuth();
 	});
 
 	const proposal = $derived(data.proposal);
 	const status = $derived(data.status);
 	const allPeriods = $derived(
-		data.allPeriods.map(p => ({
+		data.allPeriods.map((p) => ({
 			...p,
 			startDate: new Date(p.startDate),
 			endDate: new Date(p.endDate)
 		}))
 	);
-	const currentPeriod = $derived(allPeriods.find(p => p.id === proposal.voting_period_id));
+	const currentPeriod = $derived(allPeriods.find((p) => p.id === proposal.voting_period_id));
 	const createdAtRaw = $derived(
 		proposal.voting_period_id === 'february-2026-exceptional'
 			? '2025-12-11T00:00:00Z'
 			: (proposal.created_at ??
-				(proposal as any).createdAt ??
-				(proposal as any).inserted_at ??
-				currentPeriod?.startDate?.toISOString() ??
-				null)
+					(proposal as any).createdAt ??
+					(proposal as any).inserted_at ??
+					currentPeriod?.startDate?.toISOString() ??
+					null)
 	);
 	const periodHasStarted = $derived(currentPeriod ? new Date() >= currentPeriod.startDate : true);
 	const periodHasEnded = $derived(currentPeriod ? new Date() > currentPeriod.endDate : false);
 	const showResults = $derived(periodHasStarted && (status === 'open' || periodHasEnded));
-	const votingDisabled = $derived(status !== 'open' || voteLoading || !!userChoice || !periodHasStarted);
+	const votingDisabled = $derived(
+		status !== 'open' || voteLoading || !!userChoice || !periodHasStarted
+	);
 	const voteOptions = $derived([
 		{ key: 'yes' as VoteChoice, label: m.vote_yes(), color: 'bg-green-200 border-green-500' },
 		{ key: 'no' as VoteChoice, label: m.vote_no(), color: 'bg-rose-200 border-rose-500' },
@@ -79,11 +81,15 @@
 	]);
 
 	function getVotingPeriodLabelById(periodId: string): string {
-		const period = allPeriods.find(p => p.id === periodId);
+		const period = allPeriods.find((p) => p.id === periodId);
 		if (!period) return periodId;
 		const locale = getLocale() === 'pt' ? 'pt-PT' : getLocale() || 'en-US';
 		const start = period.startDate.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
-		const end = period.endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+		const end = period.endDate.toLocaleDateString(locale, {
+			day: 'numeric',
+			month: 'short',
+			year: 'numeric'
+		});
 		return `${start} - ${end}`;
 	}
 
@@ -174,12 +180,15 @@
 		votesTableLoading = true;
 		votesTableError = '';
 		try {
-			const { data: { session } } = await supabase.auth.getSession();
+			const {
+				data: { session }
+			} = await supabase.auth.getSession();
 			const headers: Record<string, string> = {};
 			if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
 			const res = await fetch(`/api/proposals/${proposal.id}/votes?include=votes`, { headers });
 			if (!res.ok) {
-				votesTableError = getLocale() === 'pt' ? 'Falha ao carregar votos.' : 'Failed to load votes.';
+				votesTableError =
+					getLocale() === 'pt' ? 'Falha ao carregar votos.' : 'Failed to load votes.';
 				return;
 			}
 			const payload = await res.json();
@@ -201,7 +210,9 @@
 
 	async function refreshVotesWithAuth() {
 		try {
-			const { data: { session } } = await supabase.auth.getSession();
+			const {
+				data: { session }
+			} = await supabase.auth.getSession();
 			const headers: Record<string, string> = {};
 			if (session?.access_token) {
 				headers['Authorization'] = `Bearer ${session.access_token}`;
@@ -229,7 +240,10 @@
 		voteSuccess = false;
 
 		try {
-			let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+			let {
+				data: { session },
+				error: sessionError
+			} = await supabase.auth.getSession();
 
 			if (!session || sessionError) {
 				const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
@@ -264,7 +278,8 @@
 			}
 			if (res.status === 400) {
 				const body = await res.json().catch(() => ({}));
-				voteError = body?.error === 'Voting closed' ? m.vote_error_closed() : m.vote_error_generic();
+				voteError =
+					body?.error === 'Voting closed' ? m.vote_error_closed() : m.vote_error_generic();
 				return;
 			}
 			if (res.status === 401) {
@@ -294,32 +309,39 @@
 
 	async function handleStartDiscussion() {
 		if (isCreatingGame) return;
-		
-		click_sound.play();
+
+		playAudio(click_sound);
 		isCreatingGame = true;
-		
+
 		try {
 			// Ensure we have a session (anonymous or authenticated)
-			const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-			
+			const {
+				data: { session },
+				error: sessionError
+			} = await supabase.auth.getSession();
+
 			if (!session) {
 				// Create anonymous session if none exists
 				const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
-				
+
 				if (authError || !authData.session) {
 					console.error('Error creating anonymous session:', authError);
-					alert(getLocale() === 'pt' ? 'Falha ao criar sessão. Tenta novamente.' : 'Failed to create session. Please try again.');
+					alert(
+						getLocale() === 'pt'
+							? 'Falha ao criar sessão. Tenta novamente.'
+							: 'Failed to create session. Please try again.'
+					);
 					isCreatingGame = false;
 					return;
 				}
 			}
-			
+
 			// Create a new discussion with proposal_id
 			const { data: gameData, error: gameError } = await supabase.rpc('create_game', {
 				p_proposal_id: proposal.id,
 				p_mode: 'pedagogic'
 			});
-			
+
 			if (gameError) {
 				console.error('Error creating discussion:', gameError);
 				alert(
@@ -330,10 +352,14 @@
 				isCreatingGame = false;
 				return;
 			}
-			
+
 			if (!gameData?.game_code) {
 				console.error('Error creating discussion: Missing game_code in response.', gameData);
-				alert(getLocale() === 'pt' ? 'Falha ao criar discussão. Tenta novamente.' : 'Failed to create discussion. Please try again.');
+				alert(
+					getLocale() === 'pt'
+						? 'Falha ao criar discussão. Tenta novamente.'
+						: 'Failed to create discussion. Please try again.'
+				);
 				isCreatingGame = false;
 				return;
 			}
@@ -354,12 +380,12 @@
 	}
 
 	function handleViewFullProposal() {
-		click_sound.play();
+		playAudio(click_sound);
 		goto(localizeUrl(`/proposals/${proposal.id}`).toString());
 	}
 
 	function handleBack() {
-		click_sound.play();
+		playAudio(click_sound);
 		goto(localizeUrl('/').toString());
 	}
 </script>
@@ -371,14 +397,16 @@
 			<Button variant="ghost" size="icon" onclick={handleBack} class="text-deep-teal">
 				<ArrowLeft class="h-6 w-6" />
 			</Button>
-	</div>
+		</div>
 
-	<!-- Preview Card -->
-	<div class="bg-white rounded-lg border-2 border-deep-teal border-opacity-20 p-6 md:p-8 shadow-lg">
-		<!-- Header -->
+		<!-- Preview Card -->
+		<div
+			class="bg-white rounded-lg border-2 border-deep-teal border-opacity-20 p-6 md:p-8 shadow-lg"
+		>
+			<!-- Header -->
 			<div class="mb-6">
 				<h1 class="bos-title text-3xl font-bold text-deep-teal mb-4">{proposal.title}</h1>
-				
+
 				<div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
 					<div class="flex items-center gap-2">
 						<Calendar class="h-4 w-4" />
@@ -401,7 +429,9 @@
 			<div class="space-y-4 mb-6">
 				<!-- Objectives Preview -->
 				<div>
-					<h3 class="bos-title text-lg font-semibold text-deep-teal mb-2">{m.long_term_objectives()}</h3>
+					<h3 class="bos-title text-lg font-semibold text-deep-teal mb-2">
+						{m.long_term_objectives()}
+					</h3>
 					<ul class="list-disc list-inside space-y-1 text-gray-700">
 						{#each proposal.objectives.slice(0, 2) as objective}
 							<li>{objective.value}</li>
@@ -414,22 +444,21 @@
 					<h3 class="bos-title text-lg font-semibold text-deep-teal mb-2">{m.functionalities()}</h3>
 					<p class="text-gray-700 line-clamp-3">{proposal.functionalities}</p>
 				</div>
-
 			</div>
 
 			<!-- Actions (moved above voting) -->
 			<div class="flex flex-col sm:flex-row gap-3 pt-4 pb-2">
 				{#if status === 'open'}
-					<Button 
-						variant="outline" 
+					<Button
+						variant="outline"
 						size="lg"
 						onclick={handleViewFullProposal}
 						class="flex-1 border-2 border-black text-black bg-white hover:bg-gray-100 min-h-[52px]"
 					>
 						{m.view_full_proposal()}
 					</Button>
-					<Button 
-						size="lg" 
+					<Button
+						size="lg"
 						onclick={handleStartDiscussion}
 						disabled={isCreatingGame}
 						class="flex-1 min-h-[52px]"
@@ -437,8 +466,8 @@
 						{isCreatingGame ? m.loading() : m.start_discussion()}
 					</Button>
 				{:else}
-					<Button 
-						variant="outline" 
+					<Button
+						variant="outline"
 						size="lg"
 						onclick={handleViewFullProposal}
 						class="w-full border-2 border-black text-black bg-white hover:bg-gray-100 min-h-[52px]"
@@ -464,7 +493,9 @@
 
 							<div class="grid grid-cols-3 gap-3 mb-4">
 								{#each voteOptions as option}
-									<label class={`flex items-center justify-center text-sm font-semibold rounded-md border p-3 cursor-pointer transition ${voteSelection === option.key ? option.color : 'border-deep-teal/30 bg-white hover:border-deep-teal/60'} ${votingDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+									<label
+										class={`flex items-center justify-center text-sm font-semibold rounded-md border p-3 cursor-pointer transition ${voteSelection === option.key ? option.color : 'border-deep-teal/30 bg-white hover:border-deep-teal/60'} ${votingDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+									>
 										<input
 											type="radio"
 											class="hidden"
@@ -595,7 +626,9 @@
 															: m.vote_abstain()}
 												</td>
 												<td class="py-3 pr-3">
-													<div class="font-semibold text-gray-900">{formatTimeAgoCompact(row.created_at)}</div>
+													<div class="font-semibold text-gray-900">
+														{formatTimeAgoCompact(row.created_at)}
+													</div>
 													<div class="text-xs text-gray-500">{formatDate(row.created_at)}</div>
 												</td>
 												<td class="py-3 pr-3">{row.cargo ?? '-'}</td>

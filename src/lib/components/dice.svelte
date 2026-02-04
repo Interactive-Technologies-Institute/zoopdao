@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import rollSound from '@/sounds/dice_roll.mp3';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 
 	interface DiceProps {
 		round: number;
@@ -10,15 +11,18 @@
 
 	let { value, round, transitionState }: DiceProps = $props();
 	let rolling = $state(false);
-	let audio: HTMLAudioElement;
+	let audio: HTMLAudioElement | null = null;
 	let audioLoaded = $state(false);
 	let currentRotation = $state('transform: rotateX(0) rotateY(0)');
 	let previousRound = $state(0);
 
 	// Audio setup
 	onMount(async () => {
-		audio = new Audio(rollSound);
-		audio.volume = 0.5;
+		audio = createAudio(rollSound, 0.5);
+		if (!audio) {
+			audioLoaded = true;
+			return;
+		}
 		await new Promise((resolve) => {
 			audio.addEventListener('canplaythrough', resolve, { once: true });
 			audio.load();
@@ -57,10 +61,7 @@
 				diceElement.style.setProperty('--to-rotation', finalRot);
 			}
 
-			if (audio) {
-				audio.currentTime = 0;
-				audio.play().catch((err) => console.error('Error playing sound:', err));
-			}
+			playAudio(audio);
 
 			setTimeout(() => {
 				rolling = false;

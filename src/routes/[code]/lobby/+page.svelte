@@ -7,12 +7,12 @@
 	import { m } from '@src/paraglide/messages.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 
-	let click: HTMLAudioElement;
+	let click: HTMLAudioElement | null = null;
 
 	onMount(() => {
-		click = new Audio(clickSound);
-		click.volume = 0.5;
+		click = createAudio(clickSound, 0.5);
 	});
 
 	let { data }: { data: PageData } = $props();
@@ -40,51 +40,51 @@
 		</div>
 
 		<div class="flex gap-3">
-				<div class="flex items-center justify-center">
-					{#if gameState.state === 'waiting' && currentPlayer.nickname === null}
+			<div class="flex items-center justify-center">
+				{#if gameState.state === 'waiting' && currentPlayer.nickname === null}
 					<!-- Back button removed as category selection is hidden -->
-					{:else if !currentPlayer.is_owner}
+				{:else if !currentPlayer.is_owner}
+					<p class="text-deep-teal font-bold text-center px-2">
+						{m.waiting_for_host_to_start()}
+					</p>
+				{/if}
+
+				{#if currentPlayer.is_owner}
+					{#if gameState.state === 'ready'}
 						<p class="text-deep-teal font-bold text-center px-2">
-							{m.waiting_for_host_to_start()}
+							{m.players_ready()}
 						</p>
 					{/if}
-
-					{#if currentPlayer.is_owner}
-						{#if gameState.state === 'ready'}
-							<p class="text-deep-teal font-bold text-center px-2">
-								{m.players_ready()}
-							</p>
-						{/if}
-						<Button
-							size="default"
-							disabled={gameState.state !== 'ready'}
-							onclick={() => {
-								click.play();
-								gameState.startGame();
-							}}
-						>
+					<Button
+						size="default"
+						disabled={gameState.state !== 'ready'}
+						onclick={() => {
+							playAudio(click);
+							gameState.startGame();
+						}}
+					>
 						{m.start_participation()}
-						</Button>
-					{/if}
-				</div>
+					</Button>
+				{/if}
+			</div>
 		</div>
 	</div>
 
 	<!-- Role selection (category selection hidden, defaulting to human) -->
 	<p class="text-deep-teal text-lg font-bold my-2">{m.select_role()}</p>
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
 		{#each CHARACTER_CATEGORIES[selectedCategory] as character}
-				{@const player = gameState.players.find((player) => player.character === character)}
-				{@const isReady = currentPlayer.nickname !== null}
-				<CharacterOption
-					{character}
-					{player}
-					selected={currentPlayer.character === character}
-					disabled={isReady && currentPlayer.character !== character}
-					onSelect={() => gameState.updatePlayerCharacter(character)}
-					onReady={(nickname, description) =>
-						gameState.updatePlayerNicknameDescription(nickname, description)}
-				/>
-			{/each}
-		</div>
+			{@const player = gameState.players.find((player) => player.character === character)}
+			{@const isReady = currentPlayer.nickname !== null}
+			<CharacterOption
+				{character}
+				{player}
+				selected={currentPlayer.character === character}
+				disabled={isReady && currentPlayer.character !== character}
+				onSelect={() => gameState.updatePlayerCharacter(character)}
+				onReady={(nickname, description) =>
+					gameState.updatePlayerNicknameDescription(nickname, description)}
+			/>
+		{/each}
+	</div>
 </div>

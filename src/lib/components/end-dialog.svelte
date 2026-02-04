@@ -6,6 +6,7 @@
 	import { getLocale } from '@src/paraglide/runtime.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 	import { GameState } from '@/state/game-state.svelte';
 	import type { Player, PlayerAnswer } from '@/types';
 	import { ROLES } from '@/types';
@@ -17,10 +18,9 @@
 	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 	import { User } from 'lucide-svelte';
 
-	let audio: HTMLAudioElement;
+	let audio: HTMLAudioElement | null = null;
 	onMount(() => {
-		audio = new Audio(clickSound);
-		audio.volume = 0.5;
+		audio = createAudio(clickSound, 0.5);
 	});
 
 	interface EndDialogProps {
@@ -37,12 +37,22 @@
 		proposalId?: number | null;
 	}
 
-	let { open = $bindable(false), gameState, discussionMessages = [], proposalId = null }: EndDialogProps = $props();
+	let {
+		open = $bindable(false),
+		gameState,
+		discussionMessages = [],
+		proposalId = null
+	}: EndDialogProps = $props();
 	let currentPlayerId = $state(gameState?.playerId || -1);
-	let discussionMessagesRound7 = $state<Array<{ senderName: string; content: string; timestamp: Date }>>([]);
+	let discussionMessagesRound7 = $state<
+		Array<{ senderName: string; content: string; timestamp: Date }>
+	>([]);
 	let vote = $state<'yes' | 'no' | 'abstain' | null>(null);
 	let proposal = $state<any>(null);
-	let existingProposalVote = $state<{ choice: 'yes' | 'no' | 'abstain'; context: 'preview' | 'discussion' } | null>(null);
+	let existingProposalVote = $state<{
+		choice: 'yes' | 'no' | 'abstain';
+		context: 'preview' | 'discussion';
+	} | null>(null);
 	const voteOptions = [
 		{ key: 'yes' as const, label: () => m.vote_yes(), color: 'bg-green-200 border-green-500' },
 		{ key: 'no' as const, label: () => m.vote_no(), color: 'bg-rose-200 border-rose-500' },
@@ -98,9 +108,9 @@
 		if (open && gameState) {
 			const loadRound7Messages = async () => {
 				try {
-					const localRound7Messages = discussionMessages.filter(msg => msg.round === 7);
+					const localRound7Messages = discussionMessages.filter((msg) => msg.round === 7);
 					if (localRound7Messages.length > 0) {
-						discussionMessagesRound7 = localRound7Messages.map(msg => ({
+						discussionMessagesRound7 = localRound7Messages.map((msg) => ({
 							senderName: msg.senderType === 'human' ? 'You' : msg.senderName,
 							content: msg.content,
 							timestamp: msg.timestamp
@@ -111,10 +121,13 @@
 					const gameId = gameState.getGameId();
 					if (gameId > 0) {
 						const messages = await getDiscussionMessages(supabase, gameId, { round: 7 });
-						discussionMessagesRound7 = messages.map(msg => ({
-							senderName: msg.participantType === 'human' 
-								? 'You' 
-								: (msg.agentRole ? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1) : 'AI Agent'),
+						discussionMessagesRound7 = messages.map((msg) => ({
+							senderName:
+								msg.participantType === 'human'
+									? 'You'
+									: msg.agentRole
+										? msg.agentRole.charAt(0).toUpperCase() + msg.agentRole.slice(1)
+										: 'AI Agent',
 							content: msg.content,
 							timestamp: new Date(msg.createdAt)
 						}));
@@ -130,9 +143,7 @@
 	// Format discussion messages for round 7 as a single text
 	function formatRound7Discussion(): string {
 		if (discussionMessagesRound7.length === 0) return '';
-		return discussionMessagesRound7
-			.map(msg => `${msg.senderName}: ${msg.content}`)
-			.join('\n\n');
+		return discussionMessagesRound7.map((msg) => `${msg.senderName}: ${msg.content}`).join('\n\n');
 	}
 
 	let storiesByPlayer = $derived.by(() => {
@@ -165,13 +176,16 @@
 				} else {
 					// For other rounds, use existing answer or create empty one
 					const existingAnswer = playerAnswersMap.get(i);
-					return existingAnswer || {
-						id: 0,
-						player_id: currentPlayerId,
-						game_id: gameState.getGameId(),
-						round: i,
-						answer: ''
-					} as PlayerAnswer;
+					return (
+						existingAnswer ||
+						({
+							id: 0,
+							player_id: currentPlayerId,
+							game_id: gameState.getGameId(),
+							round: i,
+							answer: ''
+						} as PlayerAnswer)
+					);
 				}
 			});
 
@@ -197,13 +211,16 @@
 				// Create answers array with all 8 rounds
 				const playerAnswers: PlayerAnswer[] = Array.from({ length: 8 }, (_, i) => {
 					const existingAnswer = playerAnswersMap.get(i);
-					return existingAnswer || {
-						id: 0,
-						player_id: player.id,
-						game_id: gameState.getGameId(),
-						round: i,
-						answer: ''
-					} as PlayerAnswer;
+					return (
+						existingAnswer ||
+						({
+							id: 0,
+							player_id: player.id,
+							game_id: gameState.getGameId(),
+							round: i,
+							answer: ''
+						} as PlayerAnswer)
+					);
 				});
 
 				stories.push({
@@ -234,7 +251,9 @@
 			.map((objective: { value?: string }) => objective.value)
 			.filter((value: string | undefined): value is string => !!value);
 		const preconditions = objectives
-			.flatMap((objective: { preconditions?: { value?: string }[] }) => objective.preconditions ?? [])
+			.flatMap(
+				(objective: { preconditions?: { value?: string }[] }) => objective.preconditions ?? []
+			)
 			.map((precondition) => precondition.value)
 			.filter((value: string | undefined): value is string => !!value);
 		const indicativeSteps = objectives
@@ -385,7 +404,10 @@
 		}
 
 		try {
-			let { data: { session }, error: sessionError } = await supabase.auth.getSession();
+			let {
+				data: { session },
+				error: sessionError
+			} = await supabase.auth.getSession();
 
 			if (!session || sessionError) {
 				const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
@@ -425,7 +447,7 @@
 	});
 
 	async function handleGameEnd() {
-		audio.play();
+		playAudio(audio);
 		if (voteRequired && !vote) return;
 		// Logic to save the story
 		const discussionText = formatRound7Discussion();
@@ -444,7 +466,9 @@
 		// Persist proposal vote (single vote per user per proposal enforced by DB)
 		if (voteRequired && vote && proposalId) {
 			try {
-				let { data: { session } } = await supabase.auth.getSession();
+				let {
+					data: { session }
+				} = await supabase.auth.getSession();
 				if (!session) {
 					const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously();
 					if (!anonError && anonData.session) {
@@ -518,7 +542,7 @@
 
 	// Function to toggle edit mode
 	function handleEdit(answer: PlayerAnswer) {
-		audio.play();
+		playAudio(audio);
 		editMode = !editMode;
 		if (editMode === false) {
 			cancelEdit();
@@ -594,14 +618,20 @@
 								<div class="bg-gray-50 p-4 flex items-center gap-3 border-b">
 									{#if playerData.isCurrent}
 										<!-- Match the user badge used during the live discussion (icon + black circle) -->
-										<div class="w-16 h-16 rounded-full border-4 border-black bg-gray-200 flex items-center justify-center flex-shrink-0">
+										<div
+											class="w-16 h-16 rounded-full border-4 border-black bg-gray-200 flex items-center justify-center flex-shrink-0"
+										>
 											<User class="h-8 w-8 text-gray-600" />
 										</div>
 									{:else}
 										<div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
 											<img
-												src={getBadgeSrc((playerData.player as any).role ?? (playerData.player as any).character)}
-												alt={(playerData.player as any).role ?? (playerData.player as any).character ?? 'custom'}
+												src={getBadgeSrc(
+													(playerData.player as any).role ?? (playerData.player as any).character
+												)}
+												alt={(playerData.player as any).role ??
+													(playerData.player as any).character ??
+													'custom'}
 												class="w-full h-full object-cover"
 											/>
 										</div>
@@ -657,8 +687,7 @@
 														variant="outline"
 														size="default"
 														class="hover:bg-tertiary/40"
-														onclick={cancelEdit}
-														>{m.cancel()}</Button
+														onclick={cancelEdit}>{m.cancel()}</Button
 													>
 													<Button
 														variant="default"

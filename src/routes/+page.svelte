@@ -6,6 +6,7 @@
 	import type { Locale } from '../paraglide/runtime.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 	import {
 		getVotingPeriods,
 		getExceptionalVotingPeriods,
@@ -26,11 +27,10 @@
 
 	let { data } = $props();
 
-	let click_sound: HTMLAudioElement;
+	let click_sound: HTMLAudioElement | null = null;
 
 	onMount(() => {
-		click_sound = new Audio(clickSound);
-		click_sound.volume = 0.5;
+		click_sound = createAudio(clickSound, 0.5);
 	});
 
 	const proposals = $derived(data.proposals || []);
@@ -68,12 +68,12 @@
 	}
 
 	function handleProposalClick(proposalId: number) {
-		click_sound.play();
+		playAudio(click_sound);
 		goto(localizeUrl(`/proposals/${proposalId}/preview`).toString());
 	}
 
 	function handleBrowseDiscussions() {
-		click_sound.play();
+		playAudio(click_sound);
 		goto(localizeUrl('/stories').toString());
 	}
 
@@ -193,7 +193,7 @@
 	});
 
 	function handleOnboardingStart() {
-		click_sound?.play();
+		playAudio(click_sound);
 		onboardingStep = 'role';
 	}
 
@@ -224,7 +224,7 @@
 	}
 
 	async function handleExitSession() {
-		click_sound?.play();
+		playAudio(click_sound);
 
 		if (typeof window !== 'undefined') {
 			// Clear onboarding so a new "session" can start (multiple users on same browser).

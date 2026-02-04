@@ -6,21 +6,21 @@
 	import { localizeUrl } from '@src/paraglide/runtime.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
+	import { createAudio, playAudio } from '$lib/utils/sound';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let click_sound: HTMLAudioElement;
+	let click_sound: HTMLAudioElement | null = null;
 
 	onMount(() => {
-		click_sound = new Audio(clickSound);
-		click_sound.volume = 0.5;
+		click_sound = createAudio(clickSound, 0.5);
 	});
 
 	const proposal = data.proposal;
 
 	function handleBack() {
-		click_sound.play();
+		playAudio(click_sound);
 		goto(localizeUrl('/').toString());
 	}
 </script>
@@ -41,39 +41,45 @@
 			<!-- Theory of Change Section -->
 			<div class="space-y-6">
 				<h2 class="bos-title text-2xl font-bold text-deep-teal">{m.theory_of_change()}</h2>
-				
+
 				<!-- Long-term Objectives -->
 				<div class="space-y-4">
 					<div class="bos-title block text-lg font-semibold text-deep-teal">
 						{m.long_term_objectives()}
-						<span class="text-sm font-normal text-gray-600 ml-2">({m.long_term_objectives_description()})</span>
+						<span class="text-sm font-normal text-gray-600 ml-2"
+							>({m.long_term_objectives_description()})</span
+						>
 					</div>
-					
+
 					{#each proposal.objectives as objective, objectiveIndex}
 						<div class="border-2 border-deep-teal border-opacity-20 rounded-lg p-4 bg-gray-50">
 							<div class="mb-3">
 								<span class="bos-title text-sm font-medium text-deep-teal">
-									{m.objective()} {objectiveIndex + 1}:
+									{m.objective()}
+									{objectiveIndex + 1}:
 								</span>
 								<p class="text-gray-700 mt-1">{objective.value}</p>
 							</div>
-							
+
 							<!-- Preconditions -->
 							<div class="ml-4 space-y-3 mt-4">
 								<div class="bos-title block text-sm font-semibold text-deep-teal">
 									{m.preconditions_and_goals()}
-									<span class="text-xs font-normal text-gray-600 ml-2">({m.preconditions_and_goals_description()})</span>
+									<span class="text-xs font-normal text-gray-600 ml-2"
+										>({m.preconditions_and_goals_description()})</span
+									>
 								</div>
-								
+
 								{#each objective.preconditions as precondition, preconditionIndex}
 									<div class="border border-deep-teal border-opacity-10 rounded p-3 bg-white">
 										<div class="mb-2">
 											<span class="bos-title text-xs font-medium text-deep-teal">
-												{m.precondition()} {preconditionIndex + 1}:
+												{m.precondition()}
+												{preconditionIndex + 1}:
 											</span>
 											<p class="text-gray-700 mt-1 text-sm">{precondition.value}</p>
 										</div>
-										
+
 										<!-- Indicative Steps -->
 										<div class="ml-4 space-y-2 mt-3">
 											<div class="bos-title block text-xs font-semibold text-deep-teal">
@@ -83,12 +89,14 @@
 												<p class="text-gray-700 text-sm">{step.value}</p>
 											{/each}
 										</div>
-										
+
 										<!-- Key Indicators -->
 										<div class="ml-4 space-y-2 mt-3">
 											<div class="bos-title block text-xs font-semibold text-deep-teal">
 												{m.key_indicators()}
-												<span class="text-xs font-normal text-gray-600 ml-2">({m.key_indicators_description()})</span>
+												<span class="text-xs font-normal text-gray-600 ml-2"
+													>({m.key_indicators_description()})</span
+												>
 											</div>
 											{#each precondition.keyIndicators as indicator}
 												<p class="text-gray-700 text-sm">{indicator.value}</p>
@@ -100,7 +108,7 @@
 						</div>
 					{/each}
 				</div>
-				
+
 				<!-- Functionalities -->
 				<div>
 					<label class="bos-title block text-lg font-semibold text-deep-teal mb-2">
@@ -111,7 +119,6 @@
 					</div>
 				</div>
 			</div>
-
 		</div>
 	</div>
 </div>
