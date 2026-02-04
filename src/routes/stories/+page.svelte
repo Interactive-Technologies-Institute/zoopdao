@@ -42,7 +42,7 @@
 	}
 
 	const characterOptions = $derived.by(() => {
-		const all = { value: '', label: m.all_characters() };
+		const all = { value: '', label: getLocale() === 'pt' ? 'Todos' : 'All' };
 		const other = { value: 'custom', label: getLocale() === 'pt' ? 'Outro' : 'Other' };
 
 		const items = CHARACTER_OPTIONS.map((type) => ({
@@ -66,7 +66,7 @@
 	];
 
 	const modeOptions = $derived.by(() => [
-		{ value: '', label: getLocale() === 'pt' ? 'Todos os modos' : 'All modes' },
+		{ value: '', label: getLocale() === 'pt' ? 'Todos' : 'All' },
 		{ value: 'pedagogic', label: m.pedagogic_mode() },
 		{ value: 'decision_making', label: m.decision_making_mode() }
 	]);
