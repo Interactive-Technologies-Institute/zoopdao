@@ -356,7 +356,9 @@
 		<p class="text-deep-teal text-center text-lg mb-5 px-4 italic">{m.home_tagline()}</p>
 		<!-- Containerized start flow (Typeform-style) -->
 		<div
-			class="w-full flex flex-col items-stretch justify-center gap-5 mt-4 p-5 rounded-xl border-2 bg-white/70 backdrop-blur-sm"
+			class={`w-full flex flex-col items-stretch justify-center rounded-xl border-2 bg-white/70 backdrop-blur-sm ${
+				isActionsStep ? 'gap-4 mt-2 p-4' : 'gap-5 mt-4 p-5'
+			}`}
 		>
 			{#if onboardingStep === 'welcome'}
 				<div class="flex flex-col gap-2 text-center">
@@ -488,7 +490,7 @@
 					{#if proposals.length === 0}
 						<p class="text-gray-500 text-sm italic">{m.no_proposals()}</p>
 					{:else}
-						<div class="w-full space-y-2 max-h-64 overflow-y-auto">
+						<div class="w-full space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
 							{#each proposals as proposal}
 								{@const translatedProposal = translateProposal(proposal, currentLocale)}
 								{@const status = getProposalStatus(proposal.voting_period_id, votingPeriods)}
