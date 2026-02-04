@@ -476,14 +476,11 @@
 				</div>
 				<div class="flex items-center gap-4 w-full">
 					<div class="h-px w-full bg-deep-teal"></div>
-					<p class="text-deep-teal text-center text-lg font-bold">{m.or()}</p>
+					<p class="text-deep-teal text-center text-lg font-bold">{m.current_proposals()}</p>
 					<div class="h-px w-full bg-deep-teal"></div>
 				</div>
 				<!-- Proposals List -->
 				<div class="w-full flex flex-col items-center justify-center gap-2">
-					<p class="flex items-center justify-center text-deep-teal font-medium mb-2">
-						{m.current_proposals()}
-					</p>
 					{#if proposals.length === 0}
 						<p class="text-gray-500 text-sm italic">{m.no_proposals()}</p>
 					{:else}
@@ -517,7 +514,6 @@
 				</div>
 				<div class="flex items-center gap-4 w-full">
 					<div class="h-px w-full bg-deep-teal"></div>
-					<p class="text-deep-teal text-center text-lg font-bold">{m.or()}</p>
 					<div class="h-px w-full bg-deep-teal"></div>
 				</div>
 				<div class="flex flex-col items-center justify-center">
@@ -586,30 +582,38 @@
 		height: var(--home-ill-size);
 	}
 
-	/* Keep clear of the language selector (top-right). */
 	.home-ill-mobile--top {
-		top: 4.25rem; /* ~68px */
+		top: 1rem;
 	}
 
 	.home-ill-mobile--bottom {
 		bottom: 1rem; /* 16px */
 	}
 
+	/* Keep the top illustrations away from the title text. */
+	.home-ill-mobile--top .home-ill-item:first-child {
+		transform: translate(-12px, -10px);
+	}
+
+	.home-ill-mobile--top .home-ill-item:last-child {
+		transform: translate(12px, -10px);
+	}
+
 	@media (max-width: 767px) and (orientation: portrait) {
 		.home-ill-mobile {
 			/* In portrait we can go a bit larger while staying proportional. */
-			--home-ill-size: clamp(72px, 18vmin, 112px);
+			--home-ill-size: clamp(64px, 16vmin, 100px);
 		}
 
 		.home-ill-mobile--top {
-			top: 5.25rem; /* more breathing room below the language selector */
+			top: 1.25rem;
 		}
 	}
 
 	@media (max-width: 767px) and (orientation: landscape) {
 		/* In landscape tighten the vertical spacing (top/bottom closer) and keep size stable. */
 		.home-ill-mobile--top {
-			top: 3.75rem;
+			top: 0.75rem;
 		}
 		.home-ill-mobile--bottom {
 			bottom: 0.75rem;
