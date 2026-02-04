@@ -64,7 +64,9 @@
 	let isCopied = $state(false);
 	let copyTimeout: ReturnType<typeof setTimeout>;
 	let openProposalDialog = $state(false);
-	const hasProposal = $derived.by(() => data.proposal_id !== null && data.proposal_id !== undefined);
+	const hasProposal = $derived.by(
+		() => data.proposal_id !== null && data.proposal_id !== undefined
+	);
 
 	async function copyToClipboard() {
 		const baseUrl = window.location.origin;
@@ -94,7 +96,9 @@
 >
 	<div class="flex flex-col items-center justify-center p-4">
 		<!-- Match the user badge styling used during the live discussion -->
-		<div class="h-32 w-32 rounded-full border-4 border-black bg-gray-200 flex items-center justify-center">
+		<div
+			class="h-32 w-32 rounded-full border-4 border-black bg-gray-200 flex items-center justify-center"
+		>
 			<User class="h-16 w-16 text-gray-600" />
 		</div>
 	</div>
@@ -135,9 +139,9 @@
 					</span>
 				{/each}
 			</div>
-			<div class="flex items-center gap-2 self-end w-full">
+			<div class="flex flex-col gap-2 self-end w-full sm:flex-row sm:items-center">
 				<button
-					class="h-10 px-3 text-sm whitespace-nowrap rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-tertiary/40 transition-colors text-deep-teal font-medium inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mr-auto"
+					class="h-10 px-3 text-sm whitespace-nowrap rounded-lg border-2 border-deep-teal border-opacity-20 bg-white hover:bg-tertiary/40 transition-colors text-deep-teal font-medium inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
 					onclick={() => (openProposalDialog = true)}
 					disabled={!hasProposal}
 					aria-disabled={!hasProposal}
@@ -145,20 +149,22 @@
 					<FileText class="h-4 w-4" />
 					{m.view_full_proposal()}
 				</button>
-				<Button
-					variant={'outline'}
-					onclick={copyToClipboard}
-					class="h-10 transition-all duration-200 shrink-0"
-				>
-					{#if isCopied}
-						<Check class="w-4 h-4 mr-2" /> {m.copied()}
-					{:else}
-						<Share2 class="w-4 h-4 mr-2" /> {m.share()}
-					{/if}
-				</Button>
-				<Button class="h-10 shrink-0" href={localizeHref(`/stories/${data.story_id}`)}
-					>{m.read_more()}</Button
-				>
+				<div class="flex w-full gap-2 sm:w-auto sm:ml-auto">
+					<Button
+						variant={'outline'}
+						onclick={copyToClipboard}
+						class="h-10 transition-all duration-200 flex-1 sm:flex-none"
+					>
+						{#if isCopied}
+							<Check class="w-4 h-4 mr-2" /> {m.copied()}
+						{:else}
+							<Share2 class="w-4 h-4 mr-2" /> {m.share()}
+						{/if}
+					</Button>
+					<Button class="h-10 flex-1 sm:flex-none" href={localizeHref(`/stories/${data.story_id}`)}>
+						{m.read_more()}
+					</Button>
+				</div>
 			</div>
 		</div>
 	</div>

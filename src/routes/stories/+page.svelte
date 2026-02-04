@@ -11,7 +11,7 @@
 		ChevronsUpDown,
 		X,
 		ChevronLeft,
-		ChevronRight,
+		ChevronRight
 	} from 'lucide-svelte';
 
 	import { Button } from '@/components/ui/button';
@@ -80,8 +80,12 @@
 	let currentPage = $state(parseInt(page.url.searchParams.get('page') ?? '1'));
 	let sort = $state(page.url.searchParams.get('sort') || 'latest');
 	const perPage = 5;
-	const selectedLabel = $derived.by(() => characterOptions.find((option) => option.value === value)?.label);
-	const selectedModeLabel = $derived(modeOptions.find((option) => option.value === selectedMode)?.label);
+	const selectedLabel = $derived.by(
+		() => characterOptions.find((option) => option.value === value)?.label
+	);
+	const selectedModeLabel = $derived(
+		modeOptions.find((option) => option.value === selectedMode)?.label
+	);
 	let loading = $state(false);
 
 	function formatProposalLabel(title: string): string {
@@ -259,9 +263,8 @@
 			<div class="h-full flex flex-wrap gap-2">
 				{#each proposals as p (p.id)}
 					<button
-						class="flex gap-1 items-center justify-center h-10 px-3 text-sm rounded-md transition-colors {selectedProposalId === String(
-							p.id
-						)
+						class="flex gap-1 items-center justify-center h-10 px-3 text-sm rounded-md transition-colors {selectedProposalId ===
+						String(p.id)
 							? `bg-deep-teal text-white`
 							: ` bg-gray-200 text-gray-500`}"
 						onclick={() => toggleProposalId(p.id)}
@@ -292,10 +295,9 @@
 	</div>
 
 	<div class="flex flex-col mt-8 gap-3">
-		<div class="flex items-center justify-between">
-			<p class="text-2xl text-deep-teal font-bold">{m.stories()}</p>
+		<div class="flex flex-wrap items-center justify-end gap-2">
 			<div class="flex items-center gap-2">
-				<p class="font-medium text-sm">{m.sort_by()}</p>
+				<p class="font-medium text-sm whitespace-nowrap">{m.sort_by()}</p>
 				<Select.Root
 					type="single"
 					value={sort}
