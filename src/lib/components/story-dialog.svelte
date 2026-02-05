@@ -405,9 +405,6 @@
 									>
 								</div>
 							{/if}
-							<p class="text-xl font-bold text-deep-teal">
-								{getTranslation(ROUNDS[round.index].title)}
-							</p>
 						</div>
 						<p class="font-medium py-1">
 							{getTranslation(ROUNDS[round.index].description)}
