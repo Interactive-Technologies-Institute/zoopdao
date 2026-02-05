@@ -299,7 +299,7 @@
 <Dialog.Root bind:open>
 	<Dialog.Content
 		interactOutsideBehavior="ignore"
-		class="overflow-y-auto flex flex-col gap-y-10 max-h-[95vh] w-[95vw] md:w-[60dvw] bg-white rounded-2xl shadow-lg pb-80 md:pb-5"
+		class="overflow-y-auto flex flex-col gap-y-10 max-h-[95vh] w-[95vw] md:w-[50dvw] lg:w-[45dvw] bg-white rounded-2xl shadow-lg pb-80 md:pb-5"
 		style="transform-origin: center center; z-index: 100;"
 	>
 		{#if sortedRounds.length === 0}
@@ -319,8 +319,7 @@
 				{@const isFutureRound = round.index > (currentRound ?? -1)}
 				<div
 					id={`round-${round.index}`}
-					class="flex flex-col items-center lg:flex-row lg:items-stretch gap-8 w-full {round.index >
-					(currentRound ?? -1)
+					class="flex flex-col items-center gap-8 w-full {round.index > (currentRound ?? -1)
 						? 'opacity-30 grayscale'
 						: ''}"
 				>
@@ -342,18 +341,17 @@
 									character={player?.character ?? 'child'}
 								/>
 							{/if}
-						{:else if round.index === 7}
-							<div
-								class="w-64 h-96 bg-white rounded-xl bg-center border-2 border-gray-400/50 relative"
-								style={`background-image: url('${ZOOP_THEME_ASSET_PREFIX}/cards/post-story.svg');`}
-							>
+							{:else if round.index === 7}
 								<div
-									class="absolute inset-0 pb-32 px-4 flex flex-col justify-end text-center gap-3"
+									class="w-64 h-96 bg-white rounded-xl bg-center border-2 border-gray-400/50 relative"
+									style={`background-image: url('${ZOOP_THEME_ASSET_PREFIX}/cards/post-story.svg');`}
 								>
-									<h3 class={`text-2xl font-bold text-white`}>{m.post_story()}</h3>
-									<p class="text-xs font-medium">{m.write_post_story()}</p>
+									<div
+										class="absolute inset-0 pb-32 px-4 flex flex-col justify-end text-center gap-3"
+									>
+										<h3 class={`text-2xl font-bold text-white`}>{m.post_story()}</h3>
+									</div>
 								</div>
-							</div>
 						{:else if displayCard}
 							<Card card={displayCard} />
 						{:else}
@@ -406,13 +404,15 @@
 								</div>
 							{/if}
 						</div>
-						<p class="font-medium py-1">
-							{getTranslation(ROUNDS[round.index].description)}
-						</p>
+							<p class="font-medium py-1">
+								{getTranslation(ROUNDS[round.index].description)}
+							</p>
 						{#if round.index === currentRound && playerState === 'writing'}
-							<div class="flex-1 relative mb-4">
-								<Textarea class="min-h-64 h-full mt-2" bind:value={currentAnswer} />
-							</div>
+							{#if round.index !== 7}
+								<div class="relative mb-4">
+									<Textarea class="mt-2" bind:value={currentAnswer} />
+								</div>
+							{/if}
 							<div class=" flex items-center justify-between gap-3 bg-white">
 								{#if open && playerState === 'writing' && gameState.mode === 'pedagogic'}
 									<Timer
@@ -422,8 +422,8 @@
 								{/if}
 								<Button onclick={onSubmit}>{m.submit()}</Button>
 							</div>
-						{:else}
-							<Textarea class="min-h-64 flex-1 mt-2" value={answer?.answer ?? ''} disabled />
+						{:else if round.index !== 7}
+							<Textarea class="mt-2" value={answer?.answer ?? ''} disabled />
 						{/if}
 					</div>
 				</div>
