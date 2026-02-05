@@ -16,13 +16,16 @@ b) For each SVG, document current usage (component/page) and function.
 c) Flag any SVGs that appear unused (no refs found).
 
 **Acceptance Criteria:**
-1) Inventory list includes all non-aquarium SVG assets with usage context.
-2) Each SVG has a documented purpose (what it visually represents / UI function).
+
+1. Inventory list includes all non-aquarium SVG assets with usage context.
+2. Each SVG has a documented purpose (what it visually represents / UI function).
 
 **Completion Criteria:**
-1) Audit report is complete and ready for planning (ZD-122).
+
+1. Audit report is complete and ready for planning (ZD-122).
 
 **Audit Report (non-aquarium SVGs):**
+
 - Excluded per brief: `static/images/aquarium/assembly_table.svg`.
 - Usage references found in:
   - `src/lib/components/character-card.svelte`
@@ -32,66 +35,70 @@ c) Flag any SVGs that appear unused (no refs found).
   - `src/lib/components/story-dialog.svelte`
 
 ### Inventory — Card backgrounds (used by `src/lib/components/card.svelte` and post-story in `src/lib/components/story-dialog.svelte`)
-| Asset | Current usage | Function |
-| --- | --- | --- |
-| `static/images/cards/landmark.svg` | Card background for `landmark` type | Round prompt card. |
-| `static/images/cards/nature.svg` | Card background for `nature` type | Round prompt card. |
-| `static/images/cards/sense.svg` | Card background for `sense` type | Round prompt card. |
-| `static/images/cards/history.svg` | Card background for `history` type | Round prompt card. |
-| `static/images/cards/action.svg` | Card background for `action` type | Round prompt card. |
-| `static/images/cards/post-story.svg` | Post-story card background | Closing prompt card. |
+
+| Asset                                | Current usage                       | Function             |
+| ------------------------------------ | ----------------------------------- | -------------------- |
+| `static/images/cards/landmark.svg`   | Card background for `landmark` type | Round prompt card.   |
+| `static/images/cards/nature.svg`     | Card background for `nature` type   | Round prompt card.   |
+| `static/images/cards/sense.svg`      | Card background for `sense` type    | Round prompt card.   |
+| `static/images/cards/history.svg`    | Card background for `history` type  | Round prompt card.   |
+| `static/images/cards/action.svg`     | Card background for `action` type   | Round prompt card.   |
+| `static/images/cards/post-story.svg` | Post-story card background          | Closing prompt card. |
 
 ### Inventory — Character badges (used by `src/lib/components/story-card.svelte` and `src/lib/components/end-dialog.svelte`)
-| Asset | Current usage | Function |
-| --- | --- | --- |
-| `static/images/characters/badges/scientist.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/time-traveller.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/local-specialist.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/water.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/vulcanic-rock.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/nature-lover.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/child.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/different-needs.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/iberian-green-frog.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/non-human-being.svg` | Badge avatar | Character identity. |
-| `static/images/characters/badges/custom.svg` | Badge avatar | Custom character / fallback identity. |
-| `static/images/characters/badges/trocaz-pigeon.svg` | Badge avatar | Species identity. |
-| `static/images/characters/badges/monk-seal.svg` | Badge avatar | Species identity. |
-| `static/images/characters/badges/zinos-petrel.svg` | Badge avatar | Species identity. |
+
+| Asset                                                    | Current usage | Function                              |
+| -------------------------------------------------------- | ------------- | ------------------------------------- |
+| `static/images/characters/badges/scientist.svg`          | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/time-traveller.svg`     | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/local-specialist.svg`   | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/water.svg`              | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/vulcanic-rock.svg`      | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/nature-lover.svg`       | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/child.svg`              | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/different-needs.svg`    | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/iberian-green-frog.svg` | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/non-human-being.svg`    | Badge avatar  | Character identity.                   |
+| `static/images/characters/badges/custom.svg`             | Badge avatar  | Custom character / fallback identity. |
+| `static/images/characters/badges/trocaz-pigeon.svg`      | Badge avatar  | Species identity.                     |
+| `static/images/characters/badges/monk-seal.svg`          | Badge avatar  | Species identity.                     |
+| `static/images/characters/badges/zinos-petrel.svg`       | Badge avatar  | Species identity.                     |
 
 ### Inventory — Character cards (used by `src/lib/components/character-card.svelte` and round 0 in `src/lib/components/story-dialog.svelte`)
-| Asset | Current usage | Function |
-| --- | --- | --- |
-| `static/images/characters/cards/scientist.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/time-traveller.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/local-specialist.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/water.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/vulcanic-rock.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/nature-lover.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/child.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/different-needs.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/iberian-green-frog.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/non-human-being.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/custom.svg` | Character card background | Custom character / fallback. |
-| `static/images/characters/cards/trocaz-pigeon.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/monk-seal.svg` | Character card background | Character selection/intro. |
-| `static/images/characters/cards/zinos-petrel.svg` | Character card background | Character selection/intro. |
+
+| Asset                                                   | Current usage             | Function                     |
+| ------------------------------------------------------- | ------------------------- | ---------------------------- |
+| `static/images/characters/cards/scientist.svg`          | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/time-traveller.svg`     | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/local-specialist.svg`   | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/water.svg`              | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/vulcanic-rock.svg`      | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/nature-lover.svg`       | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/child.svg`              | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/different-needs.svg`    | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/iberian-green-frog.svg` | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/non-human-being.svg`    | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/custom.svg`             | Character card background | Custom character / fallback. |
+| `static/images/characters/cards/trocaz-pigeon.svg`      | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/monk-seal.svg`          | Character card background | Character selection/intro.   |
+| `static/images/characters/cards/zinos-petrel.svg`       | Character card background | Character selection/intro.   |
 
 ### Inventory — Illustrations (raster, tutorial/round transition)
-| Asset | Current usage | Function |
-| --- | --- | --- |
-| `static/images/illustrations/step_1_1.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 1, variant 1). |
-| `static/images/illustrations/step_1_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 1, variant 2). |
+
+| Asset                                      | Current usage                                                           | Function                                                               |
+| ------------------------------------------ | ----------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `static/images/illustrations/step_1_1.png` | `src/lib/components/round-transition.svelte`                            | Round transition illustration (step 1, variant 1).                     |
+| `static/images/illustrations/step_1_2.png` | `src/lib/components/round-transition.svelte`                            | Round transition illustration (step 1, variant 2).                     |
 | `static/images/illustrations/step_2_1.png` | `src/lib/components/round-transition.svelte`, `src/routes/+page.svelte` | Round transition + homepage tutorial illustration (step 2, variant 1). |
-| `static/images/illustrations/step_2_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 2, variant 2). |
-| `static/images/illustrations/step_3_1.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 3, variant 1). |
-| `static/images/illustrations/step_3_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 3, variant 2). |
+| `static/images/illustrations/step_2_2.png` | `src/lib/components/round-transition.svelte`                            | Round transition illustration (step 2, variant 2).                     |
+| `static/images/illustrations/step_3_1.png` | `src/lib/components/round-transition.svelte`                            | Round transition illustration (step 3, variant 1).                     |
+| `static/images/illustrations/step_3_2.png` | `src/lib/components/round-transition.svelte`                            | Round transition illustration (step 3, variant 2).                     |
 | `static/images/illustrations/step_4_1.png` | `src/lib/components/round-transition.svelte`, `src/routes/+page.svelte` | Round transition + homepage tutorial illustration (step 4, variant 1). |
-| `static/images/illustrations/step_4_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 4, variant 2). |
+| `static/images/illustrations/step_4_2.png` | `src/lib/components/round-transition.svelte`                            | Round transition illustration (step 4, variant 2).                     |
 | `static/images/illustrations/step_5_1.png` | `src/lib/components/round-transition.svelte`, `src/routes/+page.svelte` | Round transition + homepage tutorial illustration (step 5, variant 1). |
-| `static/images/illustrations/step_5_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 5, variant 2). |
+| `static/images/illustrations/step_5_2.png` | `src/lib/components/round-transition.svelte`                            | Round transition illustration (step 5, variant 2).                     |
 | `static/images/illustrations/step_6_1.png` | `src/lib/components/round-transition.svelte`, `src/routes/+page.svelte` | Round transition + homepage tutorial illustration (step 6, variant 1). |
-| `static/images/illustrations/step_6_2.png` | `src/lib/components/round-transition.svelte` | Round transition illustration (step 6, variant 2). |
+| `static/images/illustrations/step_6_2.png` | `src/lib/components/round-transition.svelte`                            | Round transition illustration (step 6, variant 2).                     |
 
 ---
 
@@ -110,14 +117,17 @@ c) Assign each SVG a plan category (reuse/revise/regenerate) and a replacement c
 d) Prioritize execution order (P0 cards → P1 badges → P2 character cards → P3 misc/legacy).
 
 **Acceptance Criteria:**
-1) Every SVG in ZD-121 has a plan category and replacement concept.
-2) Backlog has clear priorities and “done” checks per asset family.
-3) Global delivery constraints are documented for consistent output.
+
+1. Every SVG in ZD-121 has a plan category and replacement concept.
+2. Backlog has clear priorities and “done” checks per asset family.
+3. Global delivery constraints are documented for consistent output.
 
 **Completion Criteria:**
-1) Backlog is ready to split into production tasks (ZD-123+).
+
+1. Backlog is ready to split into production tasks (ZD-123+).
 
 ### Global export requirements (applies to all SVG deliverables)
+
 - Preserve filenames and paths (drop-in replacement).
 - Keep `viewBox` set; avoid fixed pixel assumptions; scale cleanly at `64x64` (badges) and `w-64 h-96` (cards).
 - Convert text to paths; avoid external fonts; inline styles only.
@@ -125,54 +135,58 @@ d) Prioritize execution order (P0 cards → P1 badges → P2 character cards →
 - Optimize output (remove editor metadata, unnecessary groups, unused defs).
 
 ### Plan — Card backgrounds
-| Asset | Plan | Replacement concept (ZoopDAO) |
-| --- | --- | --- |
-| `static/images/cards/landmark.svg` | Revise | Aquarium map pin + waypoint grid, teal/sand palette. |
-| `static/images/cards/nature.svg` | Revise | Species silhouette + kelp/coral texture. |
-| `static/images/cards/sense.svg` | Revise | Sonar rings + eye/wave motif. |
-| `static/images/cards/history.svg` | Revise | Archive scroll + tank blueprint layers. |
-| `static/images/cards/action.svg` | Revise | Hand/gear collaboration emblem with ripples. |
-| `static/images/cards/post-story.svg` | Revise | Proposal report sheet + seal/reef watermark. |
+
+| Asset                                | Plan   | Replacement concept (ZoopDAO)                        |
+| ------------------------------------ | ------ | ---------------------------------------------------- |
+| `static/images/cards/landmark.svg`   | Revise | Aquarium map pin + waypoint grid, teal/sand palette. |
+| `static/images/cards/nature.svg`     | Revise | Species silhouette + kelp/coral texture.             |
+| `static/images/cards/sense.svg`      | Revise | Sonar rings + eye/wave motif.                        |
+| `static/images/cards/history.svg`    | Revise | Archive scroll + tank blueprint layers.              |
+| `static/images/cards/action.svg`     | Revise | Hand/gear collaboration emblem with ripples.         |
+| `static/images/cards/post-story.svg` | Revise | Proposal report sheet + seal/reef watermark.         |
 
 ### Plan — Character badges
-| Asset | Plan | Replacement concept (ZoopDAO) |
-| --- | --- | --- |
-| `static/images/characters/badges/scientist.svg` | Revise | Lab goggles + specimen vial with aquatic glyphs. |
-| `static/images/characters/badges/time-traveller.svg` | Revise | Chrono ring + coral strata. |
-| `static/images/characters/badges/local-specialist.svg` | Revise | Beacon/map marker + shoreline contour. |
-| `static/images/characters/badges/water.svg` | Revise | Flowing wave crest + plankton dots. |
-| `static/images/characters/badges/vulcanic-rock.svg` | Revise | Basalt column + hydrothermal vent lines. |
-| `static/images/characters/badges/nature-lover.svg` | Revise | Leaf + fish tail hybrid mark. |
-| `static/images/characters/badges/child.svg` | Revise | Playful fish + bubble trail. |
-| `static/images/characters/badges/different-needs.svg` | Revise | Accessibility icon merged with wave arc. |
-| `static/images/characters/badges/iberian-green-frog.svg` | Revise | Frog silhouette with lily + tide lines. |
-| `static/images/characters/badges/non-human-being.svg` | Revise | Cephalopod/whale icon with orbiting nodes. |
-| `static/images/characters/badges/custom.svg` | Revise | Neutral placeholder with ZoopDAO seal. |
-| `static/images/characters/badges/trocaz-pigeon.svg` | Revise | Trocaz pigeon profile + sea breeze motif. |
-| `static/images/characters/badges/monk-seal.svg` | Revise | Monk seal head + reef contour. |
-| `static/images/characters/badges/zinos-petrel.svg` | Revise | Petrel in flight over wave lines. |
+
+| Asset                                                    | Plan   | Replacement concept (ZoopDAO)                    |
+| -------------------------------------------------------- | ------ | ------------------------------------------------ |
+| `static/images/characters/badges/scientist.svg`          | Revise | Lab goggles + specimen vial with aquatic glyphs. |
+| `static/images/characters/badges/time-traveller.svg`     | Revise | Chrono ring + coral strata.                      |
+| `static/images/characters/badges/local-specialist.svg`   | Revise | Beacon/map marker + shoreline contour.           |
+| `static/images/characters/badges/water.svg`              | Revise | Flowing wave crest + plankton dots.              |
+| `static/images/characters/badges/vulcanic-rock.svg`      | Revise | Basalt column + hydrothermal vent lines.         |
+| `static/images/characters/badges/nature-lover.svg`       | Revise | Leaf + fish tail hybrid mark.                    |
+| `static/images/characters/badges/child.svg`              | Revise | Playful fish + bubble trail.                     |
+| `static/images/characters/badges/different-needs.svg`    | Revise | Accessibility icon merged with wave arc.         |
+| `static/images/characters/badges/iberian-green-frog.svg` | Revise | Frog silhouette with lily + tide lines.          |
+| `static/images/characters/badges/non-human-being.svg`    | Revise | Cephalopod/whale icon with orbiting nodes.       |
+| `static/images/characters/badges/custom.svg`             | Revise | Neutral placeholder with ZoopDAO seal.           |
+| `static/images/characters/badges/trocaz-pigeon.svg`      | Revise | Trocaz pigeon profile + sea breeze motif.        |
+| `static/images/characters/badges/monk-seal.svg`          | Revise | Monk seal head + reef contour.                   |
+| `static/images/characters/badges/zinos-petrel.svg`       | Revise | Petrel in flight over wave lines.                |
 
 ### Plan — Character cards
-| Asset | Plan | Replacement concept (ZoopDAO) |
-| --- | --- | --- |
-| `static/images/characters/cards/scientist.svg` | Revise | Scientist vignette with aquarium lab desk + teal lighting. |
-| `static/images/characters/cards/time-traveller.svg` | Revise | Time portal + layered reef history strata. |
-| `static/images/characters/cards/local-specialist.svg` | Revise | Coastal map + observation tools. |
-| `static/images/characters/cards/water.svg` | Revise | Water currents + microfauna patterns. |
-| `static/images/characters/cards/vulcanic-rock.svg` | Revise | Volcanic rock texture + vent glow. |
-| `static/images/characters/cards/nature-lover.svg` | Revise | Reef garden + sprouting mangrove. |
-| `static/images/characters/cards/child.svg` | Revise | Playful aquarium doodles + bubbles. |
-| `static/images/characters/cards/different-needs.svg` | Revise | Inclusive symbols + calm wave texture. |
-| `static/images/characters/cards/iberian-green-frog.svg` | Revise | Frog habitat with wetland plants. |
-| `static/images/characters/cards/non-human-being.svg` | Revise | Abstract marine intelligence + node network. |
-| `static/images/characters/cards/custom.svg` | Revise | Blank template with ZoopDAO frame and subtle watermark. |
-| `static/images/characters/cards/trocaz-pigeon.svg` | Revise | Pigeon + laurel/sea breeze motif. |
-| `static/images/characters/cards/monk-seal.svg` | Revise | Monk seal + sandy seabed texture. |
-| `static/images/characters/cards/zinos-petrel.svg` | Revise | Petrel in flight over open water. |
+
+| Asset                                                   | Plan   | Replacement concept (ZoopDAO)                              |
+| ------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| `static/images/characters/cards/scientist.svg`          | Revise | Scientist vignette with aquarium lab desk + teal lighting. |
+| `static/images/characters/cards/time-traveller.svg`     | Revise | Time portal + layered reef history strata.                 |
+| `static/images/characters/cards/local-specialist.svg`   | Revise | Coastal map + observation tools.                           |
+| `static/images/characters/cards/water.svg`              | Revise | Water currents + microfauna patterns.                      |
+| `static/images/characters/cards/vulcanic-rock.svg`      | Revise | Volcanic rock texture + vent glow.                         |
+| `static/images/characters/cards/nature-lover.svg`       | Revise | Reef garden + sprouting mangrove.                          |
+| `static/images/characters/cards/child.svg`              | Revise | Playful aquarium doodles + bubbles.                        |
+| `static/images/characters/cards/different-needs.svg`    | Revise | Inclusive symbols + calm wave texture.                     |
+| `static/images/characters/cards/iberian-green-frog.svg` | Revise | Frog habitat with wetland plants.                          |
+| `static/images/characters/cards/non-human-being.svg`    | Revise | Abstract marine intelligence + node network.               |
+| `static/images/characters/cards/custom.svg`             | Revise | Blank template with ZoopDAO frame and subtle watermark.    |
+| `static/images/characters/cards/trocaz-pigeon.svg`      | Revise | Pigeon + laurel/sea breeze motif.                          |
+| `static/images/characters/cards/monk-seal.svg`          | Revise | Monk seal + sandy seabed texture.                          |
+| `static/images/characters/cards/zinos-petrel.svg`       | Revise | Petrel in flight over open water.                          |
 
 ### Plan — Illustrations (tutorial/round transition)
-| Asset set | Plan | Replacement concept (ZoopDAO) |
-| --- | --- | --- |
+
+| Asset set                                            | Plan   | Replacement concept (ZoopDAO)                                                                                                                                           |
+| ---------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `static/images/illustrations/step_{1..6}_{1..2}.png` | Revise | Replace game/tutorial imagery with ZoopDAO governance flow illustrations (proposal, discussion, voting, outcome) using the assembly-table palette and aquarium context. |
 
 ---
@@ -186,6 +200,7 @@ Revise the card background SVGs so the card deck reflects ZoopDAO identity while
 Replace the card SVGs in-place with a consistent ZoopDAO visual system that remains readable behind existing text layouts.
 
 **Description:**
+
 - Update the following files in-place:
   - `static/images/cards/landmark.svg`
   - `static/images/cards/nature.svg`
@@ -198,12 +213,14 @@ Replace the card SVGs in-place with a consistent ZoopDAO visual system that rema
   - `src/lib/components/story-dialog.svelte`
 
 **Acceptance Criteria:**
-1) Each card type is visually distinct and matches the ZoopDAO palette.
-2) Overlaid text remains readable without adding new text styling hacks.
-3) No clipping/overflow artifacts at `w-64 h-96` sizing.
+
+1. Each card type is visually distinct and matches the ZoopDAO palette.
+2. Overlaid text remains readable without adding new text styling hacks.
+3. No clipping/overflow artifacts at `w-64 h-96` sizing.
 
 **Completion Criteria:**
-1) All listed SVG files are updated and render correctly in the app.
+
+1. All listed SVG files are updated and render correctly in the app.
 
 ---
 
@@ -216,18 +233,21 @@ Revise character badge SVGs used as avatars so they share a consistent framing a
 Replace badge SVGs in-place and ensure they read well when circular-cropped in UI.
 
 **Description:**
+
 - Update all files under `static/images/characters/badges/*.svg` in-place.
 - Validate with:
   - `src/lib/components/story-card.svelte`
   - `src/lib/components/end-dialog.svelte`
 
 **Acceptance Criteria:**
-1) Badges are legible from `32px` up to `128px` and look consistent as a set.
-2) `custom.svg` is a neutral, high-quality fallback.
-3) No important details are lost when cropped to a circle.
+
+1. Badges are legible from `32px` up to `128px` and look consistent as a set.
+2. `custom.svg` is a neutral, high-quality fallback.
+3. No important details are lost when cropped to a circle.
 
 **Completion Criteria:**
-1) Badge set is complete and visually consistent.
+
+1. Badge set is complete and visually consistent.
 
 ---
 
@@ -240,18 +260,21 @@ Revise the character card background SVGs used for character intro/selection scr
 Replace character card SVGs in-place with safe text-overlay areas and consistent styling.
 
 **Description:**
+
 - Update all files under `static/images/characters/cards/*.svg` in-place.
 - Validate with:
   - `src/lib/components/character-card.svelte`
   - round 0 view in `src/lib/components/story-dialog.svelte`
 
 **Acceptance Criteria:**
-1) Text overlays remain readable across all cards without extra shadows/overrides.
-2) Card backgrounds align stylistically with the badge set (ZD-124).
-3) No clipping/overflow artifacts at `w-64 h-96` sizing.
+
+1. Text overlays remain readable across all cards without extra shadows/overrides.
+2. Card backgrounds align stylistically with the badge set (ZD-124).
+3. No clipping/overflow artifacts at `w-64 h-96` sizing.
 
 **Completion Criteria:**
-1) Character card set is complete and visually consistent.
+
+1. Character card set is complete and visually consistent.
 
 ---
 
@@ -264,6 +287,7 @@ Revise the existing tutorial and round transition illustration PNGs so they matc
 Replace the illustration set in-place while preserving filenames and usage locations.
 
 **Description:**
+
 - Update in-place:
   - `static/images/illustrations/step_1_1.png` / `step_1_2.png`
   - `static/images/illustrations/step_2_1.png` / `step_2_2.png`
@@ -276,12 +300,14 @@ Replace the illustration set in-place while preserving filenames and usage locat
   - `src/routes/+page.svelte`
 
 **Acceptance Criteria:**
-1) Illustrations reflect ZoopDAO governance flow (proposal → discussion → voting → outcome) and match the palette.
-2) Images remain readable on common viewport sizes (mobile + desktop) and do not clash with overlaid UI text.
-3) No missing files or broken image URLs in the pages/components that reference them.
+
+1. Illustrations reflect ZoopDAO governance flow (proposal → discussion → voting → outcome) and match the palette.
+2. Images remain readable on common viewport sizes (mobile + desktop) and do not clash with overlaid UI text.
+3. No missing files or broken image URLs in the pages/components that reference them.
 
 **Completion Criteria:**
-1) All listed `static/images/illustrations/*.png` files are updated and render correctly.
+
+1. All listed `static/images/illustrations/*.png` files are updated and render correctly.
 
 ---
 
@@ -301,16 +327,19 @@ d) Specify background, surface, border, and focus/outline colors.
 e) Provide contrast guidance to meet accessibility needs for text and controls.
 
 **Acceptance Criteria:**
+
 1. Palette includes primary/secondary/tertiary, background/surface, border, and text colors.
 2. Buttons have defined default/hover/active/disabled states.
 3. Typography colors are defined for headings, body, and muted text.
 4. Palette references assembly table imagery as the source.
 
 **Completion Criteria:**
+
 1. Color tokens are documented and ready to be used in the UI.
 2. Basic contrast checks are satisfied for primary text and primary buttons.
 
 **Palette (source: static/images/aquarium/assembly_table.svg):**
+
 - Primary (buttons): `#0c6b78` hover `#23c1d2` active `#05363d` disabled `#a8b3b3`
 - Secondary (buttons): `#6aa85a` hover `#7fb56b` active `#1a3f43`
 - Tertiary (buttons): `#b8b09c` hover `#d7d2c3` active `#7f8a8a`
@@ -337,12 +366,14 @@ Update the homepage to reflect ZoopDAO branding by replacing "LoGaCulture" with 
 Transform the homepage from game-focused messaging to DAO governance messaging for Aquário Vasco da Gama.
 
 **Description:**
+
 - Change main title from "LoGaCulture" to "ZoopDAO" in homepage component
 - Update tagline from "Create your own story from the perspective of a character in the island of Madeira." to "Participate on the multispecies governance in Aquário Vasco da Gama"
 - Change "Browse other players' stories" link text to "Browse other participants discussions"
 - Update all related text in English (messages/en.json) and Portuguese (messages/pt.json) translation files
 
 **Acceptance Criteria:**
+
 1. Homepage displays "ZoopDAO" as the main title
 2. Tagline reflects multispecies governance participation at Aquário Vasco da Gama
 3. Navigation link text updated to "Browse other participants discussions" (or Portuguese equivalent)
@@ -350,6 +381,7 @@ Transform the homepage from game-focused messaging to DAO governance messaging f
 5. No broken links or missing translations
 
 **Completion Criteria:**
+
 1. Code changes implemented and tested
 2. Both language files updated with new translations
 3. Visual verification of homepage matches requirements
@@ -366,6 +398,7 @@ Create a new "New Proposal" form page that replaces the "Start new game" button 
 Enable users to create new governance proposals through a comprehensive form interface.
 
 **Description:**
+
 - Create new route/page for proposal creation (e.g., `/proposals/new` or replace homepage "Start new game" button)
 - Design form layout with exit button in top right corner
 - Implement form structure with sections for:
@@ -378,6 +411,7 @@ Enable users to create new governance proposals through a comprehensive form int
 - Add exit button functionality to return to homepage
 
 **Acceptance Criteria:**
+
 1. New proposal form page is accessible from homepage
 2. Form contains all required fields (title, description sections, discussion, voting period)
 3. Exit button in top right corner returns to homepage
@@ -385,6 +419,7 @@ Enable users to create new governance proposals through a comprehensive form int
 5. Form validation prevents submission with empty required fields
 
 **Completion Criteria:**
+
 1. Form page created and accessible
 2. All form fields implemented
 3. Navigation flow works correctly
@@ -401,6 +436,7 @@ Implement the mandatory Theory of Change fields within the proposal form descrip
 Capture structured proposal data following Theory of Change methodology with all mandatory fields organized in a cascaded relationship where each level is nested under the previous level.
 
 **Description:**
+
 - Implement "Long-term objectives" section with minimum 2 objectives required (top level)
 - Organize fields in cascaded/waterfall structure:
   - **Level 1: Long-term Objectives** (minimum 2 required)
@@ -414,6 +450,7 @@ Capture structured proposal data following Theory of Change methodology with all
 - Each precondition must have both indicative steps and key indicators as nested children
 
 **Acceptance Criteria:**
+
 1. Long-term objectives section allows minimum 2 objectives (top level)
 2. Each objective has 4 preconditions/goals fields nested directly under it (cascaded from objective)
 3. Each precondition has indicative steps nested directly under it (cascaded from precondition)
@@ -426,6 +463,7 @@ Capture structured proposal data following Theory of Change methodology with all
 10. Data structure maintains parent-child relationships: Objective → Precondition → (Indicative Steps + Key Indicators)
 
 **Completion Criteria:**
+
 1. All Theory of Change fields implemented in cascaded structure
 2. Form validation working correctly for all nested levels
 3. Data structure supports nested objectives/preconditions/steps/indicators with proper parent-child relationships
@@ -443,6 +481,7 @@ Implement voting period selection dropdown with predefined quarterly meeting per
 Allow proposal creators to select appropriate voting periods from organization's meeting schedule.
 
 **Description:**
+
 - Create voting period selection component/dropdown
 - Predefine quarterly periods:
   - March 16th to 20th
@@ -454,6 +493,7 @@ Allow proposal creators to select appropriate voting periods from organization's
 - Store selected period with proposal data
 
 **Acceptance Criteria:**
+
 1. Voting period dropdown displays all 4 quarterly periods
 2. Periods are displayed in readable format (e.g., "March 16-20, 2024")
 3. Selection is mandatory before form submission
@@ -461,6 +501,7 @@ Allow proposal creators to select appropriate voting periods from organization's
 5. Periods can be extended in the future without code changes (configurable)
 
 **Completion Criteria:**
+
 1. Voting period selector implemented
 2. All 4 periods available for selection
 3. Selection is validated and saved correctly
@@ -477,6 +518,7 @@ Implement proposal submission functionality that saves proposals to a list and d
 Enable proposal creation, storage, and display in a proposals list accessible from the homepage.
 
 **Description:**
+
 - Create database schema/table for proposals (if needed)
 - Implement proposal submission API endpoint
 - Save proposal data including all form fields and voting period
@@ -487,6 +529,7 @@ Enable proposal creation, storage, and display in a proposals list accessible fr
 - Update homepage layout to show proposals list
 
 **Acceptance Criteria:**
+
 1. Proposals are saved to database/storage after submission
 2. Proposals list displays on homepage in place of game code entry
 3. Only proposals in current voting period are shown
@@ -495,6 +538,7 @@ Enable proposal creation, storage, and display in a proposals list accessible fr
 6. Proposals are displayed with title and voting period information
 
 **Completion Criteria:**
+
 1. Backend storage for proposals implemented
 2. Proposals list component created and integrated
 3. Homepage updated with proposals list
@@ -512,6 +556,7 @@ Modify the lobby page to skip the character type selection screen and show only 
 Simplify lobby flow by removing character type choice and defaulting to human characters only.
 
 **Description:**
+
 - Modify lobby page (`src/routes/[code]/lobby/+page.svelte`) to hide character type selection
 - Set default character category to 'human'
 - Skip directly to character selection step
@@ -519,6 +564,7 @@ Simplify lobby flow by removing character type choice and defaulting to human ch
 - Update lobby state to automatically set human category
 
 **Acceptance Criteria:**
+
 1. Lobby page no longer shows character type selection screen
 2. Users go directly to character selection
 3. Only human characters are available for selection
@@ -526,6 +572,7 @@ Simplify lobby flow by removing character type choice and defaulting to human ch
 5. Character selection works as before but without type choice
 
 **Completion Criteria:**
+
 1. Lobby page updated to skip type selection
 2. Default category set to human
 3. Character selection flow works correctly
@@ -542,6 +589,7 @@ Transform character selection into role selection with 6 new roles (administrati
 Replace game characters with organizational roles relevant to Aquário Vasco da Gama governance.
 
 **Description:**
+
 - Replace 6 character types with 6 roles:
   - Administration
   - Research
@@ -557,6 +605,7 @@ Replace game characters with organizational roles relevant to Aquário Vasco da 
 - Modify character option component to display roles
 
 **Acceptance Criteria:**
+
 1. Lobby shows "Select your role" instead of "Select your character"
 2. All 6 roles are available with correct names
 3. Role descriptions are updated appropriately
@@ -566,6 +615,7 @@ Replace game characters with organizational roles relevant to Aquário Vasco da 
 7. Role selection works functionally the same as character selection
 
 **Completion Criteria:**
+
 1. Role data structure updated
 2. UI components updated with new role names and descriptions
 3. Translation files updated for all role-related text
@@ -583,6 +633,7 @@ Update the game tutorial to reflect ZoopDAO governance context, changing referen
 Transform tutorial from game instructions to governance participation guide.
 
 **Description:**
+
 - Update tutorial step 1 (keep as is)
 - Update tutorial step 2: Change map reference to assembly aquarium with players around table (poker table style)
 - Update tutorial step 3 (keep as is)
@@ -595,6 +646,7 @@ Transform tutorial from game instructions to governance participation guide.
 - Modify tutorial component to reflect new context
 
 **Acceptance Criteria:**
+
 1. All 8 tutorial steps updated with ZoopDAO context
 2. Map reference changed to assembly aquarium
 3. Story sheet changed to input text bar with send/chat history
@@ -605,6 +657,7 @@ Transform tutorial from game instructions to governance participation guide.
 8. Tutorial flow works correctly with new content
 
 **Completion Criteria:**
+
 1. Tutorial component updated with new steps
 2. Translation files updated for all tutorial text
 3. Tutorial displays correctly with new content
@@ -621,6 +674,7 @@ Replace the game map component with an aquarium assembly table image, maintainin
 Transform the visual centerpiece from Madeira island map to aquarium assembly table for governance discussions.
 
 **Description:**
+
 - Replace map component (`src/lib/components/map.svelte`) with aquarium assembly table ('static/images/aquarium/assembly_table.svg')
 - Use background color should be HEX #b3e4eb
 - Use generated aquarium image as background/centerpiece
@@ -631,6 +685,7 @@ Transform the visual centerpiece from Madeira island map to aquarium assembly ta
 - Remove map-specific functionality (stops, movement) if not needed
 
 **Acceptance Criteria:**
+
 1. Map component replaced with aquarium assembly table
 2. Aquarium image displays correctly in game view
 3. Current map functions remain accessible (to be updated in future stories)
@@ -639,6 +694,7 @@ Transform the visual centerpiece from Madeira island map to aquarium assembly ta
 6. Image loads and displays properly
 
 **Completion Criteria:**
+
 1. Aquarium image integrated into component
 2. Map component replaced/updated
 3. Visual layout tested and working
@@ -655,6 +711,7 @@ Implement visualization of AI agents and human participants around the table aft
 Add AI agent participation alongside human participants to provide commentary and discussion on proposal points throughout the governance process, supporting flexible assembly compositions with a total of 6 participants.
 
 **Description:**
+
 - Create AI agent visualization component showing agents around the aquarium table
 - Create participant visualization component supporting both AI agents and human participants
 - Support flexible participant composition with total of 6 participants:
@@ -675,6 +732,7 @@ Add AI agent participation alongside human participants to provide commentary an
 - Ensure proper positioning of all 6 participants around the aquarium table
 
 **Acceptance Criteria:**
+
 1. System supports flexible participant composition totaling exactly 6 participants
 2. Minimum requirement: at least 1 human participant and at least 1 AI agent must be present
 3. Maximum constraint: no more than 5 of each type (humans or AI agents)
@@ -688,6 +746,7 @@ Add AI agent participation alongside human participants to provide commentary an
 11. Participant positioning around aquarium accommodates exactly 6 participants
 
 **Completion Criteria:**
+
 1. AI agent component created and integrated
 2. Participant component created supporting both AI agents and humans
 3. Flexible participant composition logic implemented and validated (total 6 participants)
@@ -708,6 +767,7 @@ Add input text bar with send and chat history buttons to replace the story sheet
 Enable participants to engage in discussion through a chat-like interface during proposal rounds.
 
 **Description:**
+
 - Create input text bar component for discussion messages
 - Add send button (arrow icon on the right) to submit messages
 - Add chat history button (chat balloon icon on the left) to view message history
@@ -719,6 +779,7 @@ Enable participants to engage in discussion through a chat-like interface during
 - Update UI layout to accommodate new input bar
 
 **Acceptance Criteria:**
+
 1. Input text bar is visible and functional in game view
 2. Send button (arrow icon) submits messages correctly
 3. Chat history button (balloon icon) opens message history
@@ -729,6 +790,7 @@ Enable participants to engage in discussion through a chat-like interface during
 8. Input bar is accessible throughout the game flow
 
 **Completion Criteria:**
+
 1. Input bar component created and styled
 2. Send functionality implemented
 3. Chat history dialog created
@@ -747,6 +809,7 @@ Create a database table to store AI agent and human participant messages, implem
 Enable persistent storage of discussion messages and generate contextually relevant AI agent messages using Google Gemini API with role-specific system prompts.
 
 **Description:**
+
 - Create database migration for `discussion_messages` table with fields:
   - id (primary key)
   - game_id (references games table)
@@ -776,6 +839,7 @@ Enable persistent storage of discussion messages and generate contextually relev
 - Implement message retrieval functions to fetch chat history for a game/proposal
 
 **Acceptance Criteria:**
+
 1. Database table `discussion_messages` created with all required fields
 2. Table includes proper foreign key relationships and indexes
 3. API endpoint `/api/ai/messages` created and functional
@@ -792,6 +856,7 @@ Enable persistent storage of discussion messages and generate contextually relev
 14. Error handling implemented for API failures
 
 **Completion Criteria:**
+
 1. Database migration created and applied
 2. API endpoint implemented following example pattern
 3. Gemini API integration working with proper configuration
@@ -813,6 +878,7 @@ Replace the dice component with a digital clock displaying current local time in
 Transform the random dice element into a time-tracking element for governance sessions.
 
 **Description:**
+
 - Replace dice component (`src/lib/components/dice.svelte`) with digital clock component
 - Display current local time in HH:MM:SS format
 - Update clock in real-time (update every second)
@@ -823,6 +889,7 @@ Transform the random dice element into a time-tracking element for governance se
 - Style clock to match design system
 
 **Acceptance Criteria:**
+
 1. Dice component replaced with digital clock
 2. Clock displays current local time in HH:MM:SS format
 3. Clock updates every second in real-time
@@ -831,6 +898,7 @@ Transform the random dice element into a time-tracking element for governance se
 6. Clock styling matches design system
 
 **Completion Criteria:**
+
 1. Digital clock component created
 2. Dice component removed/replaced
 3. Real-time time updates working
@@ -848,6 +916,7 @@ Implement conditional display logic for discussion input elements based on the c
 Enable round-appropriate discussion input mechanisms: button-triggered dialog for rounds 1-6, and direct text input bar for the final discussion round.
 
 **Description:**
+
 - Create "Discussion Input" button component to replace input bar position for rounds 1-6
 - Implement conditional rendering logic in game view:
   - Rounds 1-6: Display "Discussion Input" button in the position where input bar normally appears
@@ -865,6 +934,7 @@ Enable round-appropriate discussion input mechanisms: button-triggered dialog fo
 - Add appropriate translation keys for "Discussion Input" button text in both English and Portuguese
 
 **Acceptance Criteria:**
+
 1. "Discussion Input" button is visible in rounds 1-6 in the position where input bar normally appears
 2. "Discussion Input" button is hidden in round 7
 3. Discussion input text bar is hidden in rounds 1-6
@@ -878,6 +948,7 @@ Enable round-appropriate discussion input mechanisms: button-triggered dialog fo
 11. Conditional rendering logic works correctly for all round transitions
 
 **Completion Criteria:**
+
 1. Discussion Input button component created
 2. Conditional rendering logic implemented in game view
 3. Button click handler integrated with story dialog
@@ -898,6 +969,7 @@ Replace all references to "story", "stories", and story-related terminology with
 Align application terminology with governance context by removing game narrative language.
 
 **Description:**
+
 - Update all UI text from "story" to "discussion" in translation files
 - Change "Your final story" to "Your final discussion"
 - Update "Story Telling" button text
@@ -909,6 +981,7 @@ Align application terminology with governance context by removing game narrative
 - Update all related text in both English and Portuguese
 
 **Acceptance Criteria:**
+
 1. All "story" references changed to "discussion" in UI
 2. "Your final story" changed to "Your final discussion"
 3. "Story Telling" button updated
@@ -919,6 +992,7 @@ Align application terminology with governance context by removing game narrative
 8. No broken functionality from terminology changes
 
 **Completion Criteria:**
+
 1. Translation files updated comprehensively
 2. Component references updated
 3. Data structure names updated
@@ -936,6 +1010,7 @@ Finalize the discussion end flow by adding mandatory voting, saving the full rou
 Guarantee a complete, votable final discussion experience with reliable AI messaging and persisted vote data.
 
 **Description:**
+
 - Add vote selection (Yes/No/Abstain) to the final report and make submission mandatory.
 - Change the submit button text to "Submit discussion and vote".
 - Hide participant name/title fields; auto-fill values for save payload.
@@ -946,6 +1021,7 @@ Guarantee a complete, votable final discussion experience with reliable AI messa
 - Store AI messages without blocking UI; keep persistence best-effort.
 
 **Acceptance Criteria:**
+
 1. Three voting buttons (Yes, No, Abstain) are visible in the final report.
 2. "Save story" button is replaced by "Submit discussion and vote".
 3. Submission is blocked until a vote is selected.
@@ -956,6 +1032,7 @@ Guarantee a complete, votable final discussion experience with reliable AI messa
 8. AI typing bubbles are sequential (only one at a time) with a short gap.
 
 **Completion Criteria:**
+
 1. Final report UI updated with voting controls and mandatory submission.
 2. DB migration adds vote column and `save_discussion` handles vote.
 3. Round-7 discussion saved with message history (user + AI).
@@ -974,6 +1051,7 @@ Transform the "Browse stories" page to "Browse discussions" page, adapting saved
 Enable users to browse and read discussions from past proposal participations instead of game stories.
 
 **Description:**
+
 - Kept the `/stories` route but updated labels and copy to discussions context
 - Mapped `saved_discussions` records to the existing stories UI shape in loaders
 - Ensured browsing only shows public discussions and backfilled visibility defaults
@@ -982,6 +1060,7 @@ Enable users to browse and read discussions from past proposal participations in
 - Adjusted browse navigation button to use client-side routing for reliability
 
 **Acceptance Criteria:**
+
 1. `/stories` shows saved discussions with discussion wording
 2. Saved discussions load from `saved_discussions` and map to UI shape
 3. Filters/search operate on discussion fields without crashes
@@ -990,6 +1069,7 @@ Enable users to browse and read discussions from past proposal participations in
 6. Browse button navigates reliably to the list
 
 **Completion Criteria:**
+
 1. Loaders query `saved_discussions` and map fields
 2. UI copy updated to discussions in EN/PT
 3. Role filter labels are resilient to missing translations
@@ -1007,6 +1087,7 @@ Deactivate the image gallery button and replace it with a "Full Proposal" button
 Provide easy access to view the full proposal details during discussion participation, replacing the game-focused image gallery functionality.
 
 **Description:**
+
 - Remove or deactivate the image gallery button (`IslandDialog`) from the game view
 - Create "Full Proposal" button component with text and icon
 - Position button in the same location where image gallery button was (right side, middle of screen)
@@ -1019,6 +1100,7 @@ Provide easy access to view the full proposal details during discussion particip
 - Ensure button is disabled until tour is completed (same as other game view buttons)
 
 **Acceptance Criteria:**
+
 1. Image gallery button is deactivated/removed from game view
 2. "View Full Proposal" button is visible in the same position as image gallery button
 3. Button displays text and icon appropriately
@@ -1030,6 +1112,7 @@ Provide easy access to view the full proposal details during discussion particip
 9. Button styling matches design system
 
 **Completion Criteria:**
+
 1. Image gallery button removed/deactivated
 2. View Full Proposal button component created
 3. Proposal view dialog/modal implemented
@@ -1049,6 +1132,7 @@ Inspect and update translation files (en.json and pt.json) for syntax and contex
 Ensure all translation strings are consistent with ZoopDAO governance context and update save discussion dialog to use appropriate terminology.
 
 **Description:**
+
 - Review all translation keys in `messages/en.json` and `messages/pt.json` for:
   - Syntax errors (missing commas, brackets, quotes)
   - Context consistency (game vs discussion terminology)
@@ -1072,6 +1156,7 @@ Ensure all translation strings are consistent with ZoopDAO governance context an
 - Test save dialog to verify all text displays correctly
 
 **Acceptance Criteria:**
+
 1. All translation files have valid JSON syntax (no syntax errors)
 2. Save discussion dialog uses "discussion" terminology instead of "game"
 3. Save discussion dialog uses "participant" terminology instead of "player" where appropriate
@@ -1082,6 +1167,7 @@ Ensure all translation strings are consistent with ZoopDAO governance context an
 8. Translation files pass JSON validation
 
 **Completion Criteria:**
+
 1. Translation files reviewed and syntax errors fixed
 2. Save discussion dialog translations updated
 3. All "game" references changed to appropriate governance terminology
@@ -1101,6 +1187,7 @@ Add a mode selection page before role selection in the lobby flow, allowing user
 Enable users to select their preferred discussion mode and implement timer functionality that only appears in the final discussion round with mode-appropriate durations.
 
 **Description:**
+
 - Create new mode selection page/route before role selection in lobby flow
 - Design mode selection UI in the style of role lobby (similar visual design)
 - Implement two mode options:
@@ -1123,6 +1210,7 @@ Enable users to select their preferred discussion mode and implement timer funct
 - Update lobby URL structure to include mode parameter if needed
 
 **Acceptance Criteria:**
+
 1. Mode selection page appears before role selection in lobby flow
 2. Two mode options are available: Pedagogic Mode and Decision-Making Mode
 3. Mode selection UI matches role lobby visual style
@@ -1137,6 +1225,7 @@ Enable users to select their preferred discussion mode and implement timer funct
 12. Mode selection persists through game flow
 
 **Completion Criteria:**
+
 1. Mode selection page created and integrated into lobby flow
 2. Mode selection UI styled to match role lobby
 3. Timer component implemented (replacing digital clock)
@@ -1165,11 +1254,13 @@ c) Ensure discussion cards show the proposal points for their corresponding roun
 d) Validate that the displayed points update correctly when rounds change.
 
 **Acceptance Criteria:**
+
 1. Each discussion card includes a "View full proposal" button below the card, matching assembly styling and behavior.
 2. Clicking the button opens the full proposal view for the card’s proposal.
 3. Discussion cards show the proposal points specific to the card’s round.
 
 **Completion Criteria:**
+
 1. UI behavior matches assembly button for all discussion cards.
 2. Round-specific points are confirmed correct across multiple rounds and proposals.
 
@@ -1191,12 +1282,14 @@ d) Confirm discussion messages remain available via the history browser and cont
 e) If legacy proposal records include a “discussion” field, define a safe handling strategy (ignore/hide, or migrate content into history if required).
 
 **Acceptance Criteria:**
+
 1. New proposal form has no “Discussion” field and submits successfully without it.
 2. Proposals list and “view full proposal” popups do not display a “Discussion” field.
 3. Proposal create/update payloads do not include a “discussion” attribute.
 4. Discussion continues to be captured and viewable via the history browser (chat).
 
 **Completion Criteria:**
+
 1. UI, API, and persistence layers are aligned with the removal (no dead fields/validators).
 2. Manual verification confirms proposals render correctly and discussion history remains intact.
 
@@ -1217,13 +1310,15 @@ c) Update any locale detection logic to prefer Portuguese when no explicit user 
 d) Verify that all key routes/components render Portuguese strings by default.
 
 **Acceptance Criteria:**
-1) On first visit (no stored preference), the UI loads in Portuguese.
-2) If the user switches language, the chosen language persists across refresh and navigation.
-3) English remains selectable and renders correctly when chosen.
+
+1. On first visit (no stored preference), the UI loads in Portuguese.
+2. If the user switches language, the chosen language persists across refresh and navigation.
+3. English remains selectable and renders correctly when chosen.
 
 **Completion Criteria:**
-1) Default locale behavior is implemented and verified across core flows (home, proposals, lobby/game).
-2) Language preference persistence is validated.
+
+1. Default locale behavior is implemented and verified across core flows (home, proposals, lobby/game).
+2. Language preference persistence is validated.
 
 ---
 
@@ -1243,18 +1338,17 @@ d) Ensure any remaining “game” terminology is limited to internal code ident
 e) Review for consistency across flows: homepage, lobby, proposal creation, rounds, discussion, and history.
 
 **Acceptance Criteria:**
-1) No user-facing UI text contains “play” or “game” wording in English or Portuguese (unless explicitly justified).
-2) Updated copy uses “participate/participation” and/or “discussion” consistently across primary flows.
-3) Buttons and navigation labels remain clear and not misleading after copy changes.
+
+1. No user-facing UI text contains “play” or “game” wording in English or Portuguese (unless explicitly justified).
+2. Updated copy uses “participate/participation” and/or “discussion” consistently across primary flows.
+3. Buttons and navigation labels remain clear and not misleading after copy changes.
 
 **Completion Criteria:**
-1) `messages/en.json` and `messages/pt.json` are updated and verified in the UI.
-2) Manual walkthrough confirms the main flows contain the new terminology end-to-end.
 
-
+1. `messages/en.json` and `messages/pt.json` are updated and verified in the UI.
+2. Manual walkthrough confirms the main flows contain the new terminology end-to-end.
 
 ---
-
 
 ## ZD-180: Epic — Finish AI assembly with switchable LLM provider (IAEDU GPT-4o gateway + keep Gemini)
 
@@ -1272,14 +1366,16 @@ d) Standardize inputs/outputs so UI and storage do not depend on provider-specif
 e) Add basic reliability and error handling for AI calls.
 
 **Acceptance Criteria:**
-1) AI assembly runs end-to-end using IAEDU OpenAI GPT-4o.
-2) Gemini integration remains available and unchanged in its location.
-3) Switching a single variable changes the active provider.
-4) AI API responses follow one consistent schema regardless of provider.
+
+1. AI assembly runs end-to-end using IAEDU OpenAI GPT-4o.
+2. Gemini integration remains available and unchanged in its location.
+3. Switching a single variable changes the active provider.
+4. AI API responses follow one consistent schema regardless of provider.
 
 **Completion Criteria:**
-1) Provider switching is documented and manually verified for both providers.
-2) Error handling is consistent and user-safe across providers.
+
+1. Provider switching is documented and manually verified for both providers.
+2. Error handling is consistent and user-safe across providers.
 
 ---
 
@@ -1298,11 +1394,13 @@ c) Define error shapes and retry/timeout policy requirements.
 d) Specify any required constraints (length limits, formatting rules) to support UI rendering.
 
 **Acceptance Criteria:**
-1) A single TS interface exists for “generate AI messages” used by all providers.
-2) Output schema includes all metadata needed by UI and history storage.
+
+1. A single TS interface exists for “generate AI messages” used by all providers.
+2. Output schema includes all metadata needed by UI and history storage.
 
 **Completion Criteria:**
-1) Schema is referenced by the IAEDU OpenAI GPT-4o and Gemini provider implementations.
+
+1. Schema is referenced by the IAEDU OpenAI GPT-4o and Gemini provider implementations.
 
 ---
 
@@ -1321,11 +1419,13 @@ c) Ensure outputs map into the standard response schema (no provider-specific le
 d) Add minimal logging/metrics hooks for debugging failures.
 
 **Acceptance Criteria:**
-1) IAEDU OpenAI GPT-4o provider generates valid messages for each round and returns the standard schema.
-2) Missing/invalid config returns a clear, safe error.
+
+1. IAEDU OpenAI GPT-4o provider generates valid messages for each round and returns the standard schema.
+2. Missing/invalid config returns a clear, safe error.
 
 **Completion Criteria:**
-1) Manual verification shows AI generation works in at least two rounds using IAEDU OpenAI GPT-4o.
+
+1. Manual verification shows AI generation works in at least two rounds using IAEDU OpenAI GPT-4o.
 
 ---
 
@@ -1343,11 +1443,13 @@ b) Route requests to the correct provider adapter based on the variable.
 c) Keep Gemini script untouched and wrap it only via a thin adapter if required.
 
 **Acceptance Criteria:**
-1) Changing only `LLM_PROVIDER` switches the running provider.
-2) No additional UI changes are required when switching providers.
+
+1. Changing only `LLM_PROVIDER` switches the running provider.
+2. No additional UI changes are required when switching providers.
 
 **Completion Criteria:**
-1) Both providers are verified to return the same response schema.
+
+1. Both providers are verified to return the same response schema.
 
 ---
 
@@ -1365,11 +1467,13 @@ b) Normalize provider errors into a single error response shape.
 c) Ensure partial failures are handled safely (e.g., some AI agents fail but UI still works).
 
 **Acceptance Criteria:**
-1) AI endpoints time out safely and return consistent errors.
-2) Transient failures can recover without user-facing crashes.
+
+1. AI endpoints time out safely and return consistent errors.
+2. Transient failures can recover without user-facing crashes.
 
 **Completion Criteria:**
-1) Manual testing confirms UI remains stable under simulated AI failures.
+
+1. Manual testing confirms UI remains stable under simulated AI failures.
 
 ---
 
@@ -1387,11 +1491,13 @@ b) Read configuration from `.env` (IAEDU endpoint, API key, channel, thread, use
 c) Print status code and a short response preview.
 
 **Acceptance Criteria:**
-1) Running the script succeeds when network/DNS is available.
-2) Script exits with a clear error when configuration is missing.
+
+1. Running the script succeeds when network/DNS is available.
+2. Script exits with a clear error when configuration is missing.
 
 **Completion Criteria:**
-1) Manual test is run and output logged in the terminal.
+
+1. Manual test is run and output logged in the terminal.
 
 ---
 
@@ -1411,13 +1517,15 @@ d) Implement RAG retrieval using LangChain.js `SupabaseVectorStore` with metadat
 e) Inject retrieved context into AI generation in a safe, token-bounded format with citations/metadata.
 
 **Acceptance Criteria:**
-1) Users can upload documents in the last round and see them attached to the proposal/round.
-2) Embeddings are stored and searchable via Supabase `pgvector`.
-3) AI calls can retrieve relevant chunks and use them as context in the final round.
+
+1. Users can upload documents in the last round and see them attached to the proposal/round.
+2. Embeddings are stored and searchable via Supabase `pgvector`.
+3. AI calls can retrieve relevant chunks and use them as context in the final round.
 
 **Completion Criteria:**
-1) End-to-end upload → ingest → retrieve → AI prompt injection is manually verified.
-2) Retrieval is correctly scoped (no cross-proposal leakage).
+
+1. End-to-end upload → ingest → retrieve → AI prompt injection is manually verified.
+2. Retrieval is correctly scoped (no cross-proposal leakage).
 
 ---
 
@@ -1435,11 +1543,13 @@ b) Add upload progress/success/error states.
 c) Display an attachments list (name, size, status) associated to the current proposal/round.
 
 **Acceptance Criteria:**
-1) Upload works from the Round 7 input bar and shows clear success/failure feedback.
-2) Uploaded files appear in an attachments list tied to the active proposal/round.
+
+1. Upload works from the Round 7 input bar and shows clear success/failure feedback.
+2. Uploaded files appear in an attachments list tied to the active proposal/round.
 
 **Completion Criteria:**
-1) Manual verification covers multiple files and failure cases.
+
+1. Manual verification covers multiple files and failure cases.
 
 ---
 
@@ -1459,11 +1569,13 @@ d) Add `match_documents` RPC with `query_embedding`, `match_count`, and `filter`
 e) Define baseline RLS expectations for documents/chunks.
 
 **Acceptance Criteria:**
-1) Schema supports proposal/round-scoped documents and chunk embeddings.
-2) `match_documents` returns `id, content, metadata, similarity` for LangChain.
+
+1. Schema supports proposal/round-scoped documents and chunk embeddings.
+2. `match_documents` returns `id, content, metadata, similarity` for LangChain.
 
 **Completion Criteria:**
-1) Migrations are ready to apply and match Supabase/LangChain naming.
+
+1. Migrations are ready to apply and match Supabase/LangChain naming.
 
 ---
 
@@ -1484,11 +1596,13 @@ e) Embed with OpenRouter (bge-m3) and insert into `document_chunks` directly (sc
 f) Track ingestion status in `documents.metadata` (pending/indexed/failed).
 
 **Acceptance Criteria:**
-1) Uploading a document results in stored chunks with embeddings in Supabase.
-2) Ingestion status is visible for troubleshooting.
+
+1. Uploading a document results in stored chunks with embeddings in Supabase.
+2. Ingestion status is visible for troubleshooting.
 
 **Completion Criteria:**
-1) Unit tests validate ingestion: document record, chunk inserts, embeddings call, and indexed status updates.
+
+1. Unit tests validate ingestion: document record, chunk inserts, embeddings call, and indexed status updates.
 
 ---
 
@@ -1507,11 +1621,13 @@ c) Use `SupabaseFilterRPCCall` when advanced filters are needed.
 d) Return chunks with citations from metadata (doc id/name, chunk id, similarity).
 
 **Acceptance Criteria:**
-1) Retrieval returns top-k relevant chunks for a query.
-2) Retrieval is correctly scoped to the proposal/round and does not leak other proposals’ docs.
+
+1. Retrieval returns top-k relevant chunks for a query.
+2. Retrieval is correctly scoped to the proposal/round and does not leak other proposals’ docs.
 
 **Completion Criteria:**
-1) Unit tests confirm retrieved chunks match uploaded content and scope (proposal/round).
+
+1. Unit tests confirm retrieved chunks match uploaded content and scope (proposal/round).
 
 ---
 
@@ -1529,11 +1645,13 @@ b) Add context blocks with `source` metadata (filename, chunk id, similarity).
 c) Enforce a strict token/length budget for injected context and strip low-signal chunks.
 
 **Acceptance Criteria:**
-1) AI responses can reference uploaded documents using retrieved chunks.
-2) Context injection respects a fixed token/length budget.
+
+1. AI responses can reference uploaded documents using retrieved chunks.
+2. Context injection respects a fixed token/length budget.
 
 **Completion Criteria:**
-1) Unit tests confirm AI prompt payload includes bounded RAG context and metadata.
+
+1. Unit tests confirm AI prompt payload includes bounded RAG context and metadata.
 
 ---
 
@@ -1552,11 +1670,13 @@ b) Harden Supabase RLS for `documents` and `document_chunks`.
 c) Define behavior for public vs private proposals (if applicable).
 
 **Acceptance Criteria:**
-1) A user cannot retrieve chunks from other proposals.
-2) Document reads/writes follow the project’s access rules.
+
+1. A user cannot retrieve chunks from other proposals.
+2. Document reads/writes follow the project’s access rules.
 
 **Completion Criteria:**
-1) Unit tests confirm no cross-proposal retrieval is possible.
+
+1. Unit tests confirm no cross-proposal retrieval is possible.
 
 ---
 
@@ -1576,11 +1696,13 @@ d) Add reindex/retry for failed ingestions.
 e) Add limits per proposal/round to prevent runaway storage costs.
 
 **Acceptance Criteria:**
-1) Unsupported files are rejected with clear messaging.
-2) Deleting a document removes its chunks/embeddings from retrieval results.
+
+1. Unsupported files are rejected with clear messaging.
+2. Deleting a document removes its chunks/embeddings from retrieval results.
 
 **Completion Criteria:**
-1) Unit tests cover upload limits and delete/reindex flows.
+
+1. Unit tests cover upload limits and delete/reindex flows.
 
 ---
 
@@ -1600,14 +1722,16 @@ d) Update button label to indicate remaining questions (e.g., “AI question (2 
 e) Disable/hide the button when no questions remain, and reset counts when the round changes.
 
 **Acceptance Criteria:**
-1) Button is available near submit during rounds with discussion input.
-2) Each click returns exactly one sentence question relevant to the current round’s proposal point.
-3) The user can request at most 3 questions per round; after that the control is disabled/hidden.
-4) Button text always indicates remaining questions for the current round.
+
+1. Button is available near submit during rounds with discussion input.
+2. Each click returns exactly one sentence question relevant to the current round’s proposal point.
+3. The user can request at most 3 questions per round; after that the control is disabled/hidden.
+4. Button text always indicates remaining questions for the current round.
 
 **Completion Criteria:**
-1) Limit logic is verified by requesting 3 questions, then confirming the 4th is blocked.
-2) Round change resets the remaining questions counter.
+
+1. Limit logic is verified by requesting 3 questions, then confirming the 4th is blocked.
+2. Round change resets the remaining questions counter.
 
 ---
 
@@ -1626,11 +1750,13 @@ c) Disable/hide the button when remaining reaches 0.
 d) Reset count when the round changes.
 
 **Acceptance Criteria:**
-1) Button label updates after each use to reflect remaining questions.
-2) Button disables/hides at 0 remaining and resets on round change.
+
+1. Button label updates after each use to reflect remaining questions.
+2. Button disables/hides at 0 remaining and resets on round change.
 
 **Completion Criteria:**
-1) Manual verification confirms the per-round counter behaves correctly.
+
+1. Manual verification confirms the per-round counter behaves correctly.
 
 ---
 
@@ -1649,11 +1775,13 @@ c) Enforce max 3 questions per round (server-side), returning a clear “limit r
 d) Keep the response shape stable for UI consumption.
 
 **Acceptance Criteria:**
-1) Endpoint returns exactly one sentence question per request.
-2) 4th request in the same round returns a limit-reached response and does not generate a new question.
+
+1. Endpoint returns exactly one sentence question per request.
+2. 4th request in the same round returns a limit-reached response and does not generate a new question.
 
 **Completion Criteria:**
-1) Manual verification confirms both the one-sentence constraint and the per-round limit.
+
+1. Manual verification confirms both the one-sentence constraint and the per-round limit.
 
 ---
 
@@ -1671,11 +1799,13 @@ b) Optionally fetch RAG context (from ZD-181d) for the same proposal/round and u
 c) Ensure the final output is still exactly one sentence question.
 
 **Acceptance Criteria:**
-1) Questions are clearly related to the current round’s proposal point.
-2) Output remains one sentence even when RAG context exists.
+
+1. Questions are clearly related to the current round’s proposal point.
+2. Output remains one sentence even when RAG context exists.
 
 **Completion Criteria:**
-1) Manual verification confirms improved relevance without breaking constraints.
+
+1. Manual verification confirms improved relevance without breaking constraints.
 
 ---
 
@@ -1692,21 +1822,24 @@ a) Define the “context payload” needed by AI prompts: proposal id, round num
 b) Add/confirm backend query to fetch the current round proposal point(s) for a given proposal/round (and ensure it matches what the UI is showing).
 c) Add/confirm backend query to fetch recent messages scoped by `game_id` + `round` (and optionally a configurable window, e.g. last 20 messages).
 d) Update AI prompt builder(s) to include:
-   - Current proposal point text (primary)
-   - Short “history window” of recent messages (role-tagged: user vs AI, agent name/id)
-   - Any required round metadata (pedagogic vs other modes)
-e) Ensure payload limits are safe (truncate by token/char budget; avoid exceeding provider limits).
-f) Ensure consistency across call sites: the assistant endpoint and the assembly AI endpoint use the same context builder (single source of truth).
-g) Modules/scripts to review: `src/routes/api/ai/+server.ts`, `src/routes/api/ai/messages/+server.ts`, message history fetch utilities, proposal/round point retrieval, prompt builder utilities.
+
+- Current proposal point text (primary)
+- Short “history window” of recent messages (role-tagged: user vs AI, agent name/id)
+- Any required round metadata (pedagogic vs other modes)
+  e) Ensure payload limits are safe (truncate by token/char budget; avoid exceeding provider limits).
+  f) Ensure consistency across call sites: the assistant endpoint and the assembly AI endpoint use the same context builder (single source of truth).
+  g) Modules/scripts to review: `src/routes/api/ai/+server.ts`, `src/routes/api/ai/messages/+server.ts`, message history fetch utilities, proposal/round point retrieval, prompt builder utilities.
 
 **Acceptance Criteria:**
-1) AI requests include the current round’s proposal point text and recent message history.
-2) AI outputs are visibly aligned with the current proposal point in Round 7 and reflect the latest discussion context.
-3) Message history included is correctly ordered and scoped (no leaking other games/rounds).
-4) Prompt size is bounded (no provider errors due to oversized context).
+
+1. AI requests include the current round’s proposal point text and recent message history.
+2. AI outputs are visibly aligned with the current proposal point in Round 7 and reflect the latest discussion context.
+3. Message history included is correctly ordered and scoped (no leaking other games/rounds).
+4. Prompt size is bounded (no provider errors due to oversized context).
 
 **Completion Criteria:**
-1) Manual verification with at least two rounds confirms AI responses change appropriately when proposal point or history changes.
+
+1. Manual verification with at least two rounds confirms AI responses change appropriately when proposal point or history changes.
 
 ---
 
@@ -1728,13 +1861,15 @@ f) Update the relevant module styles, copy, and color tokens as needed.
 g) Modules/scripts to review: `src/routes/[code]/game/+page.svelte`, `src/lib/components/help-dialog.svelte`, `src/app.css`, `tailwind.config.ts` (and `src/lib/components/ui/shepherd/custom-css.css` if the instruction flow uses the Shepherd tour).
 
 **Acceptance Criteria:**
-1) Instruction copy reflects the current discussion flow (no map references).
-2) Pop-up colors align with the ZoopDAO palette and are visually consistent with surrounding UI.
-3) Text and buttons meet readable contrast levels against the pop-up background.
-4) Hover/focus states remain clear and accessible.
+
+1. Instruction copy reflects the current discussion flow (no map references).
+2. Pop-up colors align with the ZoopDAO palette and are visually consistent with surrounding UI.
+3. Text and buttons meet readable contrast levels against the pop-up background.
+4. Hover/focus states remain clear and accessible.
 
 **Completion Criteria:**
-1) Updated copy and colors are applied and visually verified on desktop and mobile.
+
+1. Updated copy and colors are applied and visually verified on desktop and mobile.
 
 ---
 
@@ -1755,12 +1890,14 @@ e) Keep the Round 0 card style consistent with the story history view.
 f) Modules/scripts to review: `src/lib/components/story-dialog.svelte`, card components, `src/app.css`, `tailwind.config.ts`.
 
 **Acceptance Criteria:**
-1) Card titles use palette-aligned colors with readable contrast.
-2) Round 0 scenario card shows the proposal title/content.
-3) Round 0 card matches the history view styling.
+
+1. Card titles use palette-aligned colors with readable contrast.
+2. Round 0 scenario card shows the proposal title/content.
+3. Round 0 card matches the history view styling.
 
 **Completion Criteria:**
-1) Updated card title colors and Round 0 card are visually verified in the discussion dialog and history view.
+
+1. Updated card title colors and Round 0 card are visually verified in the discussion dialog and history view.
 
 ---
 
@@ -1780,12 +1917,14 @@ d) Confirm hover/focus states remain readable and consistent.
 e) Modules/scripts to review: `src/routes/[code]/game/+page.svelte`, `src/lib/components/discussion-input-bar.svelte` (or equivalent), `src/app.css`, `tailwind.config.ts`.
 
 **Acceptance Criteria:**
-1) Input text bar and chat history colors align with the ZoopDAO palette.
-2) Chat message content text is white and remains readable.
-3) Text/icon contrast inside the chat history area remains readable.
+
+1. Input text bar and chat history colors align with the ZoopDAO palette.
+2. Chat message content text is white and remains readable.
+3. Text/icon contrast inside the chat history area remains readable.
 
 **Completion Criteria:**
-1) Updated colors are visually verified in Round 7.
+
+1. Updated colors are visually verified in Round 7.
 
 ---
 
@@ -1801,18 +1940,20 @@ Enable fast palette and font switching without code edits, and make BoS visually
 a) Add/confirm config variables for theme and font in `src/lib/config/theme.ts` (`ZOOP_THEME`, `ZOOP_FONT_PROFILE`).
 b) Define theme token maps for AVG and BoS in `src/app.css`, and map Tailwind colors to CSS variables in `tailwind.config.ts`.
 c) Implement BoS palette tokens using HEX: `#D20A0A`, `#3CA5E6`, `#E6C800`, `#3CA03C`, `#000000`, aligned to the BoS visual reference.
- d) De-hardcode UI colors so components read from theme tokens (buttons, dialogs, cards, input bars).
- e) Use `static/images/bos_logos.png` as the visual reference and add theme-ready SVG variants for UI usage.
+d) De-hardcode UI colors so components read from theme tokens (buttons, dialogs, cards, input bars).
+e) Use `static/images/bos_logos.png` as the visual reference and add theme-ready SVG variants for UI usage.
 g) Modules/scripts to review: `src/lib/config/theme.ts`, `src/app.css`, `tailwind.config.ts`, `src/lib/components/ui/button/button.svelte`, `src/lib/components/discussion-input-bar.svelte`, `src/lib/components/discussion-history-dialog.svelte`, `src/routes/[code]/game/+page.svelte`.
 
 **Acceptance Criteria:**
-1) A single config variable switches between AVG and BoS themes at runtime.
-2) BoS palette uses the provided HEX colors and matches the reference image.
-3) Core UI components use theme tokens instead of hardcoded colors.
+
+1. A single config variable switches between AVG and BoS themes at runtime.
+2. BoS palette uses the provided HEX colors and matches the reference image.
+3. Core UI components use theme tokens instead of hardcoded colors.
 
 **Completion Criteria:**
-1) Theme switching is documented and visually verified on at least two core screens.
-2) BoS theme renders consistently across buttons, cards, dialogs, and input bars.
+
+1. Theme switching is documented and visually verified on at least two core screens.
+2. BoS theme renders consistently across buttons, cards, dialogs, and input bars.
 
 ---
 
@@ -1831,12 +1972,14 @@ c) Map Tailwind colors to CSS variables in `tailwind.config.ts` so components us
 d) Add `ZOOP_THEME_ASSET_PREFIX` to route theme-specific SVGs.
 
 **Acceptance Criteria:**
-1) Theme switching works by changing `ZOOP_THEME` in `src/lib/config/theme.ts` (env wiring pending).
-2) All theme tokens are defined for AVG and BoS.
-3) Tailwind color utilities reflect the active theme tokens.
+
+1. Theme switching works by changing `ZOOP_THEME` in `src/lib/config/theme.ts` (env wiring pending).
+2. All theme tokens are defined for AVG and BoS.
+3. Tailwind color utilities reflect the active theme tokens.
 
 **Completion Criteria:**
-1) Runtime theme switching is verified for both themes.
+
+1. Runtime theme switching is verified for both themes.
 
 ---
 
@@ -1855,10 +1998,12 @@ c) Ensure headings, body text, labels, and hints use theme text tokens (includin
 d) Verify fallback fonts are present if Arial is unavailable.
 
 **Acceptance Criteria:**
-1) Text colors come from theme tokens and remain readable in BoS.
+
+1. Text colors come from theme tokens and remain readable in BoS.
 
 **Completion Criteria:**
-1) Typography changes are verified once font switching is implemented.
+
+1. Typography changes are verified once font switching is implemented.
 
 ---
 
@@ -1876,11 +2021,13 @@ b) Apply token-based styles to inputs and controls in `src/lib/components/discus
 c) Define hover/active/disabled states for primary and secondary controls using BoS colors.
 
 **Acceptance Criteria:**
-1) Buttons and controls reflect the active theme across states.
-2) BoS theme buttons use the BoS palette with readable contrast.
+
+1. Buttons and controls reflect the active theme across states.
+2. BoS theme buttons use the BoS palette with readable contrast.
 
 **Completion Criteria:**
-1) Controls are visually verified in lobby and game views.
+
+1. Controls are visually verified in lobby and game views.
 
 ---
 
@@ -1898,11 +2045,13 @@ b) Update page-level backgrounds where necessary (e.g., `src/routes/[code]/game/
 c) Ensure borders and overlays use theme border/overlay tokens.
 
 **Acceptance Criteria:**
-1) Core surfaces use theme tokens in all three themes.
-2) BoS surfaces maintain readable contrast and hierarchy.
+
+1. Core surfaces use theme tokens in all three themes.
+2. BoS surfaces maintain readable contrast and hierarchy.
 
 **Completion Criteria:**
-1) Dialogs and cards are visually validated under BoS.
+
+1. Dialogs and cards are visually validated under BoS.
 
 ---
 
@@ -1922,11 +2071,13 @@ d) Add BoS-specific home illustration variants (`*_blop.svg`).
 e) Verify SVGs render correctly under both AVG and BoS themes.
 
 **Acceptance Criteria:**
-1) Themed SVG assets exist for AVG and BoS and are routed via `ZOOP_THEME_ASSET_PREFIX`.
-2) SVGs render correctly under both AVG and BoS themes without visual regressions.
+
+1. Themed SVG assets exist for AVG and BoS and are routed via `ZOOP_THEME_ASSET_PREFIX`.
+2. SVGs render correctly under both AVG and BoS themes without visual regressions.
 
 **Completion Criteria:**
-1) SVGs are verified in the UI across at least two screens for both themes.
+
+1. SVGs are verified in the UI across at least two screens for both themes.
 
 ---
 
@@ -1945,11 +2096,13 @@ c) Update proposal CTA copy strings (`cards_drawn`, `try_for_yourself`) to match
 d) Validate that theme switching no longer leaves legacy colors behind.
 
 **Acceptance Criteria:**
-1) No hardcoded palette colors remain in themeable UI components.
-2) Theme changes update colors consistently across targeted components.
+
+1. No hardcoded palette colors remain in themeable UI components.
+2. Theme changes update colors consistently across targeted components.
 
 **Completion Criteria:**
-1) Visual sweep completed on lobby, game, and discussion screens.
+
+1. Visual sweep completed on lobby, game, and discussion screens.
 
 ---
 
@@ -1970,12 +2123,14 @@ e) Ensure avatars do not overlap the aquarium image or round UI overlays.
 f) Modules/scripts to review: `src/routes/[code]/game/+page.svelte`, `src/lib/components/participants-container.svelte` (and any avatar badge components).
 
 **Acceptance Criteria:**
-1) AI + user avatars are evenly distributed around the aquarium across common breakpoints.
-2) Avatars never overlap the aquarium focal area or other critical UI (round indicator, dialogs).
-3) Avatar spacing remains stable during round transitions and mode switches.
+
+1. AI + user avatars are evenly distributed around the aquarium across common breakpoints.
+2. Avatars never overlap the aquarium focal area or other critical UI (round indicator, dialogs).
+3. Avatar spacing remains stable during round transitions and mode switches.
 
 **Completion Criteria:**
-1) Participant placement is visually verified on desktop and mobile in at least two rounds.
+
+1. Participant placement is visually verified on desktop and mobile in at least two rounds.
 
 ---
 
@@ -1995,12 +2150,14 @@ d) Verify map-position code is either repurposed for avatars or removed safely.
 e) Modules/scripts to review: `src/lib/components/map.svelte`, `src/lib/state/map-position.svelte.ts`, `src/routes/[code]/game/+page.svelte`, old stop/map components if still present.
 
 **Acceptance Criteria:**
-1) No unused map/stop code remains in the active build.
-2) Aquarium avatar positioning continues to work as expected.
+
+1. No unused map/stop code remains in the active build.
+2. Aquarium avatar positioning continues to work as expected.
 
 **Completion Criteria:**
-1) Build runs without references to removed map/stop modules.
-2) Participant placement is visually verified after cleanup.
+
+1. Build runs without references to removed map/stop modules.
+2. Participant placement is visually verified after cleanup.
 
 ---
 
@@ -2020,12 +2177,14 @@ d) Ensure messages remain visible during transitions without obstructing critica
 e) Modules/scripts to review: round transition components and message overlay styles.
 
 **Acceptance Criteria:**
-1) Step/indicative messages appear in a consistent location between rounds.
-2) Messages do not overlap avatars or the aquarium focal area.
-3) Text remains readable on desktop and mobile.
+
+1. Step/indicative messages appear in a consistent location between rounds.
+2. Messages do not overlap avatars or the aquarium focal area.
+3. Text remains readable on desktop and mobile.
 
 **Completion Criteria:**
-1) Message placement is visually verified on desktop and mobile for at least two rounds.
+
+1. Message placement is visually verified on desktop and mobile for at least two rounds.
 
 ---
 
@@ -2045,12 +2204,14 @@ d) Implement alternative placements (e.g., top-right, centered near round indica
 e) Select the best placement based on visual balance and minimal overlap with avatars/messages.
 
 **Acceptance Criteria:**
-1) Button styling matches the discussion input dialog button.
-2) Button label no longer includes “View/Ver”.
-3) At least two alternative placements are tested across multiple rounds.
+
+1. Button styling matches the discussion input dialog button.
+2. Button label no longer includes “View/Ver”.
+3. At least two alternative placements are tested across multiple rounds.
 
 **Completion Criteria:**
-1) Final placement is chosen and validated on desktop and mobile.
+
+1. Final placement is chosen and validated on desktop and mobile.
 
 ---
 
@@ -2069,13 +2230,15 @@ c) Hide/disable the entry dialog once Round 7 starts and the discussion input ba
 d) Ensure the dialog does not block other critical UI (round indicator, help/exit).
 
 **Acceptance Criteria:**
-1) The button label reads “Start Discussion” (and PT translation).
-2) The entry dialog is visible by default throughout rounds 1–6 and during transitions.
-3) The dialog is no longer shown once Round 7 begins.
-4) The dialog does not interfere with core UI elements.
+
+1. The button label reads “Start Discussion” (and PT translation).
+2. The entry dialog is visible by default throughout rounds 1–6 and during transitions.
+3. The dialog is no longer shown once Round 7 begins.
+4. The dialog does not interfere with core UI elements.
 
 **Completion Criteria:**
-1) Manual verification confirms the dialog is always visible pre‑Round‑7 and hidden in Round 7.
+
+1. Manual verification confirms the dialog is always visible pre‑Round‑7 and hidden in Round 7.
 
 ---
 
@@ -2097,14 +2260,16 @@ f) Enforce safe wrapping/clamping for bubbles and history items on small screens
 g) Modules/scripts to review: discussion state store, history dialog, avatar bubble components, realtime subscription wiring.
 
 **Acceptance Criteria:**
-1) User Send updates avatar chat circle immediately with the new message (no brief revert).
-2) AI messages update their avatar bubbles immediately on arrival.
-3) History dialog updates live when open (no reopen required).
-4) No duplicate messages due to optimistic + realtime inserts.
-5) Message text wraps and stays inside viewport on iPhone SE, iPhone, iPad mini, desktop.
+
+1. User Send updates avatar chat circle immediately with the new message (no brief revert).
+2. AI messages update their avatar bubbles immediately on arrival.
+3. History dialog updates live when open (no reopen required).
+4. No duplicate messages due to optimistic + realtime inserts.
+5. Message text wraps and stays inside viewport on iPhone SE, iPhone, iPad mini, desktop.
 
 **Completion Criteria:**
-1) Manual verification on iPhone SE, iPhone, iPad mini, and desktop wide with History closed and open.
+
+1. Manual verification on iPhone SE, iPhone, iPad mini, and desktop wide with History closed and open.
 
 ---
 
@@ -2125,11 +2290,13 @@ e) Ensure ordering is deterministic (createdAt primary, id secondary) and duplic
 f) Modules/scripts to review: timeline store, send handler, and merge/dedupe utilities.
 
 **Acceptance Criteria:**
-1) On Send, user bubble updates immediately with the new message.
-2) No duplicate messages appear after realtime inserts confirm the optimistic send.
+
+1. On Send, user bubble updates immediately with the new message.
+2. No duplicate messages appear after realtime inserts confirm the optimistic send.
 
 **Completion Criteria:**
-1) Manual verification on mobile + desktop with two consecutive sends.
+
+1. Manual verification on mobile + desktop with two consecutive sends.
 
 ---
 
@@ -2149,11 +2316,13 @@ d) Add duplicate protections for the “fetch initial history + realtime inserts
 e) Modules/scripts to review: realtime subscription wiring, timeline merge/dedupe, History dialog data source.
 
 **Acceptance Criteria:**
-1) New user/AI messages appear instantly in History when it is open.
-2) Message order is correct and no duplicates appear.
+
+1. New user/AI messages appear instantly in History when it is open.
+2. Message order is correct and no duplicates appear.
 
 **Completion Criteria:**
-1) Manual verification with History dialog open during multiple AI/user messages.
+
+1. Manual verification with History dialog open during multiple AI/user messages.
 
 ---
 
@@ -2172,11 +2341,13 @@ c) Add wrapping/clamp rules for long messages (no overflow on iPhone SE / iPad m
 d) Modules/scripts to review: avatar bubble components and bubble layout styles.
 
 **Acceptance Criteria:**
-1) User/AI avatar bubbles update immediately when new messages arrive.
-2) Long messages wrap and remain within viewport bounds on small screens.
+
+1. User/AI avatar bubbles update immediately when new messages arrive.
+2. Long messages wrap and remain within viewport bounds on small screens.
 
 **Completion Criteria:**
-1) Visual verification on iPhone SE, iPhone, iPad mini, and desktop.
+
+1. Visual verification on iPhone SE, iPhone, iPad mini, and desktop.
 
 ---
 
@@ -2189,6 +2360,7 @@ Document and accept the fixes delivered in this batch: input lock when AIs think
 Make the chat-circle experience predictable and readable while keeping history/docs usable during AI replies.
 
 **What was done:**
+
 - Input bar text + send lock while any AI is “thinking”, debounced (~300 ms) to avoid flicker; history/docs stay active.
 - Localized “wait while others finish” placeholder (PT/EN) shown only while locked; normal placeholder when unlocked.
 - Typing balloons visible for both user and AIs (AI shows whenever `isTyping`; user while typing/sending).
@@ -2196,11 +2368,12 @@ Make the chat-circle experience predictable and readable while keeping history/d
 - Chat previews stay inside the aquarium boundary, max 2 open, newest on top; debug toggle to skip persisted history.
 
 **Acceptance Criteria:**
-1) Lock/unlock flow works as above without disabling history/docs.  
-2) Waiting placeholder appears only while locked.  
-3) Typing balloons show for user/AI while typing.  
-4) Role colors + white icons render as defined.  
-5) Max two previews open; newest is frontmost; all stay inside avatar boundary.
+
+1. Lock/unlock flow works as above without disabling history/docs.
+2. Waiting placeholder appears only while locked.
+3. Typing balloons show for user/AI while typing.
+4. Role colors + white icons render as defined.
+5. Max two previews open; newest is frontmost; all stay inside avatar boundary.
 
 **Completion Criteria:**
 Manual verification on iPhone SE, iPhone, iPad mini, iPad 11, and desktop (portrait/landscape) with 1 user + 5 AIs; debug history toggle on/off.
@@ -2214,30 +2387,34 @@ Future/optional geometry pass to match the sketch: expanded circle replaces the 
 
 **Goal:**
 Deliver robust hover/tap expansion for AI + user chat circles:
+
 - stays inside `.avatar-boundary`,
 - prefers expanding inward (toward aquarium center),
 - keeps perfect circle geometry,
 - text fills the circle with minimal empty space; scroll only when unavoidable.
 
 **Implementation Notes / Guardrails:**
+
 - Bounds source of truth: `.avatar-boundary` in `src/routes/[code]/game/+page.svelte`.
 - Do not break avatar margin rules; circles must stay inside `.avatar-boundary`.
 - Expanded hover shows full text (scroll allowed).
 - Max diameter derived from aquarium/table rect (almost aquarium diameter), not hardcoded.
 
 **Step-by-step Plan (future):**
-1) Capture bounds + aquarium center in the page and pass to `ParticipantsContainer`.
-2) Plumb bounds/center into `ai-agent.svelte` and `player-badge.svelte`.
-3) Reuse `chat-circle-hover.svelte` with props: text, isTyping, colorVariant, anchorEl, boundsRect, aquariumCenter, maxDiameterPx.
-4) Geometry: anchor at minimized circle center; ideal diameter from text, clamped by bounds/center; bias inward on portrait; width==height; justify text; scroll fallback.
-5) Safety: never overflow `.avatar-boundary`; respect safe areas; z-index above avatars but below modals/tutorial.
-6) QA on iPhone SE, iPhone, iPad mini, iPad 11, desktop (hover + tap).
+
+1. Capture bounds + aquarium center in the page and pass to `ParticipantsContainer`.
+2. Plumb bounds/center into `ai-agent.svelte` and `player-badge.svelte`.
+3. Reuse `chat-circle-hover.svelte` with props: text, isTyping, colorVariant, anchorEl, boundsRect, aquariumCenter, maxDiameterPx.
+4. Geometry: anchor at minimized circle center; ideal diameter from text, clamped by bounds/center; bias inward on portrait; width==height; justify text; scroll fallback.
+5. Safety: never overflow `.avatar-boundary`; respect safe areas; z-index above avatars but below modals/tutorial.
+6. QA on iPhone SE, iPhone, iPad mini, iPad 11, desktop (hover + tap).
 
 **Acceptance Criteria (when picked up):**
-1) Expanded circle replaces minimized at same anchor.  
-2) Circle size scales with message length; remains circular.  
-3) Circle stays inside `.avatar-boundary`, biased inward on portrait.  
-4) Text fills circle; no thin columns; scroll only if needed.
+
+1. Expanded circle replaces minimized at same anchor.
+2. Circle size scales with message length; remains circular.
+3. Circle stays inside `.avatar-boundary`, biased inward on portrait.
+4. Text fills circle; no thin columns; scroll only if needed.
 
 **Completion Criteria:**
 Visual verification on iPhone SE, iPhone, iPad mini, iPad 11, desktop (portrait + landscape).
@@ -2246,31 +2423,44 @@ Visual verification on iPhone SE, iPhone, iPad mini, iPad 11, desktop (portrait 
 
 ## ZD-176f: Discussion dialog density + typography (proposal points)
 
-**Overview:**
-Reduce wasted space in the in-game discussion dialog while keeping the left proposal-point card format intact and avoiding regressions in the histories/cards pages.
+**Overview:**  
+Reduce wasted space in the in-game discussion dialog **and** stabilize proposal-point card expansion so SVG icon/title/content stay fixed (no drifting/warping) across desktop + mobile, without regressions in histories/cards pages.
 
-**Goal:**
-Make the dialog feel “filled” on both portrait mobile and desktop:
+**Goal:**  
+Make the dialog feel “filled” and readable on portrait mobile and desktop:
+
 - fewer empty gaps,
-- bigger/clearer proposal-point text + placeholders,
-- no duplicate round/proposal-point titles,
-- textarea area sized for writing without dominating the layout.
+- bigger/clearer prompt text + textarea placeholders,
+- only one visible round/proposal-point title (no duplicates),
+- proposal-point cards behave consistently:
+  - short content doesn’t create huge dead space,
+  - long content can expand without breaking the card’s visual composition.
 
-**Description:**
-a) Keep the left-side card (proposal point) but remove the duplicated header title (only one visible title per round).
-b) Make the dialog responsive and denser: wider on desktop, tighter vertical spacing, and aligned tops to avoid big blank zones.
-c) Improve input readability: larger textarea text + placeholder text, with a smaller minimum height and a capped max height (scroll inside when needed).
-d) Scope changes to the dialog component only (no global Card styling changes), so browser histories list layouts remain unchanged.
-e) Modules/scripts to review: `src/lib/components/story-dialog.svelte`, `src/lib/components/card.svelte` (class override only, no global changes).
+**Description:**  
+a) Keep the proposal-point card and the “Full Proposal” button stacked (same vertical layout on mobile **and** desktop), reducing dialog width on desktop to avoid a wide empty right side.  
+b) Show the round cue (flag/round number/post-story icon) near the prompt/textarea for orientation, but **hide the duplicate title** when the card already shows the title (screen-reader-only is OK).  
+c) Improve input readability: larger textarea text + placeholder, **auto-resize from 3 → 9 lines**, then scroll internally.  
+d) Final Discussion (round 7): keep the explanatory text visible (clarified wording), but **no input box** in that round.  
+e) Fix card expansion rules (applies to discussion dialog and story history cards):
+
+- **Short text cards:** render compact (no giant empty bottom), **no hover/tap expansion**, and no “Read more” button.
+- **Long text cards:** start at standard size; on hover/tap they expand; the action button label becomes **Close** whenever expanded; Close collapses immediately (no “stuck” hover/pin state).
+- Expansion must **not** rescale/reposition the SVG artwork (icon/title should not drift). The SVG should remain fixed to the top of the card during expansion.
+
+f) Keep story/history “browser cards” layout consistent with before (no new spacing regressions); only the long/short behavior and labels change as specified.
 
 **Acceptance Criteria:**
-1) On iPhone portrait, proposal cards and input areas no longer leave large dead space.
-2) On desktop, dialog content is balanced (no huge empty area under the card or under the textarea).
-3) Only one round/proposal-point title is shown (no duplicate title on card + header).
-4) Histories/browse screens keep their existing card formats (no regression).
 
-**Completion Criteria:**
-Manual visual verification on iPhone and desktop (portrait + landscape).
+1. iPhone portrait: the prompt + textarea no longer leave large dead space; content remains visible and scrollable.
+2. Desktop: dialog is narrower and uses the same vertical stack as mobile; no huge empty side area.
+3. Only one visible title per round (no duplicate title on card + header).
+4. Long-card expansion: icon/title do not shift; button switches to **Close** when expanded; Close collapses correctly.
+5. Short cards are compact and non-interactive (no expand affordance).
+6. Final Discussion shows the explanatory text but has no input box.
+7. Same behaviors apply in the story history carousel/cards view.
+
+**Completion Criteria:**  
+Manual visual verification on iPhone (portrait/landscape) and desktop (small + large screens). Modules to verify: `src/lib/components/story-dialog.svelte`, `src/lib/components/card.svelte`, `src/lib/components/ui/textarea/textarea.svelte`, `src/routes/stories/[story_id]/+page.svelte`.
 
 ---
 
@@ -2293,18 +2483,20 @@ g) Fix long-text formatting on cards (clamp, wrap, or scale), ensuring readabili
 h) Modules/scripts to review: player badge component, character card/option components, card rendering component, CSS flip rules, text styles, card grid layout styles, role color mapping utilities.
 
 **Acceptance Criteria:**
-1) Player badges render SVGs using player.character-based paths.
-2) Character cards render SVGs using character-based paths; game cards render SVGs using card.type.
-3) User badge circle and chat balloon use role/user colors that are distinct per user and different from AI colors, aligned with darker BoS tones.
-4) Role card colors use only black/gray/white with readable contrast.
-5) Card flip works reliably after selection (front/back visibility correct, no mirrored text).
-6) In the single-card view, lobby, the layout displays a 3x2 grid arrangement (mobile-first).
-7) Long card text does not overflow; remains readable on mobile and desktop.
-8) No layout regressions in lobby, map, or round views.
+
+1. Player badges render SVGs using player.character-based paths.
+2. Character cards render SVGs using character-based paths; game cards render SVGs using card.type.
+3. User badge circle and chat balloon use role/user colors that are distinct per user and different from AI colors, aligned with darker BoS tones.
+4. Role card colors use only black/gray/white with readable contrast.
+5. Card flip works reliably after selection (front/back visibility correct, no mirrored text).
+6. In the single-card view, lobby, the layout displays a 3x2 grid arrangement (mobile-first).
+7. Long card text does not overflow; remains readable on mobile and desktop.
+8. No layout regressions in lobby, map, or round views.
 
 **Completion Criteria:**
-1) Visual verification of badges/cards/flip on mobile + desktop.
-2) Long-text case verified with at least one oversized card title/body.
+
+1. Visual verification of badges/cards/flip on mobile + desktop.
+2. Long-text case verified with at least one oversized card title/body.
 
 ---
 
@@ -2323,11 +2515,13 @@ c) List missing SVG assets or broken paths.
 d) Document the final mapping table for use in implementation.
 
 **Acceptance Criteria:**
-1) All badge/card render locations are identified.
-2) Required SVG path mapping rules are documented.
+
+1. All badge/card render locations are identified.
+2. Required SVG path mapping rules are documented.
 
 **Completion Criteria:**
-1) Mapping table reviewed and ready for implementation.
+
+1. Mapping table reviewed and ready for implementation.
 
 ---
 
@@ -2346,12 +2540,14 @@ c) Map card.type to game card SVG paths.
 d) Ensure fallbacks are handled when assets are missing.
 
 **Acceptance Criteria:**
-1) Badges render via player.character SVGs.
-2) Character cards render via character SVGs.
-3) Game cards render via card.type SVGs.
+
+1. Badges render via player.character SVGs.
+2. Character cards render via character SVGs.
+3. Game cards render via card.type SVGs.
 
 **Completion Criteria:**
-1) Visual check confirms SVGs appear in lobby + gameplay screens.
+
+1. Visual check confirms SVGs appear in lobby + gameplay screens.
 
 ---
 
@@ -2370,12 +2566,14 @@ c) Ensure user colors differ from AI colors.
 d) Apply to badge circle and chat balloon.
 
 **Acceptance Criteria:**
-1) User badge circles and chat balloons use the role/user palette.
-2) Colors are distinct per user and different from AI.
-3) Contrast remains readable (black/white where needed).
+
+1. User badge circles and chat balloons use the role/user palette.
+2. Colors are distinct per user and different from AI.
+3. Contrast remains readable (black/white where needed).
 
 **Completion Criteria:**
-1) Visual verification across multiple users in a round.
+
+1. Visual verification across multiple users in a round.
 
 ---
 
@@ -2392,11 +2590,13 @@ a) Replace role card colors with black/gray/white palette.
 b) Ensure text and icon contrast remains readable.
 
 **Acceptance Criteria:**
-1) Role cards use only black/gray/white.
-2) Text remains readable on mobile and desktop.
+
+1. Role cards use only black/gray/white.
+2. Text remains readable on mobile and desktop.
 
 **Completion Criteria:**
-1) Visual verification on at least two screen sizes.
+
+1. Visual verification on at least two screen sizes.
 
 ---
 
@@ -2414,11 +2614,13 @@ b) Ensure click handler triggers flip only when valid.
 c) Validate front/back visibility and orientation.
 
 **Acceptance Criteria:**
-1) Flip works reliably after selection.
-2) No mirrored or inverted text appears.
+
+1. Flip works reliably after selection.
+2. No mirrored or inverted text appears.
 
 **Completion Criteria:**
-1) Manual verification in the lobby selection flow.
+
+1. Manual verification in the lobby selection flow.
 
 ---
 
@@ -2436,11 +2638,13 @@ b) Apply responsive rules for mobile-first scaling.
 c) Ensure layout does not break in desktop view.
 
 **Acceptance Criteria:**
-1) Single-card view renders as a 3x2 grid.
-2) Layout remains readable on mobile and desktop.
+
+1. Single-card view renders as a 3x2 grid.
+2. Layout remains readable on mobile and desktop.
 
 **Completion Criteria:**
-1) Visual verification on mobile + desktop.
+
+1. Visual verification on mobile + desktop.
 
 ---
 
@@ -2458,11 +2662,13 @@ b) Apply responsive font sizing if needed.
 c) Validate with oversized text examples.
 
 **Acceptance Criteria:**
-1) Long text does not overflow card bounds.
-2) Text remains readable on small screens.
+
+1. Long text does not overflow card bounds.
+2. Text remains readable on small screens.
 
 **Completion Criteria:**
-1) Long-text case verified with at least one oversized card title/body.
+
+1. Long-text case verified with at least one oversized card title/body.
 
 ---
 
@@ -2481,11 +2687,13 @@ c) Validate flip behavior and text formatting.
 d) Confirm no regressions in lobby, map, or round views.
 
 **Acceptance Criteria:**
-1) All visual elements render as expected.
-2) No regressions detected across key screens.
+
+1. All visual elements render as expected.
+2. No regressions detected across key screens.
 
 **Completion Criteria:**
-1) Manual verification on mobile and desktop.
+
+1. Manual verification on mobile and desktop.
 
 ---
 
@@ -2499,61 +2707,67 @@ Enable participants to vote either before starting the discussion or at the end 
 
 **Description:**
 a) Proposal Preview UI (`/proposals/{id}/preview`)
-   - Add a vote card with 3 options: yes/no/abstain.
-   - Vote submit button is disabled unless an option is selected and the period is open.
-   - Disabled vote state uses a neutral gray (consistent with other disabled CTA buttons).
-   - Show a results panel (counts + percentages) only while the proposal is in an open voting period.
-   - Show localized voting period range in the header (PT should be Portuguese formatting).
-   - Show creation date in the header:
-     - For `february-2026-exceptional`, treat as created on **December 11, 2025**.
-     - Otherwise, use the `created_at` returned from the DB for proposals created in the platform.
-   - Do not show voting UI or results when the voting period is closed (or not started).
+
+- Add a vote card with 3 options: yes/no/abstain.
+- Vote submit button is disabled unless an option is selected and the period is open.
+- Disabled vote state uses a neutral gray (consistent with other disabled CTA buttons).
+- Show a results panel (counts + percentages) only while the proposal is in an open voting period.
+- Show localized voting period range in the header (PT should be Portuguese formatting).
+- Show creation date in the header:
+  - For `february-2026-exceptional`, treat as created on **December 11, 2025**.
+  - Otherwise, use the `created_at` returned from the DB for proposals created in the platform.
+- Do not show voting UI or results when the voting period is closed (or not started).
 
 b) End-of-discussion vote (Save Dialog)
-   - In the “end dialog” (after discussion), display vote options matching the preview sizing and selection colors.
-   - Before showing vote options, query if the current user already voted for the proposal:
-     - If already voted (e.g., in preview), hide vote controls and update the submit CTA copy to remove “and vote”.
-     - If not voted yet, allow voting here and persist to DB as a “discussion” context vote.
+
+- In the “end dialog” (after discussion), display vote options matching the preview sizing and selection colors.
+- Before showing vote options, query if the current user already voted for the proposal:
+  - If already voted (e.g., in preview), hide vote controls and update the submit CTA copy to remove “and vote”.
+  - If not voted yet, allow voting here and persist to DB as a “discussion” context vote.
 
 c) Data + API
-   - Create `proposal_votes` table (RLS-enabled) enforcing one vote per `(proposal_id, user_id)`:
-     - `choice`: `yes | no | abstain`
-     - `context`: `preview | discussion`
-     - `created_at` timestamp
-   - Add API endpoints:
-     - `GET /api/proposals/{id}/votes` returns totals and (when authorized) the user’s vote + context.
-     - `POST /api/proposals/{id}/votes` inserts a vote and rejects duplicates (409).
-   - Vote persistence must be guarded by voting period status:
-     - Votes can only be submitted while the proposal is in an open voting period.
+
+- Create `proposal_votes` table (RLS-enabled) enforcing one vote per `(proposal_id, user_id)`:
+  - `choice`: `yes | no | abstain`
+  - `context`: `preview | discussion`
+  - `created_at` timestamp
+- Add API endpoints:
+  - `GET /api/proposals/{id}/votes` returns totals and (when authorized) the user’s vote + context.
+  - `POST /api/proposals/{id}/votes` inserts a vote and rejects duplicates (409).
+- Vote persistence must be guarded by voting period status:
+  - Votes can only be submitted while the proposal is in an open voting period.
 
 d) Exceptional voting period correctness
-   - Ensure `february-2026-exceptional` is **February 1–28, 2026**.
-   - Ensure any UI date labels match this period.
+
+- Ensure `february-2026-exceptional` is **February 1–28, 2026**.
+- Ensure any UI date labels match this period.
 
 **Acceptance Criteria:**
-1) Preview vote card renders on `/proposals/{id}/preview` and offers yes/no/abstain with consistent selection styling.
-2) Vote submission is only possible during an open voting period; outside the period voting controls/results are hidden.
-3) Results (counts + %) are shown only during an open voting period and update after a successful vote.
-4) Each user can vote only once per proposal:
+
+1. Preview vote card renders on `/proposals/{id}/preview` and offers yes/no/abstain with consistent selection styling.
+2. Vote submission is only possible during an open voting period; outside the period voting controls/results are hidden.
+3. Results (counts + %) are shown only during an open voting period and update after a successful vote.
+4. Each user can vote only once per proposal:
    - If a user votes in preview, the end-of-discussion dialog hides vote controls and the submit button text does not include “and vote”.
    - If a user votes at the end-of-discussion, preview vote is disabled for that user.
-5) `proposal_votes` enforces uniqueness on `(proposal_id, user_id)` at the database level.
-6) API behavior:
+5. `proposal_votes` enforces uniqueness on `(proposal_id, user_id)` at the database level.
+6. API behavior:
    - `POST` duplicates return 409.
    - `POST` outside an open voting window returns 400.
    - `GET` returns totals and returns user vote/context when authorized.
-7) Creation date shown in preview:
+7. Creation date shown in preview:
    - For `february-2026-exceptional` proposals it displays **December 11, 2025**.
    - For other proposals it displays the proposal `created_at` from the DB.
-8) Portuguese mode shows Portuguese date formatting for the voting period and created date.
+8. Portuguese mode shows Portuguese date formatting for the voting period and created date.
 
 **Completion Criteria:**
-1) DB migration applied and verified (table exists, RLS enabled, uniqueness index present).
-2) Manual verification:
+
+1. DB migration applied and verified (table exists, RLS enabled, uniqueness index present).
+2. Manual verification:
    - Vote in preview then open end dialog: vote controls hidden; submit CTA copy excludes “e votar”.
    - Vote in end dialog then open preview: preview voting disabled for that user.
    - Open vs closed periods correctly show/hide voting UI/results.
-3) Smoke test API endpoints returning expected responses (200/201, 400, 409).
+3. Smoke test API endpoints returning expected responses (200/201, 400, 409).
 
 ---
 
@@ -2564,65 +2778,74 @@ Improve the saved discussions (Browse histories) experience so that it reflects 
 
 **Goal:**
 When browsing or opening a saved discussion, users can immediately see:
-1) Proposal context (title / proposal filter),
-2) Role (cargo) used in the discussion,
-3) Final vote (yes/no/abstain).
+
+1. Proposal context (title / proposal filter),
+2. Role (cargo) used in the discussion,
+3. Final vote (yes/no/abstain).
 
 **Description:**
 a) Browse histories filters + proposal context (`/stories`)
-   - Remove/disable the text search input.
-   - Rename filters:
-     - "Filtrar por personagem" -> "Filtrar por cargo"
-     - "Filtrar por carta" -> "Filtrar por proposta"
-   - Replace the previous "card type" filter with a proposal filter:
-     - Show proposal options as chips (label = first 3 words + ellipsis).
-     - Only include proposals that already have at least one public saved discussion.
-   - Show proposal title on discussion cards when `proposal_id` exists (instead of generic "Discussao Final").
+
+- Remove/disable the text search input.
+- Rename filters:
+  - "Filtrar por personagem" -> "Filtrar por cargo"
+  - "Filtrar por carta" -> "Filtrar por proposta"
+- Replace the previous "card type" filter with a proposal filter:
+  - Show proposal options as chips (label = first 3 words + ellipsis).
+  - Only include proposals that already have at least one public saved discussion.
+- Show proposal title on discussion cards when `proposal_id` exists (instead of generic "Discussao Final").
 
 b) Story cards (list view) (`/stories`)
-   - Show metadata on each card:
-     - Cargo (from saved discussion role key)
-     - Voto final (yes/no/abstain; "-" when missing)
-   - Update the player badge to match the live discussion user badge:
-     - User icon on gray background with a black ring (no inner white ring).
+
+- Show metadata on each card:
+  - Cargo (from saved discussion role key)
+  - Voto final (yes/no/abstain; "-" when missing)
+- Update the player badge to match the live discussion user badge:
+  - User icon on gray background with a black ring (no inner white ring).
 
 c) Saved discussion page (`/stories/{story_id}`)
-   - Show title as the proposal title when available.
-   - Display metadata in this order:
-     1) Cargo
-     2) Voto final
-     3) Participante (name)
-   - Do not show "Sem descricao..." placeholder when the description is empty.
+
+- Show title as the proposal title when available.
+- Display metadata in this order:
+  1.  Cargo
+  2.  Voto final
+  3.  Participante (name)
+- Do not show "Sem descricao..." placeholder when the description is empty.
 
 d) Save dialog (end-of-discussion)
-   - Replace "Unknown Character" with the correct cargo label (from `player.role`).
-   - Ensure the current user badge matches the discussion user badge (icon + black circle).
+
+- Replace "Unknown Character" with the correct cargo label (from `player.role`).
+- Ensure the current user badge matches the discussion user badge (icon + black circle).
 
 e) Persist role into saved discussions
-   - When saving a discussion, persist the selected role into `p_character.type` so it can be shown later in Browse histories and the saved discussion page.
+
+- When saving a discussion, persist the selected role into `p_character.type` so it can be shown later in Browse histories and the saved discussion page.
 
 f) UI polish included in the same changeset
-   - Card long text: add "Ver mais" expansion behavior (hover/click) instead of overflow.
-   - Discussion input bar: "History" and "Documents" buttons are white with black icons; active state is yellow; yellow ring around the button.
-   - Timer: warning/ticking behavior starts at half of the configured duration (instead of always below 1 minute).
-   - Browse histories dropdown: role filter dropdown height fits content (no oversized empty dropdown).
-   - i18n: add role title keys (PT/EN) for administration/research/reception/operations/bar/cleaning.
-   - Seeds: fix Portuguese prompt typo in SQL seeds.
+
+- Card long text: add "Ver mais" expansion behavior (hover/click) instead of overflow.
+- Discussion input bar: "History" and "Documents" buttons are white with black icons; active state is yellow; yellow ring around the button.
+- Timer: warning/ticking behavior starts at half of the configured duration (instead of always below 1 minute).
+- Browse histories dropdown: role filter dropdown height fits content (no oversized empty dropdown).
+- i18n: add role title keys (PT/EN) for administration/research/reception/operations/bar/cleaning.
+- Seeds: fix Portuguese prompt typo in SQL seeds.
 
 **Acceptance Criteria:**
-1) Browse histories has no visible search input.
-2) Browse histories filters are "Filtrar por cargo" and "Filtrar por proposta".
-3) Proposal filter only lists proposals that have at least one public saved discussion.
-4) Discussion cards show cargo + voto final, and use proposal title when available.
-5) Saved discussion page shows cargo + voto final + participante (in that order) and hides empty description placeholder.
-6) Save dialog shows cargo (not "Unknown Character") and uses the user icon badge with black ring.
-7) New saved discussions persist role so cargo is not empty when browsing later.
+
+1. Browse histories has no visible search input.
+2. Browse histories filters are "Filtrar por cargo" and "Filtrar por proposta".
+3. Proposal filter only lists proposals that have at least one public saved discussion.
+4. Discussion cards show cargo + voto final, and use proposal title when available.
+5. Saved discussion page shows cargo + voto final + participante (in that order) and hides empty description placeholder.
+6. Save dialog shows cargo (not "Unknown Character") and uses the user icon badge with black ring.
+7. New saved discussions persist role so cargo is not empty when browsing later.
 
 **Completion Criteria:**
-1) Manual test:
+
+1. Manual test:
    - Finish a discussion with a chosen cargo and final vote, save it, and confirm list + detail show cargo/voto.
    - Confirm proposal filter options update based on existing saved discussions.
-2) Visual QA on mobile + desktop (no major regressions).
+2. Visual QA on mobile + desktop (no major regressions).
 
 ---
 
@@ -2633,122 +2856,134 @@ Create a new onboarding/start flow on the existing main URL (`/`) using a contai
 
 **Goal:**
 Make it easier to start the experience by guiding the user through:
-1) Welcome + Start ("Iniciar"),
-2) Choose cargo (required),
-3) Optionally set name/description,
-4) Then show the current main actions (new proposal, current proposals list, browse discussions) inside the same dialog container.
+
+1. Welcome + Start ("Iniciar"),
+2. Choose cargo (required),
+3. Optionally set name/description,
+4. Then show the current main actions (new proposal, current proposals list, browse discussions) inside the same dialog container.
 
 **Description:**
 a) Same URL as current main page (`/`)
-   - Do not introduce a new route for the entry point.
-   - The first-time experience is handled via an overlay/dialog container on the existing main page.
+
+- Do not introduce a new route for the entry point.
+- The first-time experience is handled via an overlay/dialog container on the existing main page.
 
 b) Dialog container flow (Typeform-style)
-   - When the app opens, show a dialog container that includes:
-     - A welcome message (short, friendly) with header only "Bem vindo".
-     - A single primary CTA: "Iniciar".
-   - After clicking "Iniciar", the dialog progresses step-by-step:
-     1) Cargo selector (dropdown) - required.
-        - Styled to match the Browse histories filter dropdown.
-        - Options are sorted alphabetically.
-        - Add a final option "Outro" (always last).
-        - If "Outro" is selected, show a required input to specify the cargo.
-     2) After cargo is chosen, reveal name and description inputs (both optional).
-     3) After completing (or skipping) optional fields, reveal the current main actions inside the same dialog:
-        - "Nova proposta"
-        - List of current proposals
-        - "Ver discussões" (Browse histories)
-        - Show the current "Cargo + Sair" summary below the "Ver discussões" action (not above).
+
+- When the app opens, show a dialog container that includes:
+  - A welcome message (short, friendly) with header only "Bem vindo".
+  - A single primary CTA: "Iniciar".
+- After clicking "Iniciar", the dialog progresses step-by-step:
+  1.  Cargo selector (dropdown) - required.
+      - Styled to match the Browse histories filter dropdown.
+      - Options are sorted alphabetically.
+      - Add a final option "Outro" (always last).
+      - If "Outro" is selected, show a required input to specify the cargo.
+  2.  After cargo is chosen, reveal name and description inputs (both optional).
+  3.  After completing (or skipping) optional fields, reveal the current main actions inside the same dialog:
+      - "Nova proposta"
+      - List of current proposals
+      - "Ver discussões" (Browse histories)
+      - Show the current "Cargo + Sair" summary below the "Ver discussões" action (not above).
 
 c) Persistence
-   - Persist the selected cargo and optional profile fields so the user does not have to repeat onboarding every refresh.
-   - If the user already completed the onboarding, show the dialog directly in the "main actions" state (or skip the onboarding steps entirely).
+
+- Persist the selected cargo and optional profile fields so the user does not have to repeat onboarding every refresh.
+- If the user already completed the onboarding, show the dialog directly in the "main actions" state (or skip the onboarding steps entirely).
 
 d) Session reset (multi-user on same browser)
-   - Replace the old "Editar" action with "Sair".
-   - Clicking "Sair" should:
-     - Clear onboarding storage (so the dialog returns to the "Bem vindo" + "Iniciar" step).
-     - Clear any cached discussion drafts/history in localStorage (keys starting with `discussion:`).
-     - If the user is on an anonymous Supabase session, sign out so a new anonymous user can be created next time (supports multiple participants on one device).
+
+- Replace the old "Editar" action with "Sair".
+- Clicking "Sair" should:
+  - Clear onboarding storage (so the dialog returns to the "Bem vindo" + "Iniciar" step).
+  - Clear any cached discussion drafts/history in localStorage (keys starting with `discussion:`).
+  - If the user is on an anonymous Supabase session, sign out so a new anonymous user can be created next time (supports multiple participants on one device).
 
 d) Routing cleanup: deprecate lobby and rename game route
-   - Deprecate `http://localhost:5173/[code]/lobby`:
-     - It should redirect directly to `http://localhost:5173/[code]/assembly`.
-   - Rename the old game route:
-     - `http://localhost:5173/[code]/game` -> `http://localhost:5173/[code]/assembly`.
-     - Keep a compatibility redirect from `/[code]/game` to `/[code]/assembly`.
-   - Mode selection navigation:
-     - After selecting a mode, navigate to `/${code}/assembly` (not `/lobby`).
+
+- Deprecate `http://localhost:5173/[code]/lobby`:
+  - It should redirect directly to `http://localhost:5173/[code]/assembly`.
+- Rename the old game route:
+  - `http://localhost:5173/[code]/game` -> `http://localhost:5173/[code]/assembly`.
+  - Keep a compatibility redirect from `/[code]/game` to `/[code]/assembly`.
+- Mode selection navigation:
+  - After selecting a mode, navigate to `/${code}/assembly` (not `/lobby`).
 
 e) Pedagogic mode timer config (per discussion)
-   - When the owner selects "Pedagógico" on `/${code}/mode`, open a small dialog to configure timer durations:
-     - Rounds 1-6 minutes (default prefilled).
-     - Round 7 minutes (default prefilled).
-   - Persist these values to `public.games`:
-     - `pedagogic_rounds_timer_minutes`
-     - `pedagogic_final_timer_minutes`
-   - Ensure timer logic uses these per-game values (fallback to organization defaults when missing).
+
+- When the owner selects "Pedagógico" on `/${code}/mode`, open a small dialog to configure timer durations:
+  - Rounds 1-6 minutes (default prefilled).
+  - Round 7 minutes (default prefilled).
+- Persist these values to `public.games`:
+  - `pedagogic_rounds_timer_minutes`
+  - `pedagogic_final_timer_minutes`
+- Ensure timer logic uses these per-game values (fallback to organization defaults when missing).
 
 f) Copy tweaks shipped with this ticket
-   - Update the home tagline:
-     - PT: "A plataforma de governança multiespécie no Aquário Vasco da Gama"
-   - Simplify mode card labels/copy:
-     - Titles: "Pedagógico" / "Tomada de Decisão"
-     - Descriptions: "Com temporizador" / "Sem temporizador" (no trailing punctuation)
-   - Home decorations responsive behavior:
-     - On mobile/vertical layouts, the lateral illustrations move to top/bottom (2 on top, 2 on bottom).
-     - On md+ layouts, keep the lateral positioning.
+
+- Update the home tagline:
+  - PT: "A plataforma de governança multiespécie no Aquário Vasco da Gama"
+- Simplify mode card labels/copy:
+  - Titles: "Pedagógico" / "Tomada de Decisão"
+  - Descriptions: "Com temporizador" / "Sem temporizador" (no trailing punctuation)
+- Home decorations responsive behavior:
+  - On mobile/vertical layouts, the lateral illustrations move to top/bottom (2 on top, 2 on bottom).
+  - On md+ layouts, keep the lateral positioning.
 
 g) Browse histories improvements shipped with this ticket (`/stories`)
-   - Add a filter dropdown for discussion mode:
-     - "Todos os modos", "Pedagógico", "Tomada de Decisão"
-   - Persist the mode on saved discussions:
-     - Add `saved_discussions.discussion_mode`
-     - Save `discussion_mode` when persisting a discussion
-     - Backfill existing NULLs and set a default (`pedagogic`) so filtering works reliably
-   - Display the mode on discussion cards and on the saved discussion page.
-   - Cargo filter dropdown:
-     - Keep alphabetical ordering and keep "Outro" as the last option (stored as `custom`).
-   - Story card CTA layout:
-     - "Proposta completa" is compact and aligned left on the same row as "Partilhar" and "Ler mais".
-   - Save dialog cargo display:
-     - When the lobby is bypassed (no `player.role`), show the cargo using the onboarding data in localStorage.
+
+- Add a filter dropdown for discussion mode:
+  - "Todos os modos", "Pedagógico", "Tomada de Decisão"
+- Persist the mode on saved discussions:
+  - Add `saved_discussions.discussion_mode`
+  - Save `discussion_mode` when persisting a discussion
+  - Backfill existing NULLs and set a default (`pedagogic`) so filtering works reliably
+- Display the mode on discussion cards and on the saved discussion page.
+- Cargo filter dropdown:
+  - Keep alphabetical ordering and keep "Outro" as the last option (stored as `custom`).
+- Story card CTA layout:
+  - "Proposta completa" is compact and aligned left on the same row as "Partilhar" and "Ler mais".
+- Save dialog cargo display:
+  - When the lobby is bypassed (no `player.role`), show the cargo using the onboarding data in localStorage.
 
 **UX Notes (Typeform style):**
-1) Inputs should appear progressively:
+
+1. Inputs should appear progressively:
    - First show only the cargo selector.
    - After cargo is chosen, reveal the optional name/description inputs.
-2) Keep the flow simple and fast; minimize cognitive load.
-3) The dialog should feel like part of the existing main page aesthetic (same layout/typography), just containerized.
+2. Keep the flow simple and fast; minimize cognitive load.
+3. The dialog should feel like part of the existing main page aesthetic (same layout/typography), just containerized.
 
 **Acceptance Criteria:**
-1) The app opens on `/` and shows a dialog container with a welcome message and a single primary "Iniciar" button.
-2) After "Iniciar", the user must pick a cargo (required) and only then sees optional name/description fields.
-3) The cargo dropdown matches the style used on Browse histories filters; options are alphabetically sorted and include "Outro" (last), which requires a custom cargo input.
-3) After completing the steps, the dialog shows the current main actions (new proposal, proposals list, browse discussions) inside the container.
-4) The onboarding does not introduce a new URL path (no `/lobby` without code; it stays on `/`).
-5) The chosen cargo/name/description are persisted and the user is not asked again on refresh (unless they explicitly reset).
-6) Clicking "Sair" resets the onboarding to the initial welcome ("Bem vindo" + "Iniciar") and allows a new anonymous session/user to start.
-6) Works on mobile + desktop with no major layout regressions.
-7) `/${code}/lobby` redirects to `/${code}/assembly`.
-8) `/${code}/game` redirects to `/${code}/assembly` (compatibility).
-9) When selecting "Pedagógico" in mode selection, the owner sees a dialog to configure timer minutes; saving persists to `games` and the timer uses those values during the discussion.
-10) Browse histories supports filtering by discussion mode and shows mode in cards/detail.
+
+1. The app opens on `/` and shows a dialog container with a welcome message and a single primary "Iniciar" button.
+2. After "Iniciar", the user must pick a cargo (required) and only then sees optional name/description fields.
+3. The cargo dropdown matches the style used on Browse histories filters; options are alphabetically sorted and include "Outro" (last), which requires a custom cargo input.
+4. After completing the steps, the dialog shows the current main actions (new proposal, proposals list, browse discussions) inside the container.
+5. The onboarding does not introduce a new URL path (no `/lobby` without code; it stays on `/`).
+6. The chosen cargo/name/description are persisted and the user is not asked again on refresh (unless they explicitly reset).
+7. Clicking "Sair" resets the onboarding to the initial welcome ("Bem vindo" + "Iniciar") and allows a new anonymous session/user to start.
+8. Works on mobile + desktop with no major layout regressions.
+9. `/${code}/lobby` redirects to `/${code}/assembly`.
+10. `/${code}/game` redirects to `/${code}/assembly` (compatibility).
+11. When selecting "Pedagógico" in mode selection, the owner sees a dialog to configure timer minutes; saving persists to `games` and the timer uses those values during the discussion.
+12. Browse histories supports filtering by discussion mode and shows mode in cards/detail.
 
 **Completion Criteria:**
-1) Manual verification:
+
+1. Manual verification:
    - Fresh session: `/` -> dialog shows welcome + "Iniciar" -> choose cargo -> optionally set name/description -> main actions shown.
    - Returning session: onboarding is skipped or starts already in main actions state.
-2) i18n verified for PT/EN copy ("Iniciar" and any helper text).
-3) Routing verification:
+2. i18n verified for PT/EN copy ("Iniciar" and any helper text).
+3. Routing verification:
    - `/${code}/lobby` -> `/${code}/assembly`
    - `/${code}/game` -> `/${code}/assembly`
-4) Pedagogic mode verification:
+4. Pedagogic mode verification:
    - Select "Pedagógico" -> set minutes -> proceed to assembly -> timer reflects configured durations (rounds 1-6 vs round 7).
-5) Browse histories verification:
+5. Browse histories verification:
    - Filter by mode returns expected rows (including after backfill/default).
    - "Proposta completa" button is on the same CTA row and aligned left.
- 
+
 ---
 
 ## ZD-179: AVG nonhuman AI personas + Zoop Speaker system prompt
@@ -2760,6 +2995,7 @@ Replace the default human-department AI agents with fixed non-human representati
 As a participant, I want the AI participants to feel like non-human representatives of the aquarium ecosystem (with clear names and roles/cargos) so the discussion reflects Zoop governance and not generic human departments.
 
 **Scope / Implementation notes:**
+
 - AI personas (names + cargos):
   - Aquari: Não-humanos do AVG
   - Tuga: Fauna marinha Portuguesa
@@ -2778,14 +3014,16 @@ As a participant, I want the AI participants to feel like non-human representati
   - Backend composes the final system prompt from the JSON template + persona and passes it to the active provider (IAEDU/Gemini).
 
 **Database:**
+
 - No DB schema changes required for this ticket.
 
 **Acceptance criteria:**
-1) In the assembly participant ring, AI agents appear with the new names (Aquari/Tuga/Tropicus/Doce/Galeria) and cargos readable in 1-2 lines (no "...").
-2) Single-AI mode uses Aquari as the solo agent.
-3) The AI generation endpoint uses the JSON-based system prompt and personalizes it using `agentName`.
-4) Human badge shows cargo and, when present, the participant name; if missing from DB, falls back to onboarding storage.
- 
+
+1. In the assembly participant ring, AI agents appear with the new names (Aquari/Tuga/Tropicus/Doce/Galeria) and cargos readable in 1-2 lines (no "...").
+2. Single-AI mode uses Aquari as the solo agent.
+3. The AI generation endpoint uses the JSON-based system prompt and personalizes it using `agentName`.
+4. Human badge shows cargo and, when present, the participant name; if missing from DB, falls back to onboarding storage.
+
 ---
 
 ## ZD-178: Proposal Preview - Votes List
@@ -2797,6 +3035,7 @@ Add a "Ver votos" (View votes) section to the proposal preview page so users can
 As a user viewing a proposal preview, I want to open a list of all votes (who voted, what they voted, when, and in what context/mode) so I can audit participation and outcomes transparently.
 
 **Scope / Implementation notes:**
+
 - Front-end (proposal preview):
   - Add a button "Ver votos" under results.
   - When opened, render a table below with columns: `id`, `voto`, `data`, `cargo`, `modo`.
@@ -2813,8 +3052,9 @@ As a user viewing a proposal preview, I want to open a list of all votes (who vo
   - Backfill existing rows so display works consistently.
 
 **Acceptance criteria:**
-1) On `/proposals/[id]/preview`, after results render, a "Ver votos" button appears when `totalVotes > 0`.
-2) Clicking "Ver votos" expands a table with columns: ID (truncated user id), Vote, Date (relative + absolute), Cargo, Mode.
-3) Voting from preview saves: `context='preview'`, `discussion_mode='no_discussion'`, `cargo` from onboarding role.
-4) Voting from end-of-discussion saves: `context='discussion'`, `discussion_mode` matches the chosen discussion mode, `cargo` from onboarding role.
-5) Existing constraint "one vote per user per proposal" remains enforced (no duplicate votes).
+
+1. On `/proposals/[id]/preview`, after results render, a "Ver votos" button appears when `totalVotes > 0`.
+2. Clicking "Ver votos" expands a table with columns: ID (truncated user id), Vote, Date (relative + absolute), Cargo, Mode.
+3. Voting from preview saves: `context='preview'`, `discussion_mode='no_discussion'`, `cargo` from onboarding role.
+4. Voting from end-of-discussion saves: `context='discussion'`, `discussion_mode` matches the chosen discussion mode, `cargo` from onboarding role.
+5. Existing constraint "one vote per user per proposal" remains enforced (no duplicate votes).
