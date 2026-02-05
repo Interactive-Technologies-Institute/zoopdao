@@ -1679,6 +1679,37 @@ c) Ensure the final output is still exactly one sentence question.
 
 ---
 
+## ZD-182d: Add proposal-point context + message history to AI prompts (assembly + assistant)
+
+**Overview:**
+Provide richer context to all AI generations by including the current round’s proposal point(s) and the relevant discussion message history, so AI responses stay aligned with what is being discussed.
+
+**Goal:**
+Ensure AI outputs (assistant questions and assembly AI messages) are grounded in the correct proposal point and the latest conversation context, without requiring manual copy/paste by the user.
+
+**Description:**
+a) Define the “context payload” needed by AI prompts: proposal id, round number, current proposal point text (and id), prior proposal points (optional), and recent discussion messages (user + AI).
+b) Add/confirm backend query to fetch the current round proposal point(s) for a given proposal/round (and ensure it matches what the UI is showing).
+c) Add/confirm backend query to fetch recent messages scoped by `game_id` + `round` (and optionally a configurable window, e.g. last 20 messages).
+d) Update AI prompt builder(s) to include:
+   - Current proposal point text (primary)
+   - Short “history window” of recent messages (role-tagged: user vs AI, agent name/id)
+   - Any required round metadata (pedagogic vs other modes)
+e) Ensure payload limits are safe (truncate by token/char budget; avoid exceeding provider limits).
+f) Ensure consistency across call sites: the assistant endpoint and the assembly AI endpoint use the same context builder (single source of truth).
+g) Modules/scripts to review: `src/routes/api/ai/+server.ts`, `src/routes/api/ai/messages/+server.ts`, message history fetch utilities, proposal/round point retrieval, prompt builder utilities.
+
+**Acceptance Criteria:**
+1) AI requests include the current round’s proposal point text and recent message history.
+2) AI outputs are visibly aligned with the current proposal point in Round 7 and reflect the latest discussion context.
+3) Message history included is correctly ordered and scoped (no leaking other games/rounds).
+4) Prompt size is bounded (no provider errors due to oversized context).
+
+**Completion Criteria:**
+1) Manual verification with at least two rounds confirms AI responses change appropriately when proposal point or history changes.
+
+---
+
 ## ZD-142 Review text and colors of Instruction pop-up
 
 **Overview:**
@@ -2210,6 +2241,39 @@ Deliver robust hover/tap expansion for AI + user chat circles:
 
 **Completion Criteria:**
 Visual verification on iPhone SE, iPhone, iPad mini, iPad 11, desktop (portrait + landscape).
+
+---
+
+## ZD-176f: Discussion dialog density + typography (proposal points)
+
+**Overview:**
+Reduce wasted space in the in-game discussion dialog while keeping the left proposal-point card format intact and avoiding regressions in the histories/cards pages.
+
+**Goal:**
+Make the dialog feel “filled” on both portrait mobile and desktop:
+- fewer empty gaps,
+- bigger/clearer proposal-point text + placeholders,
+- no duplicate round/proposal-point titles,
+- textarea area sized for writing without dominating the layout.
+
+**Description:**
+a) Keep the left-side card (proposal point) but remove the duplicated header title (only one visible title per round).
+b) Make the dialog responsive and denser: wider on desktop, tighter vertical spacing, and aligned tops to avoid big blank zones.
+c) Improve input readability: larger textarea text + placeholder text, with a smaller minimum height and a capped max height (scroll inside when needed).
+d) Scope changes to the dialog component only (no global Card styling changes), so browser histories list layouts remain unchanged.
+e) Modules/scripts to review: `src/lib/components/story-dialog.svelte`, `src/lib/components/card.svelte` (class override only, no global changes).
+
+**Acceptance Criteria:**
+1) On iPhone portrait, proposal cards and input areas no longer leave large dead space.
+2) On desktop, dialog content is balanced (no huge empty area under the card or under the textarea).
+3) Only one round/proposal-point title is shown (no duplicate title on card + header).
+4) Histories/browse screens keep their existing card formats (no regression).
+
+**Completion Criteria:**
+Manual visual verification on iPhone and desktop (portrait + landscape).
+
+---
+
 ## ZD-149: Enable player cards and badges with .svg + fix flips + fix long text formatting
 
 **Overview:**
