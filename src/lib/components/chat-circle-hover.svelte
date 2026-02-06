@@ -6,6 +6,8 @@
 
 	const previewOrder: string[] = [];
 	const previewRegistry = new Map<string, () => void>();
+	const previewRankById = new Map<string, number>();
+	let previewRankCounter = 0;
 
 	function registerPreview(id: string, closeFn: () => void) {
 		previewRegistry.set(id, closeFn);
@@ -13,6 +15,7 @@
 
 	function unregisterPreview(id: string) {
 		previewRegistry.delete(id);
+		previewRankById.delete(id);
 		for (let i = previewOrder.length - 1; i >= 0; i -= 1) {
 			if (previewOrder[i] === id) previewOrder.splice(i, 1);
 		}
@@ -20,30 +23,31 @@
 	}
 
 	function closePreview(id: string) {
+		previewRankById.delete(id);
 		for (let i = previewOrder.length - 1; i >= 0; i -= 1) {
 			if (previewOrder[i] === id) previewOrder.splice(i, 1);
 		}
 		previewTick += 1;
 	}
 
-function openPreview(id: string) {
-	if (!previewRegistry.has(id)) return;
-	for (let i = previewOrder.length - 1; i >= 0; i -= 1) {
-		if (previewOrder[i] === id) previewOrder.splice(i, 1);
-	}
+	function openPreview(id: string, priority = 1) {
+		if (!previewRegistry.has(id)) return;
+		const currentRank = previewRankById.get(id);
+		if (typeof currentRank === 'number' && currentRank === previewRankCounter && priority <= 1) {
+			previewTick += 1;
+			return;
+		}
+		previewRankCounter = Math.max(previewRankCounter, currentRank ?? 0) + Math.max(1, priority);
+		previewRankById.set(id, previewRankCounter);
+		for (let i = previewOrder.length - 1; i >= 0; i -= 1) {
+			if (previewOrder[i] === id) previewOrder.splice(i, 1);
+		}
 		previewOrder.push(id);
 		for (let i = previewOrder.length - 1; i >= 0; i -= 1) {
 			if (previewOrder.indexOf(previewOrder[i]) !== i) previewOrder.splice(i, 1);
 		}
-	while (previewOrder.length > 2) {
-		const oldest = previewOrder.shift();
-		if (oldest) previewRegistry.get(oldest)?.();
+		previewTick += 1;
 	}
-	for (const [key, closeFn] of previewRegistry.entries()) {
-		if (!previewOrder.includes(key)) closeFn();
-	}
-	previewTick += 1;
-}
 
 	interface ChatCircleHoverProps {
 		text: string;
@@ -76,19 +80,21 @@ function openPreview(id: string) {
 	let anchorEl: HTMLButtonElement | null = null;
 	let rootEl: HTMLDivElement | null = null;
 	let showChatModal = $state(false);
-let showHover = $state(false);
+	let showHover = $state(false);
 	let showPreview = $state(false);
 	let lastSeenText = $state('');
 	let previewTick = $state(0);
 	let previewZ = $state(120);
-let hoverTargets = $state(0);
+	let hoverTargets = $state(0);
 	let hoverStyle = $state('');
 	let circleDiameter = $state(0);
-let docLang = $state('pt');
-let slotEl: HTMLElement | null = null;
-const previewId = `preview-${Math.random().toString(36).slice(2)}`;
-const isDev = typeof window !== 'undefined' && window?.location?.hostname === 'localhost';
-let wasForcePreview = $state(false);
+	let docLang = $state('pt');
+	let slotEl: HTMLElement | null = null;
+	const previewId = `preview-${Math.random().toString(36).slice(2)}`;
+	const isDev = typeof window !== 'undefined' && window?.location?.hostname === 'localhost';
+	let wasForcePreview = $state(false);
+	let lastForcePreview = $state(false);
+	let forcePreviewSuppressed = $state(false);
 
 	const lastText = $derived(text.trim());
 	const hasText = $derived(lastText.length > 0);
@@ -133,8 +139,13 @@ let wasForcePreview = $state(false);
 	}
 
 	function resolveBounds() {
+		let providedBounds: BoundsRect | null = null;
 		if (boundsRect && boundsRect.right > boundsRect.left && boundsRect.bottom > boundsRect.top) {
-			return boundsRect;
+			const width = boundsRect.right - boundsRect.left;
+			const height = boundsRect.bottom - boundsRect.top;
+			if (width >= 180 && height >= 180) {
+				providedBounds = boundsRect;
+			}
 		}
 		if (typeof document !== 'undefined') {
 			const boundaryEl = document.querySelector('.avatar-boundary') as HTMLElement | null;
@@ -150,6 +161,7 @@ let wasForcePreview = $state(false);
 				}
 			}
 		}
+		if (providedBounds) return providedBounds;
 		if (typeof window !== 'undefined') {
 			return {
 				left: 12,
@@ -200,7 +212,8 @@ let wasForcePreview = $state(false);
 			typeof maxDiameter === 'number' && maxDiameter > 0 ? maxDiameter : boundsMax * 0.9;
 		const maxD = Math.max(40, Math.min(proposedMax, boundsMax));
 		const anchorSize = Math.max(rect.width, rect.height);
-		let minD = Math.max(56, anchorSize * 1.8);
+		const minPreviewDiameter = 120;
+		let minD = Math.max(minPreviewDiameter, Math.max(56, anchorSize * 1.8));
 		if (minD > maxD) minD = maxD;
 		const diameter = computeDiameter(lastText.length, minD, Math.max(minD, maxD));
 		const radius = diameter / 2;
@@ -268,20 +281,22 @@ let wasForcePreview = $state(false);
 
 	$effect(() => {
 		previewTick;
+		if (showPreview) {
+			const storedRank = previewRankById.get(previewId);
+			const rank =
+				typeof storedRank === 'number' ? storedRank : Number.isFinite(previewRank) ? previewRank : 0;
+			previewZ = 2000 + Math.max(0, rank);
+			if (slotEl) slotEl.style.zIndex = String(1000 + Math.max(0, rank));
+			return;
+		}
 		if (forcePreview) {
 			const rank = Number.isFinite(previewRank) ? previewRank : 0;
 			previewZ = 120 + Math.max(0, rank);
 			if (slotEl) slotEl.style.zIndex = String(90 + Math.max(0, rank));
 			return;
 		}
-		if (showPreview) {
-			const idx = previewOrder.indexOf(previewId);
-			previewZ = 120 + Math.max(0, idx);
-			if (slotEl) slotEl.style.zIndex = String(90 + Math.max(0, idx));
-		} else {
-			previewZ = 120;
-			if (slotEl) slotEl.style.zIndex = '';
-		}
+		previewZ = 120;
+		if (slotEl) slotEl.style.zIndex = '';
 	});
 
 	$effect(() => {
@@ -300,11 +315,6 @@ let wasForcePreview = $state(false);
 	});
 
 	$effect(() => {
-		if (forcePreview) {
-			showPreview = true;
-			requestAnimationFrame(updateHoverPosition);
-			return;
-		}
 		if (!isExpandable) {
 			if (showPreview) {
 				showPreview = false;
@@ -316,9 +326,24 @@ let wasForcePreview = $state(false);
 		if (lastText && lastText !== lastSeenText) {
 			lastSeenText = lastText;
 			showPreview = true;
-			openPreview(previewId);
+			openPreview(previewId, 1);
 			requestAnimationFrame(updateHoverPosition);
 		}
+	});
+
+	$effect(() => {
+		if (forcePreview && !lastForcePreview) {
+			forcePreviewSuppressed = false;
+			if (!showPreview) {
+				showPreview = true;
+				openPreview(previewId, 1);
+				requestAnimationFrame(updateHoverPosition);
+			}
+		}
+		if (!forcePreview && lastForcePreview) {
+			forcePreviewSuppressed = false;
+		}
+		lastForcePreview = forcePreview;
 	});
 
 	// Close when forced preview is lifted (without killing normal previews)
@@ -357,7 +382,13 @@ let wasForcePreview = $state(false);
 		class="h-9 w-9 rounded-full {bgClass} text-white {shadowClass} flex items-center justify-center overflow-hidden select-none"
 		aria-label="Open message"
 		onclick={() => {
-			if (!canHover && hasText) showChatModal = true;
+			if (!hasText) return;
+			if (isExpandable) {
+				forcePreviewSuppressed = false;
+				showPreview = true;
+				openPreview(previewId, 1000);
+				requestAnimationFrame(updateHoverPosition);
+			}
 		}}
 	>
 		{#if showTyping}
@@ -383,7 +414,26 @@ let wasForcePreview = $state(false);
 			style={`z-index:${previewZ}; ${hoverStyle}`}
 			onmouseenter={enterHover}
 			onmouseleave={leaveHover}
+			onclick={() => {
+				forcePreviewSuppressed = false;
+				showPreview = true;
+				openPreview(previewId, 1000);
+				requestAnimationFrame(updateHoverPosition);
+			}}
 		>
+			<button
+				type="button"
+				class="absolute left-1/2 -translate-x-1/2 top-2 h-6 w-6 rounded-full bg-white/30 text-white flex items-center justify-center text-sm font-bold shadow-md hover:bg-white/45"
+				aria-label={docLang === 'pt' ? 'Fechar' : 'Close'}
+				onclick={(event) => {
+					event.stopPropagation();
+					forcePreviewSuppressed = true;
+					showPreview = false;
+					closePreview(previewId);
+				}}
+			>
+				×
+			</button>
 			<div
 				class="h-full w-full rounded-full flex items-center justify-center"
 				style={`padding:${computePadding(circleDiameter)}px;`}

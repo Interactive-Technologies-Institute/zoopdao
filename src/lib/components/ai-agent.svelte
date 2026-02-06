@@ -109,29 +109,30 @@ const cargoLabel = $derived.by(() => getAINonHumanCargoLabel(agent.name, getLoca
 			<div class="h-12 w-12 md:h-14 md:w-14 rounded-full {roleColorClass} flex items-center justify-center border-2 border-white/30 shadow-lg relative z-20">
 				<Bot class="h-6 w-6 md:h-7 md:w-7 text-white" />
 			</div>
-			{#if isActive}
-				<div class="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white animate-pulse z-30"></div>
-			{/if}
 		</div>
 
 		<!-- Agent Name -->
-		<div class="text-xs font-semibold text-deep-teal text-center max-w-[80px] truncate mt-1">
-			{agent.name}
+		<div class="text-xs font-semibold text-deep-teal text-center max-w-[100px] truncate mt-1">
+			<span class="inline-block rounded-full bg-white/45 px-2 py-[1px] shadow-sm">
+				{agent.name}
+			</span>
 		</div>
 		<!-- Agent Role Badge -->
 		<div
-			class="text-[11px] md:text-xs leading-tight text-gray-600 text-center max-w-[120px] md:max-w-[140px] whitespace-pre-line break-normal line-clamp-2 min-h-[2.25rem] md:min-h-[2.5rem]"
+			class="text-[11px] md:text-xs leading-tight text-gray-600 text-center max-w-[180px] md:max-w-[220px] whitespace-pre-line break-words"
 			title={cargoLabel}
 		>
-			{cargoLabel}
+			<span class="inline-block rounded-full bg-white/40 px-2 py-[1px] shadow-sm">
+				{cargoLabel}
+			</span>
 		</div>
 	</div>
 	
 	<!-- Chat circle: snippet by default; hover expands; tap opens centered modal on touch devices -->
 	{#if showTypingBubble || resolvedLatestMessage.length > 0}
 		{@const lastText = resolvedLatestMessage}
-		{@const circleSide = bubbleSide === 'left' ? 'right-full mr-2' : 'left-full ml-2'}
-		<div class="absolute top-1/2 -translate-y-1/2 z-30 {circleSide}">
+		{@const chatPositionClass = 'absolute -top-5 -right-0 z-30'}
+		<div class={chatPositionClass}>
 			<ChatCircleHover
 				text={lastText}
 				isTyping={showTypingBubble}

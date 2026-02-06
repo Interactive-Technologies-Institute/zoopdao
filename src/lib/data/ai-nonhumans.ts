@@ -11,13 +11,13 @@ export const AI_NONHUMAN_PERSONAS: readonly AINonHumanPersona[] = [
 	{
 		key: 'tuga',
 		name: 'Tuga',
-		cargoPt: 'Fauna marinha Portuguesa',
+		cargoPt: 'Fauna marinha\nPortuguesa',
 		cargoEn: 'Portuguese marine fauna'
 	},
 	{
 		key: 'tropicus',
 		name: 'Tropicus',
-		cargoPt: 'Fauna marinha Tropical',
+		cargoPt: 'Fauna marinha\nTropical',
 		cargoEn: 'Tropical marine fauna'
 	},
 	{

@@ -133,10 +133,10 @@
 	{#if currentRound === 7 && isCurrentPlayer}
 		{@const lastText = (chatMessage ?? '').trim()}
 		{@const showCircle = chatIsSending || chatIsTyping || lastText.length > 0}
-	{@const showTypingBubble = chatIsSending || chatIsTyping}
+		{@const showTypingBubble = chatIsSending || chatIsTyping}
 		{#if showCircle}
-			{@const circleSide = bubbleSide === 'left' ? 'right-full mr-2' : 'left-full ml-2'}
-			<div class="absolute top-1/2 -translate-y-1/2 z-30 {circleSide}">
+			{@const chatPositionClass = 'absolute -top-5 -right-5 z-30'}
+			<div class={chatPositionClass}>
 				<!-- Chat circle: snippet by default; hover expands inward; tap opens modal on touch devices -->
 				<ChatCircleHover
 					text={lastText}
