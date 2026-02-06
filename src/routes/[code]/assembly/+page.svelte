@@ -1,6 +1,6 @@
 <script lang="ts">
 	import HelpDialog from '@/components/help-dialog.svelte';
-	import Map from '@/components/map.svelte';
+	import AssemblyMap from '@/components/map.svelte';
 	import ParticipantsContainer from '@/components/participants-container.svelte';
 	import RoundIndicator from '@/components/round-indicator.svelte';
 	import StoryDialog from '@/components/story-dialog.svelte';
@@ -35,9 +35,6 @@
 	import {
 		storeHumanMessage,
 		getDiscussionMessages,
-		getProposalMessages,
-		getChatHistoryForAI,
-		storeAIMessage,
 		mapDiscussionMessageRow
 	} from '@/utils/discussion-messages';
 	import { AquariumLayoutState } from '@/state/aquarium-layout.svelte';
@@ -695,17 +692,8 @@
 		let cancelled = false;
 		(async () => {
 			try {
-				let dbMessages = await getDiscussionMessages(supabase, gameId, { round: currentRound });
+				const dbMessages = await getDiscussionMessages(supabase, gameId, { round: currentRound });
 				if (cancelled) return;
-				if (dbMessages.length === 0 && data.proposalId) {
-					const proposalMessages = await getProposalMessages(supabase, data.proposalId, {
-						round: currentRound
-					});
-					if (cancelled) return;
-					if (proposalMessages.length > 0) {
-						dbMessages = proposalMessages;
-					}
-				}
 
 				if (dbMessages.length === 0) {
 					const cached = loadCachedDiscussion(currentRound);
@@ -923,209 +911,169 @@
 					metadata: savedMessage.metadata
 				})
 			);
-			if (chatRound) {
-				userLastSentMessage = savedMessage.content;
-				userDraft = '';
-				userIsSending = false;
-			}
+				if (chatRound) {
+					userLastSentMessage = savedMessage.content;
+					userDraft = '';
+					userIsSending = false;
+				}
 
-			// Get chat history for AI context (including current round)
-			const chatHistory = await getChatHistoryForAI(supabase, gameId, currentRound); // Includes current round messages
+					const logAiTiming = (event: string, payload: Record<string, unknown>) => {
+						console.info('[AI timing]', event, payload);
+					};
+					const waitForAiDelay = (ms: number) =>
+						SINGLE_AI_MODE_ROUND7
+							? Promise.resolve()
+							: new Promise((resolve) => setTimeout(resolve, ms));
 
-			const waitForAiDelay = (ms: number) =>
-				SINGLE_AI_MODE_ROUND7
-					? Promise.resolve()
-					: new Promise((resolve) => setTimeout(resolve, ms));
+				// Round 7: one batch request returning JSON for all agents; UI schedules avatar rendering.
+				if (
+					aiAgents.length > 0 &&
+					(!SINGLE_AI_MODE_ROUND7 || aiMessageCount < MAX_AI_MESSAGES_ROUND7)
+				) {
+					const upsertFallback = (agent: AIAgent) => {
+						const fallbackContent = generateFallbackMessage(agent, message).trim();
+						if (!fallbackContent) return;
+						discussionTimeline.upsert({
+							key: `temp:fallback:${agent.id}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
+							round: currentRound,
+							senderType: 'ai',
+							senderId: agent.id,
+							senderRole: agent.role,
+							senderName: agent.name,
+							content: fallbackContent,
+							createdAt: new Date().toISOString(),
+							status: 'sent'
+						});
+					};
 
-			// Generate AI agent responses sequentially with delays
-			if (
-				aiAgents.length > 0 &&
-				(!SINGLE_AI_MODE_ROUND7 || aiMessageCount < MAX_AI_MESSAGES_ROUND7)
-			) {
-				const clearTyping = (agentId: string) => {
-					if (typingAgents.has(agentId)) {
-						typingAgents.delete(agentId);
-						typingAgents = new Set(typingAgents);
-					}
-				};
+					// Stable idempotency key: retrying AI generation for the same human message should not double-insert.
+					const clientRequestId = `human:${savedMessage.id}`;
+					const agentsPayload = aiAgents.map((agent) => ({ id: agent.id, name: agent.name, role: agent.role }));
 
-				// Helper function to use fallback message (UI-first, persistence best-effort)
-				const useFallbackMessage = async (agent: AIAgent) => {
-					const fallbackContent = generateFallbackMessage(agent, message).trim();
-					if (!fallbackContent) {
-						clearTyping(agent.id);
-						return false;
-					}
+					// Show only one agent typing while the batch request is in flight (sequential coordination).
+					typingAgents = aiAgents.length ? new Set([aiAgents[0].id]) : new Set();
 
-					await waitForAiDelay(2000 + Math.random() * 2000); // 2-4 seconds
+					type BatchResult = {
+						success: boolean;
+						requestId?: string;
+						messages?: Array<{
+							agentId: string;
+							agentName: string;
+							agentRole: Role;
+							round: number;
+							content: string;
+							dbId: number;
+							createdAt: string;
+						}>;
+						errors?: Array<{ agentId: string; code: string; message: string }>;
+						error?: { code: string; message: string; requestId?: string };
+					};
 
-					const fallbackClientTempId = `fallback-${agent.id}-${Date.now()}-${Math.random()
-						.toString(36)
-						.slice(2, 8)}`;
-					const now = new Date();
-
-					// UI-first: add to local state immediately
-					discussionTimeline.upsert({
-						key: `temp:${fallbackClientTempId}`,
-						clientTempId: fallbackClientTempId,
-						round: currentRound,
-						senderType: 'ai',
-						senderId: agent.id,
-						senderRole: agent.role,
-						senderName: agent.name,
-						content: fallbackContent,
-						createdAt: now.toISOString(),
-						status: 'sent'
-					});
-
-					clearTyping(agent.id);
-
-					// Best-effort persistence after UI update
+					let batch: BatchResult | null = null;
 					try {
-						const fallbackTurnIndex = discussionTimeline.messages.filter(
-							(msg) =>
-								msg.round === currentRound && msg.senderType === 'ai' && msg.senderId === agent.id
-						).length;
-						const persisted = await storeAIMessage(
-							supabase,
-							gameId,
-							proposalId,
-							currentRound,
-							agent.id,
-							agent.role,
-							fallbackContent,
-							{
-								turnIndex: SINGLE_AI_MODE_ROUND7 ? fallbackTurnIndex : null,
-								clientTempId: fallbackClientTempId
-							}
-						);
-						if (persisted) {
-							discussionTimeline.removeByClientTempId(fallbackClientTempId);
-							discussionTimeline.upsert(
-								timelineMessagesFromDbMessage({
-									id: persisted.id,
-									game_id: persisted.gameId,
-									proposal_id: persisted.proposalId,
-									round: persisted.round,
-									participant_type: persisted.participantType,
-									participant_id: persisted.participantId,
-									agent_role: persisted.agentRole,
-									content: persisted.content,
-									created_at: persisted.createdAt,
-									metadata: persisted.metadata
-								})
-							);
-						}
-					} catch (fallbackError) {
-						console.error(`Failed to store fallback message for ${agent.name}:`, fallbackError);
-					}
-
-					return true;
-				};
-
-				// Calculate delay: 1 minute (60000ms) divided by number of agents, minimum 10 seconds (10000ms)
-				const totalTime = 60000; // 1 minute in milliseconds
-				const minDelay = 10000; // 10 seconds minimum
-				const baseDelay = Math.max(minDelay, Math.floor(totalTime / aiAgents.length));
-
-				// Shuffle agents for random order
-				const shuffledAgents = [...aiAgents].sort(() => Math.random() - 0.5);
-
-				// Process each agent sequentially
-				for (let i = 0; i < shuffledAgents.length; i++) {
-					const agent = shuffledAgents[i];
-
-					// Small gap before showing next typing bubble
-					if (i > 0) {
-						await waitForAiDelay(200);
-					}
-
-					// Only show the current agent typing
-					typingAgents = new Set([agent.id]);
-
-					// Calculate random delay between minDelay and baseDelay * 1.5
-					const delay = Math.floor(minDelay + Math.random() * (baseDelay * 1.5 - minDelay));
-
-					// Wait before processing next agent (except for first agent)
-					if (i > 0) {
-						await waitForAiDelay(delay);
-					}
-
-					try {
-						const inputSource = message.trim() ? 'manual' : 'auto';
-						const allowMultipleAiReplies = chatRound && MAX_AI_MESSAGES_ROUND7 > 1;
-
-						// Generate message in backend first (respects rate limit)
-						const response = await fetch('/api/ai/messages', {
+						const response = await fetch('/api/ai/messages/batch', {
 							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json'
-							},
+							headers: { 'Content-Type': 'application/json' },
 							body: JSON.stringify({
-								gameId: gameId,
-								proposalId: proposalId,
-								round: currentRound,
-								agentRole: agent.role,
-								agentName: agent.name,
+								gameId,
+								proposalId,
+								round: 7,
 								userId: data.userId,
-								inputSource,
-								allowMultipleAiReplies,
-								chatHistory: chatHistory,
-								latestUserMessage: message // Pass the most recent user message
+								locale: getLocale(),
+								latestUserMessage: message,
+								agents: agentsPayload,
+								clientRequestId
 							})
 						});
-
-						if (!response.ok) {
-							if (response.status === 429 || response.status === 500) {
-								await useFallbackMessage(agent);
-							} else {
-								clearTyping(agent.id);
-							}
-							continue;
+						const result = (await response.json()) as BatchResult;
+						if (!response.ok || !result?.success) {
+							throw new Error(result?.error?.message ?? 'Batch AI request failed.');
 						}
-
-						const result = await response.json();
-						if (result.success && result.message) {
-							// Message was successfully generated - typing indicator already shown
-							try {
-								// Wait a bit before showing the actual message (simulate typing)
-								await waitForAiDelay(2000 + Math.random() * 2000); // 2-4 seconds
-
-								// Split content if it contains multiple messages (separated by \n\n)
-								const messageContents = result.message.content
-									.split('\n\n')
-									.filter((m: string) => m.trim());
-
-								messageContents.forEach((content: string, index: number) => {
-									discussionTimeline.upsert({
-										key: `db:${result.message.id}:${index}`,
-										dbId: result.message.id,
-										round: result.message.round,
-										senderType: 'ai',
-										senderId: agent.id,
-										senderRole: agent.role,
-										senderName: agent.name,
-										content: content.trim(),
-										createdAt: result.message.createdAt,
-										status: 'sent'
-									});
-								});
-							} finally {
-								clearTyping(agent.id);
-							}
-						} else {
-							clearTyping(agent.id);
-						}
-					} catch (error) {
-						// On unexpected errors, attempt fallback to keep UI responsive
-						console.error(`AI message generation failed for ${agent.name}:`, error);
-						await useFallbackMessage(agent);
+						batch = result;
+					} catch (batchError) {
+						console.error('Batch AI request failed:', batchError);
+						batch = null;
 					}
+
+					const messagesByAgentId = new Map<string, NonNullable<BatchResult['messages']>[number]>();
+					if (batch?.messages) {
+						for (const msg of batch.messages) {
+							if (msg?.agentId) messagesByAgentId.set(msg.agentId, msg);
+						}
+					}
+					if (batch?.errors?.length) {
+						console.warn('Batch AI returned errors:', batch.errors);
+					}
+
+					const perAgentDelay = () => 2000 + Math.random() * 2000;
+					const interMessageDelay = () => 700 + Math.random() * 900;
+
+					// Schedule avatar rendering sequentially for a more natural feel.
+					const batchStart = performance.now();
+					for (let index = 0; index < aiAgents.length; index += 1) {
+						const agent = aiAgents[index];
+
+						typingAgents = new Set([agent.id]);
+						const typingStart = performance.now();
+						const typingDelay = perAgentDelay();
+						logAiTiming('typing:start', {
+							agentId: agent.id,
+							agentName: agent.name,
+							delayMs: Math.round(typingDelay)
+						});
+						await waitForAiDelay(typingDelay);
+
+						const msg = messagesByAgentId.get(agent.id);
+						if (msg?.dbId && msg.content) {
+							logAiTiming('bubble:open', {
+								agentId: agent.id,
+								agentName: agent.name,
+								elapsedMs: Math.round(performance.now() - typingStart)
+							});
+							discussionTimeline.upsert(
+								timelineMessagesFromDbMessage({
+									id: msg.dbId,
+									game_id: gameId,
+									proposal_id: proposalId,
+									round: msg.round ?? currentRound,
+									participant_type: 'ai_agent',
+									participant_id: null,
+									agent_role: msg.agentRole ?? agent.role,
+									content: msg.content,
+									created_at: msg.createdAt,
+									metadata: {
+										agent_id: msg.agentId,
+										client_request_id: clientRequestId,
+										server_request_id: batch?.requestId ?? null
+									}
+								})
+							);
+						} else {
+							logAiTiming('bubble:open:fallback', {
+								agentId: agent.id,
+								agentName: agent.name,
+								elapsedMs: Math.round(performance.now() - typingStart)
+							});
+							upsertFallback(agent);
+						}
+						if (index < aiAgents.length - 1) {
+							const gapDelay = interMessageDelay();
+							logAiTiming('inter-message:wait', {
+								nextAgentId: aiAgents[index + 1]?.id,
+								delayMs: Math.round(gapDelay)
+							});
+							await waitForAiDelay(gapDelay);
+						}
+					}
+					logAiTiming('batch:complete', {
+						elapsedMs: Math.round(performance.now() - batchStart)
+					});
+
+					typingAgents = new Set();
 				}
-			}
-		} catch (error) {
-			console.error('Error sending message:', error);
-		} finally {
+			} catch (error) {
+				console.error('Error sending message:', error);
+			} finally {
 			if (chatRound) {
 				userIsSending = false;
 			}
@@ -1174,7 +1122,7 @@
 </script>
 
 <div class="w-screen h-[100dvh] relative">
-	<Map layout={aquariumLayout} />
+	<AssemblyMap layout={aquariumLayout} />
 	<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
 	<StatusPill playerState={currentPlayerState} currentRound={gameState.currentRound} />
 	<ProposalDialog bind:open={openProposalDialog} proposalId={data.proposalId ?? null} />
