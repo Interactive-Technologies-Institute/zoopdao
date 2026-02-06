@@ -12,7 +12,7 @@
 	import paperSound from '@/sounds/rustling-paper.mp3';
 	import clickSound from '@/sounds/ui-click.mp3';
 	import { createAudio, playAudio } from '$lib/utils/sound';
-	import { Flag, FileText } from 'lucide-svelte';
+	import { Flag, FileText, Sparkles } from 'lucide-svelte';
 	import Timer from './timer.svelte';
 	import PostStory from './post-story-icon.svelte';
 	import { getCharacterCategory, type Card as CardData, type Character } from '@src/lib/types';
@@ -20,6 +20,7 @@
 	import ProposalDialog from '@/components/proposal-dialog.svelte';
 	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 	import { getProposalCardType } from '$lib/utils/proposal-cards';
+	import { getProposalTextForRound as getProposalTextForRoundUtil } from '$lib/utils/proposal-points';
 
 	let audio: HTMLAudioElement | null = null;
 	let click_sound: HTMLAudioElement | null = null;
@@ -92,70 +93,9 @@
 		return gameState.players.find((player) => player.id === gameState.playerId);
 	});
 
-	function normalizeObjectives(objectives: unknown) {
-		if (!objectives) return [];
-		if (Array.isArray(objectives)) return objectives;
-		if (typeof objectives === 'string') {
-			try {
-				return JSON.parse(objectives);
-			} catch {
-				return [];
-			}
-		}
-		return [];
-	}
-
-	const objectives = $derived.by(() => normalizeObjectives(proposal?.objectives));
-	const objectiveValues = $derived.by(() =>
-		objectives
-			.map((objective: { value?: string }) => objective.value)
-			.filter((value: string | undefined): value is string => !!value)
-	);
-	const preconditions = $derived.by(() =>
-		objectives
-			.flatMap(
-				(objective: { preconditions?: { value?: string }[] }) => objective.preconditions ?? []
-			)
-			.map((precondition) => precondition.value)
-			.filter((value: string | undefined): value is string => !!value)
-	);
-	const indicativeSteps = $derived.by(() =>
-		objectives
-			.flatMap(
-				(objective: { preconditions?: { indicativeSteps?: { value?: string }[] }[] }) =>
-					objective.preconditions ?? []
-			)
-			.flatMap((precondition) => precondition.indicativeSteps ?? [])
-			.map((step) => step.value)
-			.filter((value: string | undefined): value is string => !!value)
-	);
-	const keyIndicators = $derived.by(() =>
-		objectives
-			.flatMap(
-				(objective: { preconditions?: { keyIndicators?: { value?: string }[] }[] }) =>
-					objective.preconditions ?? []
-			)
-			.flatMap((precondition) => precondition.keyIndicators ?? [])
-			.map((indicator) => indicator.value)
-			.filter((value: string | undefined): value is string => !!value)
-	);
-
-	function getProposalPointsForRound(roundIndex: number): string[] {
-		if (!proposal) return [];
-		if (roundIndex === 0) return proposal.title ? [proposal.title] : [];
-		if (roundIndex === 1) return objectiveValues[0] ? [objectiveValues[0]] : [];
-		if (roundIndex === 2) return objectiveValues[1] ? [objectiveValues[1]] : [];
-		if (roundIndex === 3) return preconditions;
-		if (roundIndex === 4) return indicativeSteps;
-		if (roundIndex === 5) return keyIndicators;
-		if (roundIndex === 6) return proposal.functionalities ? [proposal.functionalities] : [];
-		return [];
-	}
-
 	function getProposalTextForRound(roundIndex: number): string {
-		const points = getProposalPointsForRound(roundIndex);
-		if (points.length === 0) return '';
-		return points.join('\n');
+		if (!proposal) return '';
+		return getProposalTextForRoundUtil(proposal, roundIndex);
 	}
 
 	function getFallbackCardType(roundIndex: number): CardData['type'] {
@@ -198,6 +138,154 @@
 		return gameState.playersAnswers.filter((answer) => answer.player_id === gameState.playerId);
 	});
 	let currentAnswer = $state('');
+
+	const ASSISTANT_MAX_PER_ROUND = 3;
+	let assistantRemaining = $state<number>(ASSISTANT_MAX_PER_ROUND);
+	let assistantQuestion = $state<string | null>(null);
+	let assistantError = $state<string | null>(null);
+	let assistantStatusKey = $state<string | null>(null);
+	let assistantStatusLoading = $state(false);
+	let assistantGenerating = $state(false);
+
+	function getAssistantButtonLabel(remaining: number) {
+		const remainingLabel =
+			getLocale() === 'pt'
+				? `${remaining} ${remaining === 1 ? 'restante' : 'restantes'}`
+				: `${remaining} left`;
+		return `${getLocale() === 'pt' ? 'Pergunta IA' : 'AI question'} (${remainingLabel})`;
+	}
+
+	function createClientRequestId(): string {
+		try {
+			return crypto.randomUUID();
+		} catch {
+			return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+		}
+	}
+
+	async function refreshAssistantRemaining(params: { gameId: number; round: number; userId: string }) {
+		assistantStatusLoading = true;
+		assistantError = null;
+		try {
+			const response = await fetch(
+				`/api/ai/assistant?gameId=${params.gameId}&round=${params.round}&userId=${encodeURIComponent(
+					params.userId
+				)}`,
+				{ method: 'GET' }
+			);
+			const result = await response.json();
+			if (!response.ok || !result?.success) {
+				throw new Error(result?.error?.message ?? 'Failed to load assistant status.');
+			}
+			if (typeof result.remaining === 'number' && Number.isFinite(result.remaining)) {
+				assistantRemaining = Math.max(0, Math.min(ASSISTANT_MAX_PER_ROUND, result.remaining));
+			} else {
+				assistantRemaining = ASSISTANT_MAX_PER_ROUND;
+			}
+		} catch (error) {
+			console.warn('Failed to refresh assistant remaining:', error);
+			assistantRemaining = ASSISTANT_MAX_PER_ROUND;
+		} finally {
+			assistantStatusLoading = false;
+		}
+	}
+
+	async function requestAssistantQuestion() {
+		if (assistantGenerating) return;
+
+		const round = currentRound;
+		if (round < 1 || round > 6) return;
+
+		const userId = player?.user_id;
+		const gameId = gameState.getGameId();
+		if (!userId || !Number.isFinite(gameId) || gameId <= 0) {
+			assistantError = getLocale() === 'pt' ? 'Falha ao obter contexto do participante.' : 'Missing participant context.';
+			return;
+		}
+
+		assistantGenerating = true;
+		assistantError = null;
+
+		try {
+			const response = await fetch('/api/ai/assistant', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					gameId,
+					proposalId,
+					round,
+					userId,
+					locale: getLocale(),
+					clientRequestId: createClientRequestId()
+				})
+			});
+
+			const result = await response.json();
+			if (!response.ok || !result?.success) {
+				throw new Error(result?.error?.message ?? 'Failed to generate assistant question.');
+			}
+
+			if (typeof result.remaining === 'number' && Number.isFinite(result.remaining)) {
+				assistantRemaining = Math.max(0, Math.min(ASSISTANT_MAX_PER_ROUND, result.remaining));
+			}
+
+			if (result.limitReached) {
+				assistantQuestion = null;
+				return;
+			}
+
+			assistantQuestion = typeof result.question === 'string' ? result.question : null;
+			if (!assistantQuestion) {
+				throw new Error('Assistant returned no question.');
+			}
+		} catch (error) {
+			console.error('Assistant request failed:', error);
+			assistantError =
+				getLocale() === 'pt'
+					? 'Não foi possível gerar uma pergunta agora.'
+					: 'Could not generate a question right now.';
+		} finally {
+			assistantGenerating = false;
+		}
+	}
+
+	$effect(() => {
+		if (!open) {
+			assistantRemaining = ASSISTANT_MAX_PER_ROUND;
+			assistantQuestion = null;
+			assistantError = null;
+			assistantStatusKey = null;
+			assistantStatusLoading = false;
+			assistantGenerating = false;
+		}
+	});
+
+	$effect(() => {
+		if (!open) return;
+		if (playerState !== 'writing') return;
+		if (currentRound < 1 || currentRound > 6) return;
+
+		const userId = player?.user_id;
+		const gameId = gameState.getGameId();
+		if (!userId || !Number.isFinite(gameId) || gameId <= 0) return;
+
+		const key = `${gameId}:${userId}:${currentRound}`;
+		if (assistantStatusKey === key) return;
+		assistantStatusKey = key;
+		assistantRemaining = ASSISTANT_MAX_PER_ROUND;
+		assistantQuestion = null;
+		assistantError = null;
+
+		let cancelled = false;
+		(async () => {
+			await refreshAssistantRemaining({ gameId, round: currentRound, userId });
+			if (cancelled) return;
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	async function submitAnswer() {
 		if (playerState === 'writing') {
@@ -413,14 +501,52 @@
 									<Textarea class="mt-2" bind:value={currentAnswer} />
 								</div>
 							{/if}
-							<div class=" flex items-center justify-between gap-3 bg-white">
+							{#if round.index >= 1 && round.index <= 6}
+								{#if assistantQuestion}
+									<div
+										class="mb-4 rounded-xl border border-sand bg-sand/20 px-4 py-3 text-sm text-black"
+									>
+										<div class="flex items-center gap-2 font-semibold">
+											<Sparkles class="h-4 w-4" />
+											<span>{getLocale() === 'pt' ? 'Pergunta IA' : 'AI question'}</span>
+										</div>
+										<p class="mt-1 leading-snug">{assistantQuestion}</p>
+									</div>
+								{:else if assistantError}
+									<div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm">
+										<p class="text-red-700">{assistantError}</p>
+									</div>
+								{/if}
+							{/if}
+							<div class="flex items-center justify-between gap-3 bg-white">
 								{#if open && playerState === 'writing' && gameState.mode === 'pedagogic'}
 									<Timer
 										onTimeUp={handleTimeUp}
 										duration={gameState.getTimerDurationForRound(currentRound)}
 									/>
 								{/if}
-								<Button onclick={onSubmit}>{m.submit()}</Button>
+								<div class="ml-auto flex items-center gap-2">
+									{#if round.index >= 1 && round.index <= 6}
+										<Button
+											variant="outline"
+											class="flex items-center justify-center gap-2 hover:bg-tertiary/40"
+											disabled={
+												assistantGenerating ||
+												assistantRemaining <= 0 ||
+												!player?.user_id ||
+												assistantStatusLoading
+											}
+											onclick={() => {
+												playAudio(click_sound);
+												requestAssistantQuestion();
+											}}
+										>
+											<Sparkles class="h-4 w-4" />
+											{getAssistantButtonLabel(assistantRemaining)}
+										</Button>
+									{/if}
+									<Button onclick={onSubmit}>{m.submit()}</Button>
+								</div>
 							</div>
 						{:else if round.index !== 7}
 							<Textarea class="mt-2" value={answer?.answer ?? ''} disabled />
