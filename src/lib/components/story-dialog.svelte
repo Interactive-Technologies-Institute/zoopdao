@@ -21,6 +21,7 @@
 	import { ZOOP_THEME_ASSET_PREFIX } from '$lib/config/theme';
 	import { getProposalCardType } from '$lib/utils/proposal-cards';
 	import { getProposalTextForRound as getProposalTextForRoundUtil } from '$lib/utils/proposal-points';
+	import { ENABLE_AI_QUESTION_ASSISTANT } from '$lib/config/feature-flags';
 
 	let audio: HTMLAudioElement | null = null;
 	let click_sound: HTMLAudioElement | null = null;
@@ -164,6 +165,7 @@
 	}
 
 	async function refreshAssistantRemaining(params: { gameId: number; round: number; userId: string }) {
+		if (!ENABLE_AI_QUESTION_ASSISTANT) return;
 		assistantStatusLoading = true;
 		assistantError = null;
 		try {
@@ -192,6 +194,7 @@
 
 	async function requestAssistantQuestion() {
 		if (assistantGenerating) return;
+		if (!ENABLE_AI_QUESTION_ASSISTANT) return;
 
 		const round = currentRound;
 		if (round < 1 || round > 6) return;
@@ -263,6 +266,7 @@
 	$effect(() => {
 		if (!open) return;
 		if (playerState !== 'writing') return;
+		if (!ENABLE_AI_QUESTION_ASSISTANT) return;
 		if (currentRound < 1 || currentRound > 6) return;
 
 		const userId = player?.user_id;
@@ -501,7 +505,7 @@
 									<Textarea class="mt-2" bind:value={currentAnswer} />
 								</div>
 							{/if}
-							{#if round.index >= 1 && round.index <= 6}
+							{#if ENABLE_AI_QUESTION_ASSISTANT && round.index >= 1 && round.index <= 6}
 								{#if assistantQuestion}
 									<div
 										class="mb-4 rounded-xl border border-sand bg-sand/20 px-4 py-3 text-sm text-black"
@@ -526,7 +530,7 @@
 									/>
 								{/if}
 								<div class="ml-auto flex items-center gap-2">
-									{#if round.index >= 1 && round.index <= 6}
+									{#if ENABLE_AI_QUESTION_ASSISTANT && round.index >= 1 && round.index <= 6}
 										<Button
 											variant="outline"
 											class="flex items-center justify-center gap-2 hover:bg-tertiary/40"

@@ -6,6 +6,7 @@ import { buildAssistantContext } from '$lib/server/ai-context';
 import { validateOneSentenceQuestion } from '$lib/server/ai-validators';
 import { createRequestId, logAiEvent, persistAiAudit } from '$lib/server/ai-observability';
 import { generateAIMessageIaedu } from '$lib/ai/providers/iaedu';
+import { ENABLE_AI_QUESTION_ASSISTANT } from '$lib/config/feature-flags';
 
 const requestSchema = z.object({
 	gameId: z.number().int().positive(),
@@ -88,6 +89,12 @@ async function userIsActivePlayer(params: {
 export const GET: RequestHandler = async ({ url }) => {
 	const requestId = createRequestId();
 	try {
+		if (!ENABLE_AI_QUESTION_ASSISTANT) {
+			return json(
+				{ success: false, error: { code: 'feature_disabled', message: 'Assistant disabled.', requestId } },
+				{ status: 404 }
+			);
+		}
 		const payload = statusQuerySchema.parse({
 			gameId: url.searchParams.get('gameId'),
 			round: url.searchParams.get('round'),
@@ -144,6 +151,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	const startedAt = Date.now();
 
 	try {
+		if (!ENABLE_AI_QUESTION_ASSISTANT) {
+			return json(
+				{ success: false, error: { code: 'feature_disabled', message: 'Assistant disabled.', requestId } },
+				{ status: 404 }
+			);
+		}
 		const body = await request.json();
 		const payload = requestSchema.parse(body);
 		const supabaseAdmin = getSupabaseAdmin();
