@@ -19,6 +19,7 @@ const CHAT_HISTORY_MAX_CHARS = 2600;
 export type PlayerContext = {
 	nickname: string | null;
 	role: string | null;
+	description: string | null;
 };
 
 export type ProposalContext = {
@@ -29,6 +30,7 @@ export type ProposalContext = {
 export type Round7Context = {
 	organizationName: string;
 	proposalContext: string | null;
+	assemblyParticipants: string | null;
 	discussionSummary: string | null;
 	chatHistory: AiChatMessage[];
 	ragContext: string | null;
@@ -78,16 +80,44 @@ async function fetchPlayerContext(
 	try {
 		const { data } = await supabaseAdmin
 			.from('players')
-			.select('nickname, role')
+			.select('nickname, role, description')
 			.eq('game_id', gameId)
 			.eq('user_id', userId)
 			.maybeSingle();
 		return {
 			nickname: (data as any)?.nickname ?? null,
-			role: (data as any)?.role ?? null
+			role: (data as any)?.role ?? null,
+			description: (data as any)?.description ?? null
 		};
 	} catch {
-		return { nickname: null, role: null };
+		return { nickname: null, role: null, description: null };
+	}
+}
+
+type PlayerRosterRow = {
+	id: number;
+	nickname: string | null;
+	role: string | null;
+	description: string | null;
+	is_active: boolean | null;
+};
+
+async function fetchActivePlayersRoster(
+	supabaseAdmin: SupabaseClient,
+	gameId: number,
+	limit = 12
+): Promise<PlayerRosterRow[]> {
+	try {
+		const { data, error } = await supabaseAdmin
+			.from('players')
+			.select('id, nickname, role, description, is_active')
+			.eq('game_id', gameId)
+			.order('inserted_at', { ascending: true })
+			.limit(limit);
+		if (error || !data) return [];
+		return (data as any[]).filter((row) => row?.is_active !== false) as PlayerRosterRow[];
+	} catch {
+		return [];
 	}
 }
 
@@ -129,6 +159,7 @@ type DiscussionRow = {
 	id: number;
 	round: number;
 	participant_type: 'human' | 'ai_agent';
+	participant_id: number | null;
 	agent_role: string | null;
 	content: string;
 	created_at: string;
@@ -144,7 +175,7 @@ async function fetchRecentDiscussionRows(params: {
 	const { supabaseAdmin, gameId, round, limit } = params;
 	const { data, error } = await supabaseAdmin
 		.from('discussion_messages')
-		.select('id, round, participant_type, agent_role, content, created_at, metadata')
+		.select('id, round, participant_type, participant_id, agent_role, content, created_at, metadata')
 		.eq('game_id', gameId)
 		.eq('round', round)
 		.order('created_at', { ascending: false })
@@ -154,15 +185,22 @@ async function fetchRecentDiscussionRows(params: {
 	return (data as DiscussionRow[]).slice().reverse();
 }
 
-function mapRowsToChatHistory(rows: DiscussionRow[]): AiChatMessage[] {
+function mapRowsToChatHistory(
+	rows: DiscussionRow[],
+	playersById: Map<number, { nickname: string | null; role: string | null }>
+): AiChatMessage[] {
 	return rows.map((row) => {
 		const senderType = row.participant_type === 'human' ? 'human' : 'ai';
-		const senderName =
-			senderType === 'human'
-				? 'Participant'
-				: row.agent_role
-					? toTitleCaseRole(row.agent_role)
-					: 'AI Agent';
+		let senderName: string;
+		if (senderType === 'human') {
+			const participantId = typeof row.participant_id === 'number' ? row.participant_id : null;
+			const player = participantId ? playersById.get(participantId) : null;
+			const nickname = (player?.nickname ?? '').trim();
+			const role = (player?.role ?? '').trim();
+			senderName = nickname ? (role ? `${nickname} (${role})` : nickname) : role ? role : 'Participant';
+		} else {
+			senderName = row.agent_role ? toTitleCaseRole(row.agent_role) : 'AI Agent';
+		}
 		return {
 			content: (row.content ?? '').trim(),
 			senderType,
@@ -228,6 +266,24 @@ export async function buildRound7Context(params: {
 		? wrapUntrusted('PROPOSAL_CONTEXT', proposal.proposalFullText)
 		: null;
 
+	const roster = await fetchActivePlayersRoster(supabaseAdmin, gameId);
+	const playersById = new Map<number, { nickname: string | null; role: string | null }>();
+	for (const row of roster) {
+		playersById.set(row.id, { nickname: row.nickname ?? null, role: row.role ?? null });
+	}
+
+	const rosterLines = roster
+		.map((p) => {
+			const nickname = (p.nickname ?? '').trim() || 'Participant';
+			const role = (p.role ?? '').trim() || '-';
+			const description = (p.description ?? '').trim() || '-';
+			return `- ${nickname} | Role: ${role} | Description: ${description}`;
+		})
+		.join('\n');
+	const assemblyParticipants = rosterLines
+		? wrapUntrusted('ASSEMBLY_PARTICIPANTS', clamp(rosterLines, 900))
+		: null;
+
 	const recentRows = await fetchRecentDiscussionRows({
 		supabaseAdmin,
 		gameId,
@@ -252,12 +308,13 @@ export async function buildRound7Context(params: {
 		summaryUsed = summaryResult.summaryUsed;
 	}
 
-	const chatHistory = normalizeChatHistory(mapRowsToChatHistory(recentRows), CHAT_HISTORY_MAX_CHARS).map(
-		(msg) => ({
-			...msg,
-			content: wrapUntrusted('DISCUSSION_MESSAGE', msg.content)
-		})
-	);
+	const chatHistory = normalizeChatHistory(
+		mapRowsToChatHistory(recentRows, playersById),
+		CHAT_HISTORY_MAX_CHARS
+	).map((msg) => ({
+		...msg,
+		content: wrapUntrusted('DISCUSSION_MESSAGE', msg.content)
+	}));
 
 	let ragContext: string | null = null;
 	let ragChunkCount = 0;
@@ -282,6 +339,7 @@ export async function buildRound7Context(params: {
 
 	const promptSizes: Record<string, number> = {
 		proposalContextChars: proposalContext?.length ?? 0,
+		assemblyParticipantsChars: assemblyParticipants?.length ?? 0,
 		summaryChars: discussionSummary?.length ?? 0,
 		historyChars: chatHistory.reduce((acc, msg) => acc + msg.content.length, 0),
 		ragChars: ragContext?.length ?? 0
@@ -290,6 +348,7 @@ export async function buildRound7Context(params: {
 	return {
 		organizationName: ORGANIZATION_NAME,
 		proposalContext,
+		assemblyParticipants,
 		discussionSummary,
 		chatHistory,
 		ragContext,

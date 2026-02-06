@@ -204,6 +204,10 @@ export const POST: RequestHandler = async ({ request }) => {
 			? wrapUntrusted('LATEST_USER_MESSAGE', latestUserMessage)
 			: null;
 
+		const participantsContext = context.assemblyParticipants
+			? `Assembly participants:\n${context.assemblyParticipants}`.trim()
+			: null;
+
 		type AgentResult = {
 			agent: BatchAgent;
 			content: string;
@@ -212,13 +216,14 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		const toGenerate = payload.agents.filter((agent) => !existingByAgentId.has(agent.id));
 
-		const generated: AgentResult[] = await runWithConcurrency(toGenerate, 2, async (agent) => {
-			const { systemPrompt, organizationName } = buildAgentSystemPrompt({
-				agentName: agent.name,
-				agentRole: agent.role
-			});
+			const generated: AgentResult[] = await runWithConcurrency(toGenerate, 2, async (agent) => {
+				const { systemPrompt, organizationName } = buildAgentSystemPrompt({
+					agentName: agent.name,
+					agentRole: agent.role,
+					locale: payload.locale ?? null
+				});
 
-			const system = `${systemPrompt}\n\n${instructionSuffix}`.trim();
+			const system = [systemPrompt, participantsContext, instructionSuffix].filter(Boolean).join('\n\n').trim();
 
 			const aiResult = await generateAIMessageIaedu({
 				gameId: payload.gameId,
