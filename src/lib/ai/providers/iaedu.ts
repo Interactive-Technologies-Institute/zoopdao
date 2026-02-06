@@ -19,12 +19,23 @@ const USER_INFO_PREFIX = 'zoopdao';
 function buildPrompt(request: AiGenerateRequest): string {
 	const orgName = request.organizationName?.trim();
 	const orgLine = orgName ? `Organization: ${orgName}` : null;
+	const summary = request.discussionSummary?.trim();
+	const summaryBlock = summary ? `Discussion summary:\n${summary}` : null;
+	const chatHistory = Array.isArray(request.chatHistory) ? request.chatHistory : [];
+	const chatHistoryBlock =
+		chatHistory.length > 0
+			? `Recent discussion messages:\n${chatHistory
+					.map((msg) => `${msg.senderName} (${msg.senderType}, Round ${msg.round}): ${msg.content}`)
+					.join('\n')}`
+			: null;
 	const promptParts = [
 		request.systemPrompt?.trim() || null,
 		orgLine,
 		request.agentName?.trim() ? `Agent: ${request.agentName.trim()}` : null,
 		`Round: ${request.round}`,
 		request.proposalPoint ? `Proposal point:\n${request.proposalPoint}` : null,
+		summaryBlock,
+		chatHistoryBlock,
 		request.ragContext ? `RAG context:\n${request.ragContext}` : null,
 		request.latestUserMessage ? `Latest user message:\n${request.latestUserMessage}` : null
 	].filter(Boolean);

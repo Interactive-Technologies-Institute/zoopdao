@@ -26,6 +26,7 @@ export interface AiGenerateRequest {
 	userId?: string | null;
 	inputSource?: 'manual' | 'auto';
 	proposalPoint?: string;
+	discussionSummary?: string | null;
 	chatHistory?: AiChatMessage[];
 	latestUserMessage?: string | null;
 	ragContext?: string;
