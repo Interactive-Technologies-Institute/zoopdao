@@ -510,6 +510,39 @@
 		}))
 	);
 
+	const userPromptUsedCountRound7 = $derived.by(() => {
+		if (!enableDiscussionChat || !chatRound) return 0;
+		discussionTimeline.messages.length;
+		const selfId = String(data.playerId);
+		return discussionTimeline.messages.filter((msg) => {
+			if (msg.round !== 7) return false;
+			if (msg.senderType !== 'human') return false;
+			if (msg.senderId !== selfId) return false;
+			if (msg.status === 'failed') return false;
+			return msg.content.trim().length > 0;
+		}).length;
+	});
+
+	const userPromptRemainingRound7 = $derived.by(() => {
+		if (!enableDiscussionChat || !chatRound) return MAX_USER_MESSAGES_ROUND7;
+		return Math.max(0, MAX_USER_MESSAGES_ROUND7 - userPromptUsedCountRound7);
+	});
+
+	const round7PromptStatusMessage = $derived.by(() => {
+		if (!enableDiscussionChat || !chatRound) return null;
+		const locale = getLocale();
+		const isPt = locale.toLowerCase().startsWith('pt');
+		const remaining = userPromptRemainingRound7;
+		if (userPromptUsedCountRound7 <= 0) {
+			return isPt
+				? `Tens ${MAX_USER_MESSAGES_ROUND7} prompts`
+				: `You have ${MAX_USER_MESSAGES_ROUND7} prompts.`;
+		}
+		return isPt
+			? `Prompts restantes: ${remaining}/${MAX_USER_MESSAGES_ROUND7}.`
+			: `Prompts left: ${remaining}/${MAX_USER_MESSAGES_ROUND7}.`;
+	});
+
 	const aiIsThinking = $derived.by(() => typingAgents.size > 0);
 	let debouncedAiIsThinking = $state(false);
 	let aiThinkingClearTimer: ReturnType<typeof setTimeout> | null = null;
@@ -855,6 +888,14 @@
 	async function handleSendMessage(message: string) {
 		try {
 			if (chatRound) {
+				const userMessageCount = discussionMessages.filter(
+					(msg) => msg.senderType === 'human' && msg.round === 7
+				).length;
+				if (userMessageCount >= MAX_USER_MESSAGES_ROUND7) {
+					alert(m.message_limit_reached());
+					return;
+				}
+
 				hasUserChattedThisRound = true;
 				// Keep the user bubble empty while the new message is being persisted,
 				// to avoid flashing the previous message between sends.
@@ -869,11 +910,7 @@
 			).length;
 			const aiMessageCount = aiMessages.filter((msg) => msg.round === currentRound).length;
 
-			if (chatRound && SINGLE_AI_MODE_ROUND7 && userMessageCount >= MAX_USER_MESSAGES_ROUND7) {
-				userIsSending = false;
-				alert(m.message_limit_reached());
-				return;
-			}
+			// (Round 7 prompt quota is enforced above.)
 
 			// Optimistic UI: show immediately in timeline/history (even if the history dialog is open).
 			const clientTempId = addOptimisticHumanMessage(message);
@@ -1124,7 +1161,11 @@
 <div class="w-screen h-[100dvh] relative">
 	<AssemblyMap layout={aquariumLayout} />
 	<RoundIndicator rounds={gameState.rounds} currentRound={gameState.currentRound} />
-	<StatusPill playerState={currentPlayerState} currentRound={gameState.currentRound} />
+	<StatusPill
+		playerState={currentPlayerState}
+		currentRound={gameState.currentRound}
+		round7WritingMessage={round7PromptStatusMessage}
+	/>
 	<ProposalDialog bind:open={openProposalDialog} proposalId={data.proposalId ?? null} />
 
 	{#if !chatRound}
@@ -1209,8 +1250,16 @@
 				disabled={!tourCompleted}
 				historyDisabled={!tourCompleted}
 				documentsDisabled={!tourCompleted}
-				inputDisabled={!tourCompleted || debouncedAiIsThinking}
-				lockedPlaceholder={debouncedAiIsThinking ? m.discussion_waiting_placeholder() : null}
+				inputDisabled={!tourCompleted || debouncedAiIsThinking || userPromptRemainingRound7 <= 0}
+				lockedPlaceholder={
+					userPromptRemainingRound7 <= 0
+						? getLocale() === 'pt'
+							? 'Sem prompts restantes.'
+							: 'No prompts left.'
+						: debouncedAiIsThinking
+							? m.discussion_waiting_placeholder()
+							: null
+				}
 			/>
 			<button
 				type="button"

@@ -119,14 +119,18 @@
 		<div class="mt-1 flex flex-col items-center max-w-[120px] md:max-w-[140px]">
 			{#if displayName}
 				<div class="text-xs font-semibold text-deep-teal text-center truncate w-full" title={displayName}>
-					{displayName}
+					<span class="inline-block rounded-full bg-white/45 px-2 py-[1px] shadow-sm">
+						{displayName}
+					</span>
 				</div>
 			{/if}
 			<div
 				class="text-[11px] md:text-xs leading-tight text-gray-600 text-center whitespace-normal break-words line-clamp-2 min-h-[1.4rem]"
 				title={displayRole}
 			>
-				{displayRole}
+				<span class="inline-block rounded-full bg-white/40 px-2 py-[1px] shadow-sm">
+					{displayRole}
+				</span>
 			</div>
 		</div>
 	</div>

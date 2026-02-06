@@ -6,6 +6,13 @@
 	import { onMount } from 'svelte';
 	import type { AquariumLayoutState } from '@/state/aquarium-layout.svelte';
 	import { SHOW_ONLY_USER_AVATAR_ROUNDS_0_TO_6 } from '$lib/config/feature-flags';
+	import {
+		SHOW_AI_AVATAR_BOTTOM_LEFT,
+		SHOW_AI_AVATAR_TOP_LEFT,
+		SHOW_AI_AVATAR_TOP_MID,
+		SHOW_AI_AVATAR_TOP_RIGHT,
+		SHOW_AI_AVATAR_BOTTOM_RIGHT
+	} from '$lib/config/feature-flags';
 
 	interface ParticipantsContainerProps {
 		participants: Participant[];
@@ -83,22 +90,67 @@
 		return () => window.removeEventListener('resize', updateViewport);
 	});
 
-	const visibleParticipants = $derived.by(() => {
-		if (!SHOW_ONLY_USER_AVATAR_ROUNDS_0_TO_6) return participants;
-		if (currentRound < 0 || currentRound > 6) return participants;
+	const primaryHumanPlayerId = $derived.by(() => {
+		if (typeof currentPlayerId === 'number') return currentPlayerId;
+		const firstHuman = participants.find((p) => p.type === 'human');
+		return firstHuman?.type === 'human' ? firstHuman.player.id : null;
+	});
 
-		if (typeof currentPlayerId === 'number') {
-			const found = participants.find((p) => p.type === 'human' && p.player.id === currentPlayerId);
-			if (found) return [found];
+	function isAiVisibleByRole(role: string | null | undefined) {
+		switch (role) {
+			case 'administration':
+				return SHOW_AI_AVATAR_BOTTOM_LEFT;
+			case 'research':
+				return SHOW_AI_AVATAR_TOP_LEFT;
+			case 'reception':
+				return SHOW_AI_AVATAR_TOP_MID;
+			case 'operations':
+				return SHOW_AI_AVATAR_TOP_RIGHT;
+			case 'bar':
+				return SHOW_AI_AVATAR_BOTTOM_RIGHT;
+			case 'cleaning':
+				// No stable "slot" in the standard layout; keep visible by default.
+				return true;
+			default:
+				return true;
+		}
+	}
+
+	function isParticipantVisible(participant: Participant) {
+		const isPrimaryHuman =
+			participant.type === 'human' &&
+			primaryHumanPlayerId !== null &&
+			participant.player.id === primaryHumanPlayerId;
+
+		// The current user is always visible in all rounds.
+		if (isPrimaryHuman) return true;
+
+		// Round 0..6: show ONLY the current user.
+		if (SHOW_ONLY_USER_AVATAR_ROUNDS_0_TO_6 && currentRound >= 0 && currentRound <= 6) {
+			return false;
 		}
 
-		const firstHuman = participants.find((p) => p.type === 'human');
-		return firstHuman ? [firstHuman] : [];
+		// Round 7: show ONLY the top-mid avatar (Aquari / reception) plus the user.
+		if (currentRound === 7) {
+			return participant.type === 'ai' && participant.agent.role === 'reception';
+		}
+
+		// Default: show all humans + configured AI slots.
+		if (participant.type === 'ai') return isAiVisibleByRole(participant.agent.role);
+		return true;
+	}
+
+	const visibleCount = $derived.by(() => {
+		let count = 0;
+		for (const participant of participants) {
+			if (isParticipantVisible(participant)) count += 1;
+		}
+		return count;
 	});
 
 	$effect(() => {
 		// Remeasure when the set of badges or their content changes.
-		visibleParticipants.length;
+		visibleCount;
 		currentRound;
 		aiMessages.length;
 		transitionState;
@@ -107,16 +159,15 @@
 
 	// Find index of current player in participants array
 	const currentPlayerIndex = $derived.by(() => {
-		if (visibleParticipants.length <= 1) return 0;
 		if (currentPlayerId === undefined) {
-			const firstHuman = visibleParticipants.findIndex(p => p.type === 'human');
+			const firstHuman = participants.findIndex(p => p.type === 'human');
 			return firstHuman >= 0 ? firstHuman : 0;
 		}
-		const idx = visibleParticipants.findIndex(
+		const idx = participants.findIndex(
 			p => p.type === 'human' && p.player.id === currentPlayerId
 		);
 		if (idx >= 0) return idx;
-		const fallbackHuman = visibleParticipants.findIndex(p => p.type === 'human');
+		const fallbackHuman = participants.findIndex(p => p.type === 'human');
 		return fallbackHuman >= 0 ? fallbackHuman : 0;
 	});
 
@@ -176,7 +227,7 @@
 
 	const positions = $derived(
 		calculateAquariumPositions(
-			visibleParticipants.length, 
+			participants.length, 
 			currentPlayerIndex >= 0 ? currentPlayerIndex : 0,
 			layoutWidth,
 			layoutHeight,
@@ -194,60 +245,62 @@
 <!-- Participants positioned around aquarium table (centered on screen) -->
 <div class="fixed inset-0 w-screen h-screen z-10 overflow-visible">
 	<div bind:this={containerEl} class="relative w-full h-full overflow-visible pointer-events-none">
-		{#each visibleParticipants as participant, index (participant.type === 'human' ? `human-${participant.player.id}` : `ai-${participant.agent.id}`)}
-			{@const position = positions[index]}
-			{@const inlineStyle = `left: ${position.xPx}px; top: ${position.yPx}px; transform: translate(-50%, -50%);`}
-			
-			{@const isCurrent = participant.type === 'human' && participant.player.id === currentPlayerId}
-			{@const angleRad = (position.angle * Math.PI) / 180}
-			{@const cos = Math.cos(angleRad)}
-			{@const bubbleSide = isCurrent
-				? 'right'
-				: cos > 0.25
-					? 'left'
-					: cos < -0.25
-						? 'right'
-						: 'right'}
-			<div class="participant-slot absolute z-20 overflow-visible pointer-events-auto" style="{inlineStyle}">
-				{#if participant.type === 'human'}
-					{@const isCurrent = participant.player.id === currentPlayerId}
-					<PlayerBadge
-						player={participant.player}
-						playerState={playersState[participant.player.id] || { state: 'done' }}
-						round={currentRound}
-						currentRound={currentRound}
-						{tourCompleted}
-						{transitionState}
-						isCurrentPlayer={isCurrent}
-						chatIsTyping={isCurrent ? userChatIsTyping : false}
-						chatDraft={isCurrent ? userChatDraft : ''}
-						chatMessage={isCurrent ? userChatMessage : null}
-						chatIsSending={isCurrent ? userChatIsSending : false}
-						previewOpen={isCurrent ? previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.open ?? false : false}
-						previewRank={isCurrent ? previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.rank ?? 0 : 0}
-						bubbleSide={bubbleSide}
-						chatBoundsRect={chatBoundsRect}
-						aquariumCenter={aquariumCenter}
-						maxBubbleDiameter={maxBubbleDiameter}
-					/>
-				{:else}
-					{@const agentMessages = aiMessages.filter(msg => msg.agent_id === participant.agent.id)}
-					<AIAgent
-						agent={participant.agent}
-						messages={agentMessages}
-						latestMessage={latestAiMessageById[participant.agent.id] ?? ''}
-						previewOpen={previewStateBySender[participant.agent.id]?.open ?? false}
-						previewRank={previewStateBySender[participant.agent.id]?.rank ?? 0}
-						round={currentRound}
-						isActive={agentMessages.some(msg => msg.round === currentRound)}
-						isTyping={typingAgents.has(participant.agent.id)}
-						bubbleSide={bubbleSide}
-						chatBoundsRect={chatBoundsRect}
-						aquariumCenter={aquariumCenter}
-						maxBubbleDiameter={maxBubbleDiameter}
-					/>
-				{/if}
-			</div>
+		{#each participants as participant, index (participant.type === 'human' ? `human-${participant.player.id}` : `ai-${participant.agent.id}`)}
+			{#if isParticipantVisible(participant)}
+				{@const position = positions[index]}
+				{@const inlineStyle = `left: ${position.xPx}px; top: ${position.yPx}px; transform: translate(-50%, -50%);`}
+				
+				{@const isCurrent = participant.type === 'human' && participant.player.id === currentPlayerId}
+				{@const angleRad = (position.angle * Math.PI) / 180}
+				{@const cos = Math.cos(angleRad)}
+				{@const bubbleSide = isCurrent
+					? 'right'
+					: cos > 0.25
+						? 'left'
+						: cos < -0.25
+							? 'right'
+							: 'right'}
+				<div class="participant-slot absolute z-20 overflow-visible pointer-events-auto" style="{inlineStyle}">
+					{#if participant.type === 'human'}
+						{@const isCurrent = participant.player.id === currentPlayerId}
+						<PlayerBadge
+							player={participant.player}
+							playerState={playersState[participant.player.id] || { state: 'done' }}
+							round={currentRound}
+							currentRound={currentRound}
+							{tourCompleted}
+							{transitionState}
+							isCurrentPlayer={isCurrent}
+							chatIsTyping={isCurrent ? userChatIsTyping : false}
+							chatDraft={isCurrent ? userChatDraft : ''}
+							chatMessage={isCurrent ? userChatMessage : null}
+							chatIsSending={isCurrent ? userChatIsSending : false}
+							previewOpen={isCurrent ? previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.open ?? false : false}
+							previewRank={isCurrent ? previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.rank ?? 0 : 0}
+							bubbleSide={bubbleSide}
+							chatBoundsRect={chatBoundsRect}
+							aquariumCenter={aquariumCenter}
+							maxBubbleDiameter={maxBubbleDiameter}
+						/>
+					{:else}
+						{@const agentMessages = aiMessages.filter(msg => msg.agent_id === participant.agent.id)}
+						<AIAgent
+							agent={participant.agent}
+							messages={agentMessages}
+							latestMessage={latestAiMessageById[participant.agent.id] ?? ''}
+							previewOpen={previewStateBySender[participant.agent.id]?.open ?? false}
+							previewRank={previewStateBySender[participant.agent.id]?.rank ?? 0}
+							round={currentRound}
+							isActive={agentMessages.some(msg => msg.round === currentRound)}
+							isTyping={typingAgents.has(participant.agent.id)}
+							bubbleSide={bubbleSide}
+							chatBoundsRect={chatBoundsRect}
+							aquariumCenter={aquariumCenter}
+							maxBubbleDiameter={maxBubbleDiameter}
+						/>
+					{/if}
+				</div>
+			{/if}
 		{/each}
 	</div>
 </div>

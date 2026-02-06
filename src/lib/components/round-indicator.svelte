@@ -103,6 +103,9 @@
 			<p class="text-xl md:text-2xl text-deep-teal font-medium text-center">
 				{getTranslation(ROUNDS[currentRound]?.title)}
 			</p>
+			{#if currentRound === 7}
+				<p class="text-center text-text">{m.pill_round_7()}</p>
+			{/if}
 		</div>
 	{/if}
 </div>

@@ -6,9 +6,10 @@
 	interface StatusPillProps {
 		playerState: PlayerState;
 		currentRound: number;
+		round7WritingMessage?: string | null;
 	}
 
-	let { playerState, currentRound }: StatusPillProps = $props();
+	let { playerState, currentRound, round7WritingMessage = null }: StatusPillProps = $props();
 
 	function getWritingMessage(round: number) {
 		switch (round) {
@@ -25,7 +26,9 @@
 			case 6:
 				return m.pill_round_6();
 			case 7:
-				return m.pill_round_7();
+				return round7WritingMessage && round7WritingMessage.trim().length > 0
+					? round7WritingMessage
+					: m.pill_round_7();
 			default:
 				return m.write_next_part();
 		}
