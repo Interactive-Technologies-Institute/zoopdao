@@ -5,6 +5,7 @@
 	import { calculateAquariumPositions } from '@/utils/participants';
 	import { onMount } from 'svelte';
 	import type { AquariumLayoutState } from '@/state/aquarium-layout.svelte';
+	import { SHOW_ONLY_USER_AVATAR_ROUNDS_0_TO_6 } from '$lib/config/feature-flags';
 
 	interface ParticipantsContainerProps {
 		participants: Participant[];
@@ -82,9 +83,22 @@
 		return () => window.removeEventListener('resize', updateViewport);
 	});
 
+	const visibleParticipants = $derived.by(() => {
+		if (!SHOW_ONLY_USER_AVATAR_ROUNDS_0_TO_6) return participants;
+		if (currentRound < 0 || currentRound > 6) return participants;
+
+		if (typeof currentPlayerId === 'number') {
+			const found = participants.find((p) => p.type === 'human' && p.player.id === currentPlayerId);
+			if (found) return [found];
+		}
+
+		const firstHuman = participants.find((p) => p.type === 'human');
+		return firstHuman ? [firstHuman] : [];
+	});
+
 	$effect(() => {
 		// Remeasure when the set of badges or their content changes.
-		participants.length;
+		visibleParticipants.length;
 		currentRound;
 		aiMessages.length;
 		transitionState;
@@ -93,15 +107,16 @@
 
 	// Find index of current player in participants array
 	const currentPlayerIndex = $derived.by(() => {
+		if (visibleParticipants.length <= 1) return 0;
 		if (currentPlayerId === undefined) {
-			const firstHuman = participants.findIndex(p => p.type === 'human');
+			const firstHuman = visibleParticipants.findIndex(p => p.type === 'human');
 			return firstHuman >= 0 ? firstHuman : 0;
 		}
-		const idx = participants.findIndex(
+		const idx = visibleParticipants.findIndex(
 			p => p.type === 'human' && p.player.id === currentPlayerId
 		);
 		if (idx >= 0) return idx;
-		const fallbackHuman = participants.findIndex(p => p.type === 'human');
+		const fallbackHuman = visibleParticipants.findIndex(p => p.type === 'human');
 		return fallbackHuman >= 0 ? fallbackHuman : 0;
 	});
 
@@ -161,7 +176,7 @@
 
 	const positions = $derived(
 		calculateAquariumPositions(
-			participants.length, 
+			visibleParticipants.length, 
 			currentPlayerIndex >= 0 ? currentPlayerIndex : 0,
 			layoutWidth,
 			layoutHeight,
@@ -179,7 +194,7 @@
 <!-- Participants positioned around aquarium table (centered on screen) -->
 <div class="fixed inset-0 w-screen h-screen z-10 overflow-visible">
 	<div bind:this={containerEl} class="relative w-full h-full overflow-visible pointer-events-none">
-		{#each participants as participant, index (participant.type === 'human' ? `human-${participant.player.id}` : `ai-${participant.agent.id}`)}
+		{#each visibleParticipants as participant, index (participant.type === 'human' ? `human-${participant.player.id}` : `ai-${participant.agent.id}`)}
 			{@const position = positions[index]}
 			{@const inlineStyle = `left: ${position.xPx}px; top: ${position.yPx}px; transform: translate(-50%, -50%);`}
 			
