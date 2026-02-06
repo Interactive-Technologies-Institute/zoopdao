@@ -1706,102 +1706,151 @@ e) Add limits per proposal/round to prevent runaway storage costs.
 
 ---
 
-## ZD-182: Epic — Add per-round AI assistant button (one-sentence question, max 3 per round)
+## ZD-182: Epic — Rounds 1–6 AI assistant button + Round 7 batch AI discussion (one-sentence outputs, bounded context, trust guardrails)
 
 **Overview:**
-Add an AI assistant button near the submit button to help the user think about the current proposal point in each round. The assistant returns exactly one sentence question and is limited to a maximum of 3 questions per round, with the button text showing how many are left.
+Add an AI assistant button near the submit button to help the user think about the current proposal point in each round **from Round 1 to Round 6**. The assistant returns exactly **one sentence question** and is limited to a maximum of **3 questions per round**, with the button text showing how many are left.
+In **Round 7**, the assembly discussion with AI agents must be context-aware and safe against exploding context size by using a **single batch API response (JSON)** plus **bounded context techniques** (rolling stored summary + recent window + optional RAG).
 
 **Goal:**
-Help users reflect on the proposal point without generating their message, and prevent spam by limiting prompts per round.
+Help users reflect on the proposal point (Rounds 1–6) without generating their message, prevent spam by limiting prompts per round, and keep Round 7 AI discussion grounded in the correct proposal point and latest context without context blowups, injection, or malformed outputs.
 
 **Description:**
-a) Add a UI button near the submit button to request an “AI question”.
-b) Enforce “one sentence question only” output.
-c) Enforce per-round limit: max 3 AI questions per round per user/session.
-d) Update button label to indicate remaining questions (e.g., “AI question (2 left)”).
-e) Disable/hide the button when no questions remain, and reset counts when the round changes.
+a) Add a UI button near submit to request an “AI question” **only in Rounds 1–6** (writing rounds).  
+b) Enforce “one sentence question only” output (prompt + validation).  
+c) Enforce per-round limit: max 3 AI questions per round per user (server-side, persisted).  
+d) Update button label to indicate remaining questions (e.g., “AI question (2 left)”).  
+e) Disable/hide the button when no questions remain, and reset counts when the round changes.  
+f) Ensure assistant prompts include context: organization/place + user label/role + “facilitator role” + current round proposal point.  
+g) In Round 7, replace per-agent UI calls with a **single batch API request** that returns all agents’ replies as **JSON**, already generated.  
+h) In Round 7, use bounded context: proposal context + recent chat history window; if context is too large, include a **rolling stored summary** + last N recent messages.  
+i) Optionally include **RAG context** from uploaded files (Round 7) scoped to the current proposal and user.  
+j) Add trust guardrails: prompt-injection resistance (treat user/RAG content as untrusted), strict output validation (one sentence + JSON schema), bounded prompt budgets, and safe fallbacks.  
+k) Add observability: requestId per call, latency/error tracking, prompt-size metrics, validation-failure metrics (no raw user text logged in prod).  
+l) Add testing: unit + integration + e2e + red-team injection fixtures for assistant + batch endpoints.
 
 **Acceptance Criteria:**
 
-1. Button is available near submit during rounds with discussion input.
-2. Each click returns exactly one sentence question relevant to the current round’s proposal point.
-3. The user can request at most 3 questions per round; after that the control is disabled/hidden.
+1. Button is available near submit during Rounds **1–6** when the user is writing, and not shown in Round 0 or Round 7.
+2. Each click returns exactly one sentence **question** relevant to the current round’s proposal point and user role.
+3. The user can request at most 3 questions per round; the 4th request is blocked server-side with a clear limit-reached response.
 4. Button text always indicates remaining questions for the current round.
+5. Assistant prompts include organization/place context + user label/role + facilitator framing + current proposal point.
+6. Round 7 AI replies are retrieved via **one** batch API request that returns **JSON** replies for all agents, and the UI only schedules/renders them on the correct avatars.
+7. Round 7 prompts include proposal context + bounded discussion context (summary + recent messages) and optionally RAG.
+8. Prompt size is bounded and does not cause provider errors.
+9. Output validation is enforced: assistant always returns one-sentence `?`; batch always returns valid JSON (partial errors allowed).
+10. Injection resistance exists: user/RAG content is treated as untrusted and cannot override system instructions.
 
 **Completion Criteria:**
 
-1. Limit logic is verified by requesting 3 questions, then confirming the 4th is blocked.
-2. Round change resets the remaining questions counter.
+1. Rounds 1–6: 3 assistant requests succeed, 4th is blocked; round change resets remaining to 3.
+2. Round 7: batch API returns JSON for all agents and UI renders/schedules correctly.
+3. Manual verification across two different proposal contexts shows AI output changes when proposal point/history changes.
+4. Manual verification confirms summary is used when history grows, without provider errors.
+5. Tests added and passing: unit + integration + e2e + red-team injection fixtures.
+
+**Functions Diagram Flow (ZD‑182):**
+```mermaid
+flowchart TD
+  A[UI: story-dialog.svelte (Rounds 1-6)] --> B[Click "AI question"]
+  B --> C[POST /api/ai/assistant]
+  C --> D[Validate request + claim quota (3/round)]
+  D --> E[Build assistant context: org/place + user + proposal point]
+  E --> F[Generate one-sentence question]
+  F --> G[Validate output + fallback if needed]
+  G --> H[Return JSON: question + remaining + requestId]
+  H --> I[Update UI label / disable at 0]
+
+  J[UI: assembly/+page.svelte (Round 7)] --> K[User sends message]
+  K --> L[POST /api/ai/messages/batch]
+  L --> M[Build context: proposal + rolling summary + recent history + optional RAG]
+  M --> N[Generate replies for all agents]
+  N --> O[Validate JSON + per-message constraints + fallback per-agent if needed]
+  O --> P[Persist AI messages]
+  P --> Q[Return JSON array: agent->message (+ errors)]
+  Q --> R[UI schedules + routes messages to avatars]
+```
 
 ---
 
-## ZD-182a: Implement assistant button UI with remaining-questions label and per-round counter
+## ZD-182a: Implement assistant button UI with remaining-questions label and per-round counter (Rounds 1–6 only)
 
 **Overview:**
-Implement the UI behavior for the assistant button, including remaining questions display and per-round limits.
+Implement the UI behavior for the assistant button, including remaining questions display and per-round limits for Rounds 1–6.
 
 **Goal:**
-Make the assistant interaction clear and self-limiting in the UI.
+Make the assistant interaction clear, discoverable, and self-limiting in the UI without interrupting the user’s writing flow.
 
 **Description:**
-a) Add the assistant button near submit and render remaining count in the label.
-b) Track per-round usage count and remaining questions (max 3).
-c) Disable/hide the button when remaining reaches 0.
-d) Reset count when the round changes.
+a) Add the assistant button near submit (Rounds 1–6 only) and render remaining count in the label (e.g., “AI question (2 left)”).  
+b) Display the returned question in the UI (non-destructive; does not edit the user’s input).  
+c) Track per-round usage and remaining questions in UI state, but treat the server response as the source of truth.  
+d) Disable/hide at 0 remaining; reset on round change.  
+e) Show loading state; handle limit-reached and error states gracefully.  
 
 **Acceptance Criteria:**
 
-1. Button label updates after each use to reflect remaining questions.
-2. Button disables/hides at 0 remaining and resets on round change.
+1. Button only appears for the current round when writing and round is 1–6.
+2. Label updates after each success to reflect remaining; disables/hides at 0.
+3. UI stays responsive while request is in flight.
+4. If API says limit reached, UI immediately reflects 0 remaining.
 
 **Completion Criteria:**
 
-1. Manual verification confirms the per-round counter behaves correctly.
+1. Manual verification confirms UI counter/reset behavior and error handling.
 
 ---
 
-## ZD-182b: Create assistant API endpoint (one-sentence question only) with per-round limit enforcement
+## ZD-182b: Create assistant API endpoint (one-sentence question only) with per-round limit enforcement (Rounds 1–6)
 
 **Overview:**
-Implement the server endpoint that returns a single-sentence question and enforces the per-round maximum.
+Implement `POST /api/ai/assistant` returning a single-sentence question and enforcing max 3 per round server-side.
 
 **Goal:**
-Provide safe, consistent assistant questions and enforce limits server-side.
+Provide safe, consistent assistant questions grounded in proposal point + organization/place + user role context, and enforce limits robustly.
 
 **Description:**
-a) Create/extend API endpoint to generate one-sentence questions based on proposal point + round context.
-b) Enforce output constraint (exactly one sentence; trim and validate).
-c) Enforce max 3 questions per round (server-side), returning a clear “limit reached” response.
-d) Keep the response shape stable for UI consumption.
+a) Add `POST /api/ai/assistant` with a stable JSON response `{ success, question, remaining, limitReached, requestId }`.  
+b) Validate request payload; reject invalid rounds (must be 1–6).  
+c) Enforce output: exactly one sentence question ending with `?`; trim/validate; retry once; fallback question if still invalid.  
+d) Enforce max 3 per `(game_id, user_id, round)` using a new Supabase table + atomic claim (RPC or transaction).  
+e) Build prompts server-side only (do not accept client-supplied system prompts).  
+f) Add injection resistance: treat proposal/user inputs as untrusted content in the prompt.  
 
 **Acceptance Criteria:**
 
-1. Endpoint returns exactly one sentence question per request.
-2. 4th request in the same round returns a limit-reached response and does not generate a new question.
+1. Returns exactly one sentence question per request (ends with `?`).
+2. 4th request in same round is blocked with `limitReached=true` and `remaining=0`.
+3. Remaining count matches UI behavior across reloads.
+4. Endpoint emits requestId + basic metrics (no raw user text logged in prod).
 
 **Completion Criteria:**
 
-1. Manual verification confirms both the one-sentence constraint and the per-round limit.
+1. Manual verification confirms one-sentence + limit logic.
+2. Unit/integration tests cover quota enforcement + output validation + injection fixture.
 
 ---
 
-## ZD-182c: Make assistant round-aware and optionally RAG-aware (still one sentence)
+## ZD-182c: Make assistant (Rounds 1–6) and Round 7 discussion generation round-aware and optionally RAG-aware (still one sentence)
 
 **Overview:**
-Improve relevance of the assistant question by incorporating round context and (optionally) retrieved document chunks when available, while still returning only one sentence.
+Improve relevance by incorporating round context consistently; in Round 7, optionally include RAG context from uploaded files, while keeping outputs one sentence.
 
 **Goal:**
-Generate higher-quality, grounded questions without changing the one-sentence constraint.
+Higher-quality, grounded one-sentence outputs without increasing context risk.
 
 **Description:**
-a) Include round number, proposal point, and recent user/AI messages as context.
-b) Optionally fetch RAG context (from ZD-181d) for the same proposal/round and use it as supporting context.
-c) Ensure the final output is still exactly one sentence question.
+a) Assistant (Rounds 1–6): include round number + current proposal point + org/place + user label/role + “ask a question only” facilitator framing.  
+b) Round 7: include proposal context + rolling summary + recent message window in generation context.  
+c) Round 7: optionally fetch RAG context (from uploaded files) and include it as supporting context (bounded).  
+d) Ensure output remains one sentence and does not leak other proposals/rounds/users.  
 
 **Acceptance Criteria:**
 
-1. Questions are clearly related to the current round’s proposal point.
+1. Outputs are clearly related to the current proposal point and the user’s role context.
 2. Output remains one sentence even when RAG context exists.
+3. RAG is scoped to current proposal/round/user.
 
 **Completion Criteria:**
 
@@ -1809,40 +1858,200 @@ c) Ensure the final output is still exactly one sentence question.
 
 ---
 
-## ZD-182d: Add proposal-point context + message history to AI prompts (assembly + assistant)
+## ZD-182d: Add proposal-point context + bounded discussion context + place/org/user framing to AI prompts (assistant + assembly batch)
 
 **Overview:**
-Provide richer context to all AI generations by including the current round’s proposal point(s) and the relevant discussion message history, so AI responses stay aligned with what is being discussed.
+Provide richer, correct context to all AI generations by including proposal point + bounded discussion context + place/org/user framing.
 
 **Goal:**
-Ensure AI outputs (assistant questions and assembly AI messages) are grounded in the correct proposal point and the latest conversation context, without requiring manual copy/paste by the user.
+Keep AI aligned with what’s being discussed, who is speaking, and where (assembly/org), without manual copy/paste or context blowups.
 
 **Description:**
-a) Define the “context payload” needed by AI prompts: proposal id, round number, current proposal point text (and id), prior proposal points (optional), and recent discussion messages (user + AI).
-b) Add/confirm backend query to fetch the current round proposal point(s) for a given proposal/round (and ensure it matches what the UI is showing).
-c) Add/confirm backend query to fetch recent messages scoped by `game_id` + `round` (and optionally a configurable window, e.g. last 20 messages).
-d) Update AI prompt builder(s) to include:
-
-- Current proposal point text (primary)
-- Short “history window” of recent messages (role-tagged: user vs AI, agent name/id)
-- Any required round metadata (pedagogic vs other modes)
-  e) Ensure payload limits are safe (truncate by token/char budget; avoid exceeding provider limits).
-  f) Ensure consistency across call sites: the assistant endpoint and the assembly AI endpoint use the same context builder (single source of truth).
-  g) Modules/scripts to review: `src/routes/api/ai/+server.ts`, `src/routes/api/ai/messages/+server.ts`, message history fetch utilities, proposal/round point retrieval, prompt builder utilities.
+a) Define shared context payload: org/place, user label/role, round, current proposal point text, bounded discussion context (summary + recent messages), and optional RAG.  
+b) Ensure proposal-point mapping matches UI (single source of truth).  
+c) Ensure message history is scoped by `game_id` and round boundary and ordered correctly.  
+d) Ensure prompt size is bounded; prefer summary + recent window when needed.  
+e) Do not accept client-supplied system prompts; server builds system prompts.  
+f) Ensure assistant + batch use the same context builder.  
 
 **Acceptance Criteria:**
 
-1. AI requests include the current round’s proposal point text and recent message history.
-2. AI outputs are visibly aligned with the current proposal point in Round 7 and reflect the latest discussion context.
-3. Message history included is correctly ordered and scoped (no leaking other games/rounds).
-4. Prompt size is bounded (no provider errors due to oversized context).
+1. AI requests include correct proposal point + bounded context + org/user framing.
+2. No message leaking across games/rounds/users.
+3. Prompt size bounded without provider errors.
 
 **Completion Criteria:**
 
-1. Manual verification with at least two rounds confirms AI responses change appropriately when proposal point or history changes.
+1. Manual verification across two scenarios shows outputs change with proposal point/history changes.
 
 ---
 
+## ZD-182e: Create shared proposal-point mapping helper (single source of truth)
+
+**Overview:**
+Extract proposal-point mapping into a shared helper so UI and server compute the same round context.
+
+**Goal:**
+Prevent proposal-point mismatches between UI display and AI prompt context.
+
+**Description:**
+a) Create a shared helper to normalize objectives and map rounds to proposal text.  
+b) Ensure mapping uses the same fields the UI displays (`value`, `preconditions[].value`, `indicativeSteps[].value`, `keyIndicators[].value`).  
+c) Replace ad-hoc proposal-point mapping in UI and server with the helper.  
+
+**Acceptance Criteria:**
+
+1. Proposal-point text used by AI matches what the UI displays for each round.
+2. Mapping works when objectives are stored as JSON strings.
+
+**Completion Criteria:**
+
+1. Unit tests cover proposal-point mapping for all rounds used by assistant and Round 7.
+
+---
+
+## ZD-182f: Add message history retrieval + rolling summary storage for AI context (Round 7)
+
+**Overview:**
+Add utilities and storage to fetch recent messages and maintain rolling summary per game/round.
+
+**Goal:**
+Stop context growth from breaking AI prompts in Round 7 and reduce hallucination drift via provenance.
+
+**Description:**
+a) Fetch the most recent N discussion messages for a game/round, ordered chronologically for prompting.  
+b) Add `discussion_round_summaries` table keyed by `(game_id, round)` with `summary` + `last_message_id` provenance.  
+c) Update summary only when needed (threshold exceeded or after N new messages).  
+d) Summary prompt must be faithful: summarize only what participants stated; preserve uncertainty/disagreements; no new facts.  
+
+**Acceptance Criteria:**
+
+1. History is ordered correctly and scoped.
+2. Summary is reused and updated incrementally with provenance.
+3. Summary does not contain new facts not present in messages (best-effort via prompt + review).
+
+**Completion Criteria:**
+
+1. Integration tests confirm summary update triggers and provenance updates.
+
+---
+
+## ZD-182g: Build shared AI context builder for assistant + assembly batch endpoint
+
+**Overview:**
+Create a server-side context builder assembling proposal point + (Round 7) summary + recent history + optional RAG under fixed budgets.
+
+**Goal:**
+Single source of truth for AI input context across endpoints.
+
+**Description:**
+a) Build context payload in one place for both assistant and batch.  
+b) Apply deterministic budgets per section (proposal point, summary, recent history, RAG).  
+c) Return structured payload used by `/api/ai/assistant` and `/api/ai/messages/batch`.  
+
+**Acceptance Criteria:**
+
+1. Both endpoints use identical context rules (only round-specific differences).
+2. Context is bounded and stable (no provider errors due to size).
+3. Context includes org/place + user role framing.
+
+**Completion Criteria:**
+
+1. Unit tests validate budget/truncation logic and scoping.
+
+---
+
+## ZD-182h: Add trust guardrails (injection resistance, output validation, observability, and tests)
+
+**Overview:**
+Add trust and reliability guardrails so AI outputs are safe, bounded, and debuggable.
+
+**Goal:**
+Reduce hallucination, prompt injection, malformed outputs, and silent failures.
+
+**Description:**
+a) Prompt-injection resistance: clearly delimit user/RAG content as untrusted and forbid following instructions within it.  
+b) Output validation: enforce one sentence and JSON schemas; implement retry-on-repair and safe fallback behavior.  
+c) Observability: add requestId, latency/error logs, prompt-size metrics, validation-failure counters (no raw text logs in prod).  
+d) Optional but recommended: add `ai_request_audit` table to store metadata-only request traces for debugging/regressions.  
+e) Add tests: unit + integration coverage of validators, JSON schema parsing, injection fixtures, and fallback behavior.  
+
+**Acceptance Criteria:**
+
+1. Assistant output always passes one-sentence + `?` validator or returns a safe fallback.
+2. Batch endpoint always returns valid JSON (partial errors allowed) and never breaks the UI.
+3. Observability emits requestId + metrics without logging sensitive content.
+
+**Completion Criteria:**
+
+1. Red-team injection fixtures are added and passing.
+2. Unit/integration tests cover validators and fallback paths.
+
+---
+
+## ZD-182i: Implement Round 7 batch endpoint returning JSON for all agents + wire UI scheduling
+
+**Overview:**
+Replace per-agent calls in Round 7 with a single batch request that returns all agent replies as JSON, with bounded context and safe fallbacks.
+
+**Goal:**
+Reduce client complexity, prevent repeated context shipping, centralize summarization/RAG, and improve reliability.
+
+**Description:**
+a) Add `POST /api/ai/messages/batch` that accepts `{ gameId, proposalId, round:7, userId, latestUserMessage, agents[], clientRequestId }`.  
+b) Build shared context server-side (proposal point + summary + recent + optional RAG) and enforce budgets.  
+c) Generate replies for all agents and return JSON array; validate each message is one sentence and role-aligned.  
+d) If provider output is invalid, retry once; if still invalid, fallback to per-agent generation server-side and return partial results with per-agent errors.  
+e) Persist each AI message to `discussion_messages` and return DB ids/timestamps.  
+f) Update assembly UI to call batch endpoint once and schedule rendering per avatar.  
+g) Trust hardening: prevent client spoofing AI messages by ensuring AI inserts are performed server-side (service role) and review/remove any overly permissive RLS for `ai_agent` inserts.  
+
+**Acceptance Criteria:**
+
+1. One HTTP request returns all agent replies as valid JSON.
+2. UI renders/schedules each agent’s reply on the right avatar.
+3. Messages are persisted and appear in history consistently.
+4. Summary/RAG are applied and bounded; no provider errors from oversized context.
+5. Malformed provider responses do not break the UI (fallback works).
+
+**Completion Criteria:**
+
+1. Manual verification confirms end-to-end batch flow works and is context-safe.
+2. Integration tests cover JSON parsing + fallback + persistence.
+
+---
+
+## ZD-182j: Follow-up gaps (tests, guardrails, deprecations) for ZD-182a…i
+
+**Overview:**
+Close the remaining gaps from ZD-182a…i so the epic is fully validated in CI and safe in production.
+
+**Goal:**
+Ensure the assistant + batch flows are test-covered end-to-end, injection-hardened, and consistent with the new batch architecture.
+
+**Description:**
+a) Add red-team injection fixtures (user + RAG) to validate prompt-injection resistance and fallback behavior.  
+b) Add Playwright E2E coverage for: Rounds 1–6 assistant usage (3 ok, 4th blocked, reset), and Round 7 batch flow (single request, sequential avatar rendering).  
+c) Add an integration test for rolling summary persistence using a real DB fixture (verify summary triggers & last_message_id updates).  
+d) Validate prompt budgets against provider max limits and add explicit assertions for max tokens/length.  
+e) Deprecate or gate the legacy per-agent endpoint `/api/ai/messages` to avoid accidental usage and confusion (documented deprecation or feature flag).  
+f) Add a short test/CI check that ensures assistant and batch always use the shared proposal-point mapping helper.
+
+**Acceptance Criteria:**
+
+1. Red-team tests cover injection patterns from user text and RAG chunks and demonstrate safe handling.
+2. Playwright tests verify assistant limits and Round 7 batch scheduling in the UI.
+3. Rolling summary integration test verifies DB updates and provenance (`last_message_id`).
+4. Prompt budget assertions exist and fail safely when limits would be exceeded.
+5. Legacy `/api/ai/messages` is gated or clearly deprecated with no accidental calls.
+6. Tests confirm proposal-point mapping is shared across assistant and batch.
+
+**Completion Criteria:**
+
+1. New tests pass locally and in CI.
+2. Documentation/notes clearly reference ZD-182a…i as the parent scope for this cleanup.
+
+---
 ## ZD-142 Review text and colors of Instruction pop-up
 
 **Overview:**
