@@ -91,7 +91,6 @@
 	let docLang = $state('pt');
 	let slotEl: HTMLElement | null = null;
 	const previewId = `preview-${Math.random().toString(36).slice(2)}`;
-	const isDev = typeof window !== 'undefined' && window?.location?.hostname === 'localhost';
 	let wasForcePreview = $state(false);
 	let lastForcePreview = $state(false);
 	let forcePreviewSuppressed = $state(false);
@@ -194,7 +193,10 @@
 			right: Math.min(bounds.right, viewportBounds.right),
 			bottom: Math.min(bounds.bottom, viewportBounds.bottom)
 		};
-		if (clampedBounds.right - clampedBounds.left <= 0 || clampedBounds.bottom - clampedBounds.top <= 0) {
+		if (
+			clampedBounds.right - clampedBounds.left <= 0 ||
+			clampedBounds.bottom - clampedBounds.top <= 0
+		) {
 			clampedBounds = viewportBounds;
 		}
 
@@ -273,18 +275,22 @@
 			showPreview = false;
 			closePreview(previewId);
 		});
-	return () => {
-		unregisterPreview(previewId);
-		if (slotEl) slotEl.classList.remove('is-previewing');
-	};
-});
+		return () => {
+			unregisterPreview(previewId);
+			if (slotEl) slotEl.classList.remove('is-previewing');
+		};
+	});
 
 	$effect(() => {
 		previewTick;
 		if (showPreview) {
 			const storedRank = previewRankById.get(previewId);
 			const rank =
-				typeof storedRank === 'number' ? storedRank : Number.isFinite(previewRank) ? previewRank : 0;
+				typeof storedRank === 'number'
+					? storedRank
+					: Number.isFinite(previewRank)
+						? previewRank
+						: 0;
 			previewZ = 2000 + Math.max(0, rank);
 			if (slotEl) slotEl.style.zIndex = String(1000 + Math.max(0, rank));
 			return;
@@ -358,21 +364,6 @@
 			wasForcePreview = false;
 		}
 	});
-
-	// Dev-only trace
-	$effect(() => {
-		if (!isDev) return;
-		if (!showPreview && !forcePreview) return;
-		console.info('preview-debug', {
-			id: previewId,
-			forcePreview,
-			order: Array.from(previewOrder),
-			showPreview,
-			lastText,
-			lastSeenText,
-			isExpandable
-		});
-	});
 </script>
 
 <div bind:this={rootEl} class="relative" onmouseenter={enterHover} onmouseleave={leaveHover}>
@@ -394,15 +385,19 @@
 		{#if showTyping}
 			{#if typingStyle === 'dots'}
 				<div class="flex items-center gap-1">
-					<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:0ms]"></span>
-					<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:150ms]"></span>
-					<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:300ms]"></span>
+					<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:0ms]"
+					></span>
+					<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:150ms]"
+					></span>
+					<span class="h-1.5 w-1.5 rounded-full bg-white/90 animate-bounce [animation-delay:300ms]"
+					></span>
 				</div>
 			{:else}
 				<span class="h-2 w-2 rounded-full bg-white/80 animate-pulse"></span>
 			{/if}
 		{:else}
-			<span class="px-1 text-[10px] font-semibold leading-none whitespace-nowrap overflow-hidden text-ellipsis"
+			<span
+				class="px-1 text-[10px] font-semibold leading-none whitespace-nowrap overflow-hidden text-ellipsis"
 				>{snippet(lastText)}</span
 			>
 		{/if}

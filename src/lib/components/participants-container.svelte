@@ -18,6 +18,7 @@
 		participants: Participant[];
 		playersState?: Record<number, PlayerState>;
 		aiMessages?: AIMessage[];
+		round7VisibleAiAgentIds?: string[];
 		currentRound: number;
 		tourCompleted: boolean;
 		transitionState: 'starting' | 'transitioning' | 'ending' | 'ended';
@@ -36,6 +37,7 @@
 		participants,
 		playersState = {},
 		aiMessages = [],
+		round7VisibleAiAgentIds = [],
 		currentRound,
 		tourCompleted,
 		transitionState,
@@ -56,9 +58,7 @@
 
 	function recomputeBadgeSize() {
 		if (!containerEl || typeof window === 'undefined') return;
-		const els = Array.from(
-			containerEl.querySelectorAll<HTMLElement>('[data-badge-core]')
-		);
+		const els = Array.from(containerEl.querySelectorAll<HTMLElement>('[data-badge-core]'));
 		if (els.length === 0) return;
 
 		let maxW = 0;
@@ -130,9 +130,14 @@
 			return false;
 		}
 
-		// Round 7: show ONLY the top-mid avatar (Aquari / reception) plus the user.
+		// Round 7: show the user and server-orchestrated visible AI set.
 		if (currentRound === 7) {
-			return participant.type === 'ai' && participant.agent.role === 'reception';
+			if (participant.type !== 'ai') return false;
+			const visibleSet = new Set(round7VisibleAiAgentIds);
+			if (visibleSet.size > 0) {
+				return visibleSet.has(participant.agent.id);
+			}
+			return participant.agent.role === 'reception';
 		}
 
 		// Default: show all humans + configured AI slots.
@@ -160,23 +165,19 @@
 	// Find index of current player in participants array
 	const currentPlayerIndex = $derived.by(() => {
 		if (currentPlayerId === undefined) {
-			const firstHuman = participants.findIndex(p => p.type === 'human');
+			const firstHuman = participants.findIndex((p) => p.type === 'human');
 			return firstHuman >= 0 ? firstHuman : 0;
 		}
 		const idx = participants.findIndex(
-			p => p.type === 'human' && p.player.id === currentPlayerId
+			(p) => p.type === 'human' && p.player.id === currentPlayerId
 		);
 		if (idx >= 0) return idx;
-		const fallbackHuman = participants.findIndex(p => p.type === 'human');
+		const fallbackHuman = participants.findIndex((p) => p.type === 'human');
 		return fallbackHuman >= 0 ? fallbackHuman : 0;
 	});
 
-	const layoutWidth = $derived.by(() =>
-		viewportWidth
-	);
-	const layoutHeight = $derived.by(() =>
-		viewportHeight
-	);
+	const layoutWidth = $derived.by(() => viewportWidth);
+	const layoutHeight = $derived.by(() => viewportHeight);
 	const tableRect = $derived.by(() => {
 		if (layout.tableWidth <= 0 || layout.tableHeight <= 0) return null;
 		return {
@@ -227,7 +228,7 @@
 
 	const positions = $derived(
 		calculateAquariumPositions(
-			participants.length, 
+			participants.length,
 			currentPlayerIndex >= 0 ? currentPlayerIndex : 0,
 			layoutWidth,
 			layoutHeight,
@@ -249,8 +250,9 @@
 			{#if isParticipantVisible(participant)}
 				{@const position = positions[index]}
 				{@const inlineStyle = `left: ${position.xPx}px; top: ${position.yPx}px; transform: translate(-50%, -50%);`}
-				
-				{@const isCurrent = participant.type === 'human' && participant.player.id === currentPlayerId}
+
+				{@const isCurrent =
+					participant.type === 'human' && participant.player.id === currentPlayerId}
 				{@const angleRad = (position.angle * Math.PI) / 180}
 				{@const cos = Math.cos(angleRad)}
 				{@const bubbleSide = isCurrent
@@ -260,14 +262,17 @@
 						: cos < -0.25
 							? 'right'
 							: 'right'}
-				<div class="participant-slot absolute z-20 overflow-visible pointer-events-auto" style="{inlineStyle}">
+				<div
+					class="participant-slot absolute z-20 overflow-visible pointer-events-auto"
+					style={inlineStyle}
+				>
 					{#if participant.type === 'human'}
 						{@const isCurrent = participant.player.id === currentPlayerId}
 						<PlayerBadge
 							player={participant.player}
 							playerState={playersState[participant.player.id] || { state: 'done' }}
 							round={currentRound}
-							currentRound={currentRound}
+							{currentRound}
 							{tourCompleted}
 							{transitionState}
 							isCurrentPlayer={isCurrent}
@@ -275,15 +280,23 @@
 							chatDraft={isCurrent ? userChatDraft : ''}
 							chatMessage={isCurrent ? userChatMessage : null}
 							chatIsSending={isCurrent ? userChatIsSending : false}
-							previewOpen={isCurrent ? previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.open ?? false : false}
-							previewRank={isCurrent ? previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.rank ?? 0 : 0}
-							bubbleSide={bubbleSide}
-							chatBoundsRect={chatBoundsRect}
-							aquariumCenter={aquariumCenter}
-							maxBubbleDiameter={maxBubbleDiameter}
+							previewOpen={isCurrent
+								? (previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.open ??
+									false)
+								: false}
+							previewRank={isCurrent
+								? (previewStateBySender[String(currentPlayerId ?? participant.player.id)]?.rank ??
+									0)
+								: 0}
+							{bubbleSide}
+							{chatBoundsRect}
+							{aquariumCenter}
+							{maxBubbleDiameter}
 						/>
 					{:else}
-						{@const agentMessages = aiMessages.filter(msg => msg.agent_id === participant.agent.id)}
+						{@const agentMessages = aiMessages.filter(
+							(msg) => msg.agent_id === participant.agent.id
+						)}
 						<AIAgent
 							agent={participant.agent}
 							messages={agentMessages}
@@ -291,12 +304,12 @@
 							previewOpen={previewStateBySender[participant.agent.id]?.open ?? false}
 							previewRank={previewStateBySender[participant.agent.id]?.rank ?? 0}
 							round={currentRound}
-							isActive={agentMessages.some(msg => msg.round === currentRound)}
+							isActive={agentMessages.some((msg) => msg.round === currentRound)}
 							isTyping={typingAgents.has(participant.agent.id)}
-							bubbleSide={bubbleSide}
-							chatBoundsRect={chatBoundsRect}
-							aquariumCenter={aquariumCenter}
-							maxBubbleDiameter={maxBubbleDiameter}
+							{bubbleSide}
+							{chatBoundsRect}
+							{aquariumCenter}
+							{maxBubbleDiameter}
 						/>
 					{/if}
 				</div>

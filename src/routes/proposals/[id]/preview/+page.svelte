@@ -79,6 +79,11 @@
 		{ key: 'no' as VoteChoice, label: m.vote_no(), bar: 'bg-rose-500' },
 		{ key: 'abstain' as VoteChoice, label: m.vote_abstain(), bar: 'bg-gray-500' }
 	]);
+	const longTermObjectivesLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Objetivos a longo prazo'
+			: 'Long-term goals'
+	);
 
 	function getVotingPeriodLabelById(periodId: string): string {
 		const period = allPeriods.find((p) => p.id === periodId);
@@ -430,7 +435,7 @@
 				<!-- Objectives Preview -->
 				<div>
 					<h3 class="bos-title text-lg font-semibold text-deep-teal mb-2">
-						{m.long_term_objectives()}
+						{longTermObjectivesLabel}
 					</h3>
 					<ul class="list-disc list-inside space-y-1 text-gray-700">
 						{#each proposal.objectives.slice(0, 2) as objective}
@@ -442,7 +447,7 @@
 				<!-- Functionalities Preview -->
 				<div>
 					<h3 class="bos-title text-lg font-semibold text-deep-teal mb-2">{m.functionalities()}</h3>
-					<p class="text-gray-700 line-clamp-3">{proposal.functionalities}</p>
+					<p class="text-gray-700 whitespace-pre-line">{proposal.functionalities}</p>
 				</div>
 			</div>
 

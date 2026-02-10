@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte';
 	import { m } from '@src/paraglide/messages';
+	import { getLocale } from '@src/paraglide/runtime.js';
 
 	interface Message {
 		id: string;
@@ -26,35 +27,36 @@
 	}
 
 	function formatTime(date: Date): string {
-		return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+		return date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 	}
 </script>
 
 {#if open}
 	<!-- Backdrop -->
 	<div
-		class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4"
-		on:click={handleClose}
+		class="fixed inset-x-0 top-0 bottom-[11rem] sm:bottom-[10.5rem] bg-transparent z-[120] flex items-end sm:items-center justify-center p-3 sm:p-4"
+		onclick={handleClose}
 		role="button"
 		tabindex="0"
 	>
 		<!-- Dialog Panel -->
 		<div
-			class="w-full max-w-[860px] max-h-[700px] bg-gradient-to-b from-dark-deep to-midnight bos-surface rounded-3xl shadow-2xl border border-ice/15 bos-border flex flex-col"
-			on:click={(e) => e.stopPropagation()}
+			class="w-full max-w-[860px] h-full max-h-[760px] bg-gradient-to-b from-dark-deep to-midnight bos-surface rounded-3xl shadow-2xl border border-ice/15 bos-border flex flex-col"
+			onclick={(e) => e.stopPropagation()}
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="history-title"
 		>
 			<!-- Header -->
-			<div class="bg-gradient-to-r from-charcoal to-graphite bos-surface rounded-t-3xl px-8 py-6 border-b border-ice/15 bos-border flex items-center justify-between">
+			<div class="shrink-0 bg-gradient-to-r from-charcoal to-graphite bos-surface rounded-t-3xl px-5 sm:px-8 py-5 sm:py-6 border-b border-ice/15 bos-border flex items-center justify-between gap-4">
 				<h2 id="history-title" class="text-2xl font-semibold text-white bos-text">
 					{m.message_history()}
 				</h2>
 				
 				<!-- Close Button -->
 				<button
-					on:click={handleClose}
+					type="button"
+					onclick={handleClose}
 					class="w-11 h-11 rounded-full bg-charcoal hover:bg-tertiary/40 transition-colors flex items-center justify-center border border-ice/20 bos-surface bos-border bos-text"
 					aria-label={m.close()}
 				>
@@ -63,8 +65,8 @@
 			</div>
 
 			<!-- Scrollable Content Area -->
-			<div class="flex-1 p-8 overflow-y-auto">
-				<div class="bg-dark-deep/70 bos-surface rounded-2xl p-6 border border-ice/10 bos-border min-h-[520px]">
+			<div class="history-scroll flex-1 min-h-0 p-4 sm:p-8 overflow-y-auto">
+				<div class="bg-dark-deep/70 bos-surface rounded-2xl p-4 sm:p-6 border border-ice/10 bos-border min-h-full">
 					{#if messages.length === 0}
 						<div class="flex items-center justify-center h-full text-ice/70 bos-muted">
 							<p class="text-lg">{m.no_messages_yet()}</p>
@@ -87,7 +89,7 @@
 											{message.senderName}
 										</span>
 										<span class="text-xs text-ice/60 bos-muted">
-											Round {message.round} • {formatTime(message.timestamp)}
+											{m.round()} {message.round} • {formatTime(message.timestamp)}
 										</span>
 									</div>
 
@@ -107,26 +109,26 @@
 
 <style>
 	/* Custom scrollbar styling */
-	:global(.overflow-y-auto) {
+	.history-scroll {
 		scrollbar-width: thin;
 		scrollbar-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.08);
 	}
 
-	:global(.overflow-y-auto::-webkit-scrollbar) {
+	.history-scroll::-webkit-scrollbar {
 		width: 8px;
 	}
 
-	:global(.overflow-y-auto::-webkit-scrollbar-track) {
+	.history-scroll::-webkit-scrollbar-track {
 		background: rgba(255, 255, 255, 0.08);
 		border-radius: 4px;
 	}
 
-	:global(.overflow-y-auto::-webkit-scrollbar-thumb) {
+	.history-scroll::-webkit-scrollbar-thumb {
 		background: rgba(255, 255, 255, 0.22);
 		border-radius: 4px;
 	}
 
-	:global(.overflow-y-auto::-webkit-scrollbar-thumb:hover) {
+	.history-scroll::-webkit-scrollbar-thumb:hover {
 		background: rgba(255, 255, 255, 0.32);
 	}
 </style>

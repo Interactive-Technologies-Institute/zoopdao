@@ -3,7 +3,6 @@
 	import { Button } from './ui/button';
 	import { m } from '@src/paraglide/messages';
 	import { getLocale } from '@src/paraglide/runtime.js';
-	import { onMount } from 'svelte';
 
 	interface ProposalDialogProps {
 		open: boolean;
@@ -15,6 +14,35 @@
 	let proposal = $state<any>(null);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
+
+	const proposalFormatLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Formato da proposta baseado na Teoria da Mudança'
+			: 'Proposal format based on Theory of Change'
+	);
+	const longTermObjectivesLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Objetivos a longo prazo'
+			: 'Long-term goals'
+	);
+	const preconditionsLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Pré-condições e requisitos'
+			: 'Preconditions and requirements'
+	);
+	const indicativeStepsLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Etapas iniciais'
+			: 'Initial steps'
+	);
+	const keyIndicatorsLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Indicadores-chave de desempenho'
+			: 'Key performance indicators'
+	);
+	const proposalFallbackTitle = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt') ? 'Proposta' : 'Proposal'
+	);
 
 	async function fetchProposal() {
 		if (!proposalId) {
@@ -29,9 +57,7 @@
 		try {
 			const response = await fetch(`/api/proposals/${proposalId}`);
 			if (!response.ok) {
-				throw new Error(
-					getLocale() === 'pt' ? 'Falha ao carregar a proposta.' : 'Failed to load proposal.'
-				);
+				throw new Error(m.proposal_load_failed());
 			}
 			const { proposal: proposalData } = await response.json();
 			
@@ -46,19 +72,10 @@
 				}
 			}
 			
-			// Debug: log the proposal data structure
-			console.log('Proposal data loaded:', {
-				hasTitle: !!proposalData?.title,
-				hasObjectives: !!proposalData?.objectives,
-				objectivesType: typeof proposalData?.objectives,
-				objectivesLength: Array.isArray(proposalData?.objectives) ? proposalData.objectives.length : 'not array',
-				hasFunctionalities: !!proposalData?.functionalities
-			});
-			
 			proposal = proposalData;
 		} catch (err) {
 			console.error('Error fetching proposal:', err);
-			error = getLocale() === 'pt' ? 'Falha ao carregar a proposta.' : 'Failed to load proposal.';
+			error = m.proposal_load_failed();
 		} finally {
 			loading = false;
 		}
@@ -92,29 +109,26 @@
 			</div>
 		{:else if !proposalId}
 			<div class="flex flex-col items-center justify-center p-8">
-				<p class="text-gray-600 mb-4">
-					{getLocale() === 'pt'
-						? 'Não há proposta disponível para esta discussão.'
-						: 'No proposal available for this discussion.'}
-				</p>
+				<p class="text-gray-600 mb-4">{m.no_proposal_available()}</p>
 				<Dialog.Close>
 					<Button>{m.close()}</Button>
 				</Dialog.Close>
 			</div>
 		{:else if proposal}
-			<h2 class="text-2xl font-bold text-deep-teal mb-6">{proposal.title || 'Proposal'}</h2>
+			<h2 class="text-2xl font-bold text-deep-teal mb-6">
+				{proposal.title || proposalFallbackTitle}
+			</h2>
 			
 			<div class="space-y-6 flex-grow">
 				<!-- Theory of Change Section -->
 				<div class="space-y-6">
-					<h3 class="text-2xl font-bold text-deep-teal">{m.theory_of_change()}</h3>
+					<h3 class="text-xl font-medium text-deep-teal">{proposalFormatLabel}</h3>
 					
 					<!-- Long-term Objectives -->
 					{#if proposal.objectives && Array.isArray(proposal.objectives) && proposal.objectives.length > 0}
 					<div class="space-y-4">
 						<div class="block text-lg font-semibold text-deep-teal">
-							{m.long_term_objectives()}
-							<span class="text-sm font-normal text-gray-600 ml-2">({m.long_term_objectives_description()})</span>
+							{longTermObjectivesLabel}
 						</div>
 						
 						{#each proposal.objectives as objective, objectiveIndex}
@@ -129,8 +143,7 @@
 								<!-- Preconditions -->
 								<div class="ml-4 space-y-3 mt-4">
 									<div class="block text-sm font-semibold text-deep-teal">
-										{m.preconditions_and_goals()}
-										<span class="text-xs font-normal text-gray-600 ml-2">({m.preconditions_and_goals_description()})</span>
+										{preconditionsLabel}
 									</div>
 									
 									{#each objective.preconditions as precondition, preconditionIndex}
@@ -145,7 +158,7 @@
 											<!-- Indicative Steps -->
 											<div class="ml-4 space-y-2 mt-3">
 												<div class="block text-xs font-semibold text-deep-teal">
-													{m.indicative_steps()}
+													{indicativeStepsLabel}
 												</div>
 												{#each precondition.indicativeSteps as step}
 													<p class="text-gray-700 text-sm">{step.value}</p>
@@ -155,8 +168,7 @@
 											<!-- Key Indicators -->
 											<div class="ml-4 space-y-2 mt-3">
 												<div class="block text-xs font-semibold text-deep-teal">
-													{m.key_indicators()}
-													<span class="text-xs font-normal text-gray-600 ml-2">({m.key_indicators_description()})</span>
+													{keyIndicatorsLabel}
 												</div>
 												{#each precondition.keyIndicators as indicator}
 													<p class="text-gray-700 text-sm">{indicator.value}</p>

@@ -73,6 +73,11 @@
 	const votingPeriodLabel = $derived.by(
 		() => votingPeriods.find((p) => p.id === votingPeriod)?.label ?? m.select_voting_period()
 	);
+	const proposalFormatLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Formato da proposta baseado na Teoria da Mudança'
+			: 'Proposal format based on Theory of Change'
+	);
 
 	let functionalitiesRef: HTMLTextAreaElement | null = null;
 
@@ -164,7 +169,7 @@
 		<!-- Form -->
 		<div class="bg-white rounded-lg border-2 border-deep-teal border-opacity-20 p-6 md:p-8">
 			<h1 class="bos-title text-3xl font-bold text-deep-teal">{m.new_proposal()}</h1>
-			<p class="text-deep-teal/70 text-sm mt-1 mb-6">{m.theory_of_change()}</p>
+			<p class="text-deep-teal/70 text-sm font-normal mt-1 mb-6">{proposalFormatLabel}</p>
 
 			<form
 				onsubmit={(e) => {

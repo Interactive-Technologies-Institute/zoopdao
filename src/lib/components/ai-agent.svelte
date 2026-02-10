@@ -1,40 +1,40 @@
 <script lang="ts">
 	import type { AIAgent, AIMessage } from '@/types';
-import { Bot } from 'lucide-svelte';
-import { onMount } from 'svelte';
-import ChatCircleHover from './chat-circle-hover.svelte';
-import { getAINonHumanCargoLabel } from '$lib/data/ai-nonhumans';
-import { getLocale } from '@src/paraglide/runtime.js';
+	import { Bot } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import ChatCircleHover from './chat-circle-hover.svelte';
+	import { getAINonHumanCargoLabel } from '$lib/data/ai-nonhumans';
+	import { getLocale } from '@src/paraglide/runtime.js';
 
-interface AIAgentProps {
-	agent: AIAgent;
-	messages?: AIMessage[];
-	latestMessage?: string;
-	previewOpen?: boolean;
-	previewRank?: number;
-	round: number;
-	isActive?: boolean;
-	isTyping?: boolean;
-	bubbleSide?: 'left' | 'right';
-	chatBoundsRect?: { left: number; top: number; right: number; bottom: number } | null;
-	aquariumCenter?: { x: number; y: number } | null;
-	maxBubbleDiameter?: number | null;
-}
+	interface AIAgentProps {
+		agent: AIAgent;
+		messages?: AIMessage[];
+		latestMessage?: string;
+		previewOpen?: boolean;
+		previewRank?: number;
+		round: number;
+		isActive?: boolean;
+		isTyping?: boolean;
+		bubbleSide?: 'left' | 'right';
+		chatBoundsRect?: { left: number; top: number; right: number; bottom: number } | null;
+		aquariumCenter?: { x: number; y: number } | null;
+		maxBubbleDiameter?: number | null;
+	}
 
 	let {
 		agent,
 		messages = [],
 		latestMessage = '',
-	previewOpen = false,
-	previewRank = 0,
-	round,
-	isActive = false,
-	isTyping = false,
-	bubbleSide = 'right',
-	chatBoundsRect = null,
-	aquariumCenter = null,
-	maxBubbleDiameter = null
-}: AIAgentProps = $props();
+		previewOpen = false,
+		previewRank = 0,
+		round,
+		isActive = false,
+		isTyping = false,
+		bubbleSide = 'right',
+		chatBoundsRect = null,
+		aquariumCenter = null,
+		maxBubbleDiameter = null
+	}: AIAgentProps = $props();
 
 	let canHover = $state(false);
 	onMount(() => {
@@ -45,42 +45,29 @@ interface AIAgentProps {
 		mql.addEventListener?.('change', update);
 		return () => mql.removeEventListener?.('change', update);
 	});
-	
+
 	// Filter messages for current round (fallback when latestMessage is not provided)
 	const currentRoundMessages = $derived(
-		messages.filter(msg => {
+		messages.filter((msg) => {
 			// Ensure both are numbers for comparison
 			const msgRound = typeof msg.round === 'string' ? parseInt(msg.round) : msg.round;
 			const currentRoundNum = typeof round === 'string' ? parseInt(round) : round;
 			return msgRound === currentRoundNum;
 		})
 	);
-	
-	// Debug: log messages
-	$effect(() => {
-		if (messages.length > 0 || isTyping) {
-			console.log(`AI Agent ${agent.name}:`, {
-				messages: messages.length,
-				currentRoundMessages: currentRoundMessages.length,
-				round,
-				isTyping,
-				messagesData: messages
-			});
-		}
-	});
 
-const resolvedLatestMessage = $derived(
-	latestMessage && latestMessage.trim().length > 0
-		? latestMessage.trim()
-		: currentRoundMessages.length > 0
-			? currentRoundMessages[currentRoundMessages.length - 1].content.trim()
-			: ''
-);
+	const resolvedLatestMessage = $derived(
+		latestMessage && latestMessage.trim().length > 0
+			? latestMessage.trim()
+			: currentRoundMessages.length > 0
+				? currentRoundMessages[currentRoundMessages.length - 1].content.trim()
+				: ''
+	);
 
-const showTypingBubble = $derived(isTyping);
+	const showTypingBubble = $derived(isTyping);
 
-const roleColorClass = $derived.by(() => {
-	// Fixed tailwind tokens to avoid theme overrides (no black)
+	const roleColorClass = $derived.by(() => {
+		// Fixed tailwind tokens to avoid theme overrides (no black)
 		switch (agent.role) {
 			case 'reception':
 				return 'bg-sky-400';
@@ -95,18 +82,20 @@ const roleColorClass = $derived.by(() => {
 			case 'cleaning':
 				return 'bg-teal-500';
 			default:
-			return 'bg-emerald-500';
-	}
-});
+				return 'bg-emerald-500';
+		}
+	});
 
-const cargoLabel = $derived.by(() => getAINonHumanCargoLabel(agent.name, getLocale()));
+	const cargoLabel = $derived.by(() => getAINonHumanCargoLabel(agent.name, getLocale()));
 </script>
 
 <div class="relative inline-block">
 	<div data-badge-core class="flex flex-col items-center">
 		<!-- AI Agent Avatar -->
 		<div class="relative">
-			<div class="h-12 w-12 md:h-14 md:w-14 rounded-full {roleColorClass} flex items-center justify-center border-2 border-white/30 shadow-lg relative z-20">
+			<div
+				class="h-12 w-12 md:h-14 md:w-14 rounded-full {roleColorClass} flex items-center justify-center border-2 border-white/30 shadow-lg relative z-20"
+			>
 				<Bot class="h-6 w-6 md:h-7 md:w-7 text-white" />
 			</div>
 		</div>
@@ -127,7 +116,7 @@ const cargoLabel = $derived.by(() => getAINonHumanCargoLabel(agent.name, getLoca
 			</span>
 		</div>
 	</div>
-	
+
 	<!-- Chat circle: snippet by default; hover expands; tap opens centered modal on touch devices -->
 	{#if showTypingBubble || resolvedLatestMessage.length > 0}
 		{@const lastText = resolvedLatestMessage}
@@ -140,10 +129,10 @@ const cargoLabel = $derived.by(() => getAINonHumanCargoLabel(agent.name, getLoca
 				variant="ai"
 				bubbleClass={roleColorClass}
 				forcePreview={previewOpen}
-				previewRank={previewRank}
-				canHover={canHover}
+				{previewRank}
+				{canHover}
 				boundsRect={chatBoundsRect}
-				aquariumCenter={aquariumCenter}
+				{aquariumCenter}
 				maxDiameter={maxBubbleDiameter}
 			/>
 		</div>
@@ -153,7 +142,8 @@ const cargoLabel = $derived.by(() => getAINonHumanCargoLabel(agent.name, getLoca
 <style>
 	/* Animation for active agent */
 	@keyframes pulse-active {
-		0%, 100% {
+		0%,
+		100% {
 			opacity: 1;
 		}
 		50% {

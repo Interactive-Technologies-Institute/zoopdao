@@ -3,7 +3,7 @@
 	import { Button } from '@/components/ui/button';
 	import { ArrowLeft } from 'lucide-svelte';
 	import { m } from '@src/paraglide/messages';
-	import { localizeUrl } from '@src/paraglide/runtime.js';
+	import { getLocale, localizeUrl } from '@src/paraglide/runtime.js';
 	import clickSound from '@/sounds/click.mp3';
 	import { onMount } from 'svelte';
 	import { createAudio, playAudio } from '$lib/utils/sound';
@@ -18,6 +18,31 @@
 	});
 
 	const proposal = data.proposal;
+	const proposalFormatLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Formato da proposta baseado na Teoria da Mudança'
+			: 'Proposal format based on Theory of Change'
+	);
+	const longTermObjectivesLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Objetivos a longo prazo'
+			: 'Long-term goals'
+	);
+	const preconditionsLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Pré-condições e requisitos'
+			: 'Preconditions and requirements'
+	);
+	const indicativeStepsLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Etapas iniciais'
+			: 'Initial steps'
+	);
+	const keyIndicatorsLabel = $derived.by(() =>
+		getLocale().toLowerCase().startsWith('pt')
+			? 'Indicadores-chave de desempenho'
+			: 'Key performance indicators'
+	);
 
 	function handleBack() {
 		playAudio(click_sound);
@@ -40,16 +65,13 @@
 
 			<!-- Theory of Change Section -->
 			<div class="space-y-6">
-				<h2 class="bos-title text-2xl font-bold text-deep-teal">{m.theory_of_change()}</h2>
+				<h2 class="bos-title text-xl font-medium text-deep-teal">{proposalFormatLabel}</h2>
 
 				<!-- Long-term Objectives -->
-				<div class="space-y-4">
-					<div class="bos-title block text-lg font-semibold text-deep-teal">
-						{m.long_term_objectives()}
-						<span class="text-sm font-normal text-gray-600 ml-2"
-							>({m.long_term_objectives_description()})</span
-						>
-					</div>
+					<div class="space-y-4">
+						<div class="bos-title block text-lg font-semibold text-deep-teal">
+							{longTermObjectivesLabel}
+						</div>
 
 					{#each proposal.objectives as objective, objectiveIndex}
 						<div class="border-2 border-deep-teal border-opacity-20 rounded-lg p-4 bg-gray-50">
@@ -64,10 +86,7 @@
 							<!-- Preconditions -->
 							<div class="ml-4 space-y-3 mt-4">
 								<div class="bos-title block text-sm font-semibold text-deep-teal">
-									{m.preconditions_and_goals()}
-									<span class="text-xs font-normal text-gray-600 ml-2"
-										>({m.preconditions_and_goals_description()})</span
-									>
+									{preconditionsLabel}
 								</div>
 
 								{#each objective.preconditions as precondition, preconditionIndex}
@@ -83,7 +102,7 @@
 										<!-- Indicative Steps -->
 										<div class="ml-4 space-y-2 mt-3">
 											<div class="bos-title block text-xs font-semibold text-deep-teal">
-												{m.indicative_steps()}
+												{indicativeStepsLabel}
 											</div>
 											{#each precondition.indicativeSteps as step}
 												<p class="text-gray-700 text-sm">{step.value}</p>
@@ -93,10 +112,7 @@
 										<!-- Key Indicators -->
 										<div class="ml-4 space-y-2 mt-3">
 											<div class="bos-title block text-xs font-semibold text-deep-teal">
-												{m.key_indicators()}
-												<span class="text-xs font-normal text-gray-600 ml-2"
-													>({m.key_indicators_description()})</span
-												>
+												{keyIndicatorsLabel}
 											</div>
 											{#each precondition.keyIndicators as indicator}
 												<p class="text-gray-700 text-sm">{indicator.value}</p>
