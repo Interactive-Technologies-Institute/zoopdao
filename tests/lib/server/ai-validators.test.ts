@@ -51,5 +51,38 @@ describe('validateOneSentenceStatement', () => {
 			expect(result.reason).toBe('multiple_sentence_terminators');
 		}
 	});
-});
 
+	it('rejects provider placeholder error messages', () => {
+		const result = validateOneSentenceStatement('Unexpected processing error');
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.reason).toBe('placeholder_response');
+		}
+	});
+
+	it('rejects compact alphanumeric id-like responses', () => {
+		const result = validateOneSentenceStatement('cmlfowvyj0543hd01tkzahi18');
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.reason).toBe('identifier_like_response');
+		}
+	});
+
+	it('rejects id-like responses even with edge punctuation', () => {
+		const result = validateOneSentenceStatement('cmlfowvyj0543hd01tkzahi18.');
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.reason).toBe('identifier_like_response');
+		}
+	});
+
+	it('accepts generic context-request responses as valid one-sentence statements', () => {
+		const result = validateOneSentenceStatement(
+			'Aquari: I need more context about "test" to answer with ecological precision.'
+		);
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.value.toLowerCase()).toContain('need more context');
+		}
+	});
+});

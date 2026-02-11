@@ -24,6 +24,7 @@ export interface AiGenerateRequest {
 	agentRole: AiAgentRole;
 	agentName?: string | null;
 	userId?: string | null;
+	providerThreadId?: string | null;
 	inputSource?: 'manual' | 'auto';
 	proposalPoint?: string;
 	discussionSummary?: string | null;
@@ -32,7 +33,22 @@ export interface AiGenerateRequest {
 	ragContext?: string;
 	mode?: 'pedagogic' | 'decision_making' | 'unknown';
 	systemPrompt?: string | null;
+	promptPayload?: Record<string, unknown> | null;
 	organizationName?: string | null;
+	currentUserProfile?: {
+		name?: string | null;
+		role?: string | null;
+		description?: string | null;
+	} | null;
+	assemblyParticipants?: string | null;
+}
+
+export interface AiPlannerDecision {
+	selectedAgentId: string;
+	shouldReveal: boolean;
+	confidence: number;
+	reason: string;
+	matchedConcepts: string[];
 }
 
 export interface AiGeneratedMessage {
