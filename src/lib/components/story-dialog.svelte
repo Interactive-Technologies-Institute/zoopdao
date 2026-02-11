@@ -140,8 +140,8 @@
 	});
 	let currentAnswer = $state('');
 
-	const ASSISTANT_MAX_PER_ROUND = 3;
-	let assistantRemaining = $state<number>(ASSISTANT_MAX_PER_ROUND);
+	const ASSISTANT_MAX_TOTAL = 3;
+	let assistantRemaining = $state<number>(ASSISTANT_MAX_TOTAL);
 	let assistantQuestion = $state<string | null>(null);
 	let assistantError = $state<string | null>(null);
 	let assistantStatusKey = $state<string | null>(null);
@@ -180,13 +180,13 @@
 				throw new Error(result?.error?.message ?? 'Failed to load assistant status.');
 			}
 			if (typeof result.remaining === 'number' && Number.isFinite(result.remaining)) {
-				assistantRemaining = Math.max(0, Math.min(ASSISTANT_MAX_PER_ROUND, result.remaining));
+				assistantRemaining = Math.max(0, Math.min(ASSISTANT_MAX_TOTAL, result.remaining));
 			} else {
-				assistantRemaining = ASSISTANT_MAX_PER_ROUND;
+				assistantRemaining = ASSISTANT_MAX_TOTAL;
 			}
 		} catch (error) {
 			console.warn('Failed to refresh assistant remaining:', error);
-			assistantRemaining = ASSISTANT_MAX_PER_ROUND;
+			assistantRemaining = ASSISTANT_MAX_TOTAL;
 		} finally {
 			assistantStatusLoading = false;
 		}
@@ -229,7 +229,7 @@
 			}
 
 			if (typeof result.remaining === 'number' && Number.isFinite(result.remaining)) {
-				assistantRemaining = Math.max(0, Math.min(ASSISTANT_MAX_PER_ROUND, result.remaining));
+				assistantRemaining = Math.max(0, Math.min(ASSISTANT_MAX_TOTAL, result.remaining));
 			}
 
 			if (result.limitReached) {
@@ -254,7 +254,7 @@
 
 	$effect(() => {
 		if (!open) {
-			assistantRemaining = ASSISTANT_MAX_PER_ROUND;
+			assistantRemaining = ASSISTANT_MAX_TOTAL;
 			assistantQuestion = null;
 			assistantError = null;
 			assistantStatusKey = null;
@@ -276,7 +276,7 @@
 		const key = `${gameId}:${userId}:${currentRound}`;
 		if (assistantStatusKey === key) return;
 		assistantStatusKey = key;
-		assistantRemaining = ASSISTANT_MAX_PER_ROUND;
+		assistantRemaining = ASSISTANT_MAX_TOTAL;
 		assistantQuestion = null;
 		assistantError = null;
 

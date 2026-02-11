@@ -23,6 +23,11 @@ const statusQuerySchema = z.object({
 	userId: z.string().min(1)
 });
 
+const ASSISTANT_MAX_TOTAL = 3;
+const ASSISTANT_QUOTA_ROUND_MIN = 1;
+const ASSISTANT_QUOTA_ROUND_MAX = 6;
+const ASSISTANT_COMPAT_SCOPE_ROUND = 1;
+
 function isPortuguese(locale: string | null | undefined) {
 	return (locale ?? '').toLowerCase().startsWith('pt');
 }
@@ -116,25 +121,27 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		const { data, error } = await supabaseAdmin
 			.from('assistant_question_usage')
-			.select('used_count')
+			.select('used_count, round')
 			.eq('game_id', payload.gameId)
-			.eq('round', payload.round)
 			.eq('user_id', payload.userId)
-			.maybeSingle();
+			.gte('round', ASSISTANT_QUOTA_ROUND_MIN)
+			.lte('round', ASSISTANT_QUOTA_ROUND_MAX);
 
-		if (error) {
+		if (error || !Array.isArray(data)) {
 			return json(
 				{ success: false, error: { code: 'provider_error', message: 'Failed to load assistant quota.', requestId } },
 				{ status: 500 }
 			);
 		}
 
-		const usedCount = Number((data as any)?.used_count ?? 0);
-		const used = Number.isFinite(usedCount) ? usedCount : 0;
+		const used = data.reduce((sum: number, row: any) => {
+			const value = Number(row?.used_count ?? 0);
+			return sum + (Number.isFinite(value) ? value : 0);
+		}, 0);
 		return json({
 			success: true,
 			usedCount: used,
-			remaining: Math.max(3 - used, 0),
+			remaining: Math.max(ASSISTANT_MAX_TOTAL - used, 0),
 			requestId
 		});
 	} catch (error) {
@@ -173,16 +180,35 @@ export const POST: RequestHandler = async ({ request }) => {
 			);
 		}
 
-		// Claim quota atomically (max 3 per (game_id, user_id, round)).
-		const { data: claimData, error: claimError } = await supabaseAdmin.rpc(
-			'claim_assistant_question_slot',
-			{
+		// Claim quota atomically (max 3 total across rounds 1..6).
+		let claimData: any = null;
+		let claimError: { message: string } | null = null;
+		{
+			const claimResult = await supabaseAdmin.rpc('claim_assistant_question_slot_global', {
 				p_game_id: payload.gameId,
 				p_round: payload.round,
 				p_user_id: payload.userId,
 				p_proposal_id: payload.proposalId
-			}
-		);
+			});
+			claimData = claimResult.data;
+			claimError = claimResult.error;
+		}
+
+		// Compatibility path while DB migration is not yet applied.
+		if (claimError && /claim_assistant_question_slot_global/i.test(claimError.message)) {
+			logAiEvent('assistant global quota rpc missing, using compatibility scope round', {
+				requestId,
+				round: payload.round
+			});
+			const fallbackClaim = await supabaseAdmin.rpc('claim_assistant_question_slot', {
+				p_game_id: payload.gameId,
+				p_round: ASSISTANT_COMPAT_SCOPE_ROUND,
+				p_user_id: payload.userId,
+				p_proposal_id: payload.proposalId
+			});
+			claimData = fallbackClaim.data;
+			claimError = fallbackClaim.error;
+		}
 
 		if (claimError) {
 			logAiEvent('assistant quota claim failed', { requestId, error: claimError.message });
