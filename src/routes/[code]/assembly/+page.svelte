@@ -30,7 +30,6 @@
 		createParticipants
 	} from '@/utils/participants';
 	import type { AIAgent, AIMessage, Participant, Role } from '@/types';
-	import { getAINonHumanFallbackMessages } from '$lib/data/ai-nonhumans';
 	import { supabase } from '@/supabase';
 	import {
 		storeHumanMessage,
@@ -42,6 +41,7 @@
 		DiscussionTimelineState,
 		type TimelineMessage
 	} from '@/state/discussion-timeline.svelte';
+	import { ENABLE_ROUND7_SCENE_ORCHESTRATION } from '$lib/config/feature-flags';
 
 	let tour: Tour | undefined;
 
@@ -119,12 +119,6 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// Debug: Check if rounds are loaded
-	$effect(() => {
-		console.log('Rounds data from page load:', data.rounds);
-		console.log('Rounds length:', data.rounds?.length || 0);
-	});
-
 	let gameState = new GameState(
 		data.cards,
 		data.rounds,
@@ -148,32 +142,27 @@
 	const chatRound = $derived.by(() => gameState.currentRound === 7);
 	const SINGLE_AI_MODE_ROUND7 = false;
 	const MAX_USER_MESSAGES_ROUND7 = 5;
-	const MAX_AI_MESSAGES_ROUND7 = 5;
+	const TOP_MID_AI_AGENT_ID = 'ai-agent-aquari';
+	const DEBUG_AI_TIMING = false;
 	const SINGLE_AI_AGENT: AIAgent = {
-		id: 'ai-agent-aquari',
+		id: TOP_MID_AI_AGENT_ID,
 		name: 'Aquari',
 		role: 'research'
 	};
-
-	// Configurable variable for number of discussion rounds with message exchanges
-	// This controls how many rounds of messages are exchanged between user and AIs
-	// before showing the save history popup
-	const DISCUSSION_ROUNDS_COUNT = $derived.by(() =>
-		SINGLE_AI_MODE_ROUND7 ? MAX_USER_MESSAGES_ROUND7 : 1
-	);
 
 	let hasUserChattedThisRound = $state(false);
 	let userDraft = $state('');
 	let userLastSentMessage = $state<string | null>(null);
 	let userIsSending = $state(false);
+	let round7TurnHint = $state(0);
 	const userIsTyping = $derived.by(() => userDraft.trim().length > 0);
 	let lastChatRound = $state(-1);
-	let discussionRoundCount = $state(0); // Track how many discussion rounds have been completed
 
 	// AI Agents and Participants
 	let aiAgents = $state<AIAgent[]>([]);
 	let aiMessages = $state<AIMessage[]>([]);
 	let typingAgents = $state<Set<string>>(new Set()); // Track which agents are currently typing
+	let round7VisibleAiAgentIds = $state<string[]>([TOP_MID_AI_AGENT_ID]);
 
 	// Initialize AI agents based on human players count
 	$effect(() => {
@@ -207,16 +196,16 @@
 
 	// Generate AI messages after each round completion
 	$effect(() => {
-		if (gameState.currentRound !== lastChatRound) {
-			lastChatRound = gameState.currentRound;
-			hasUserChattedThisRound = false;
-			userDraft = '';
-			userLastSentMessage = null;
-			userIsSending = false;
-			// Reset discussion round count when entering a new round
-			discussionRoundCount = 0;
-		}
-	});
+			if (gameState.currentRound !== lastChatRound) {
+				lastChatRound = gameState.currentRound;
+				hasUserChattedThisRound = false;
+				userDraft = '';
+				userLastSentMessage = null;
+				userIsSending = false;
+				round7TurnHint = 0;
+				round7VisibleAiAgentIds = [TOP_MID_AI_AGENT_ID];
+			}
+		});
 
 	$effect(() => {
 		if (!enableDiscussionChat || !chatRound || !hasUserChattedThisRound) {
@@ -286,6 +275,18 @@
 	let showLayoutDebug = $state(false);
 	let safeAreaObserver: ResizeObserver | null = null;
 
+	$effect(() => {
+		if (openProposalDialog && openHistoryDialog) {
+			openHistoryDialog = false;
+		}
+	});
+
+	$effect(() => {
+		if (openEndDialog && openHistoryDialog) {
+			openHistoryDialog = false;
+		}
+	});
+
 	function updateSafeArea() {
 		if (typeof window === 'undefined') return;
 		const statusEl = document.querySelector('.status-pill');
@@ -298,18 +299,20 @@
 		const bottomPadding = 16;
 
 		const roundBottom = roundEl ? roundEl.getBoundingClientRect().bottom : 0;
+		const isRound7 = chatRound;
 		if (roundBottom > 0) {
 			// Keep the status pill below the title area to prevent overlap on landscape layouts.
-			const minTopPx = 104; // 6.5rem @ 16px base font size
-			const desiredTopPx = roundBottom + 12;
-			const topForPill = Math.max(minTopPx, desiredTopPx);
+			const topForPill = isRound7 ? roundBottom + 2 : Math.max(104, roundBottom + 12);
 			document.documentElement.style.setProperty('--status-pill-top', `${topForPill}px`);
 		} else {
 			document.documentElement.style.removeProperty('--status-pill-top');
 		}
 
 		const statusBottom = statusEl ? statusEl.getBoundingClientRect().bottom : 0;
-		const topPx = Math.max(statusBottom, roundBottom) + topPadding;
+		const statusHeight = statusEl ? statusEl.getBoundingClientRect().height : 0;
+		const topPx = isRound7
+			? roundBottom + statusHeight + 24
+			: Math.max(statusBottom, roundBottom) + topPadding;
 		const bottomPx = bottomEl
 			? window.innerHeight - bottomEl.getBoundingClientRect().top + bottomPadding
 			: 0;
@@ -498,8 +501,8 @@
 		}
 	}
 
-	const discussionMessages = $derived.by(() =>
-		discussionTimeline.messages.map((msg) => ({
+	const discussionMessages = $derived.by(() => {
+		const baseMessages = discussionTimeline.messages.map((msg) => ({
 			id: msg.key,
 			content: msg.content,
 			senderType: msg.senderType,
@@ -507,8 +510,25 @@
 			round: msg.round,
 			timestamp: new Date(msg.createdAt),
 			status: msg.status
-		}))
-	);
+		}));
+
+		if (!chatRound || typingAgents.size === 0) return baseMessages;
+
+		const typingPreviewMessages = Array.from(typingAgents).map((agentId) => {
+			const agent = aiAgents.find((candidate) => candidate.id === agentId);
+			return {
+				id: `typing:${agentId}`,
+				content: m.writing(),
+				senderType: 'ai' as const,
+				senderName: agent?.name ?? 'AI',
+				round: gameState.currentRound,
+				timestamp: new Date(),
+				status: 'sending' as const
+			};
+		});
+
+		return [...baseMessages, ...typingPreviewMessages];
+	});
 
 	const userPromptUsedCountRound7 = $derived.by(() => {
 		if (!enableDiscussionChat || !chatRound) return 0;
@@ -843,47 +863,32 @@
 	// 	}
 	// });
 
-	// New logic: Show end dialog after discussion rounds complete
-	// Check if discussion round is complete (user sent message + all AIs sent messages + no typing)
+	// Round 7 closes after the configured user prompt quota is exhausted and AI typing ends.
 	$effect(() => {
-		if (chatRound && hasUserChattedThisRound && aiAgents.length > 0) {
-			// Check if all AI agents have sent their messages for this round
-			const currentRoundMessages = aiMessages.filter((msg) => msg.round === gameState.currentRound);
-
-			// Get unique agent IDs that have sent messages in this round
-			const agentsWhoResponded = new Set(currentRoundMessages.map((msg) => msg.agent_id));
-			// Check if all agents have responded (each agent should have at least one message)
-			const allAgentsResponded = aiAgents.every((agent) => agentsWhoResponded.has(agent.id));
-			const noAgentsTyping = typingAgents.size === 0;
-			const userMessageCount = discussionMessages.filter(
-				(msg) => msg.senderType === 'human' && msg.round === gameState.currentRound
-			).length;
-			const aiMessageCount = currentRoundMessages.length;
-
-			// If all agents have responded and none are typing, discussion round is complete
-			if (SINGLE_AI_MODE_ROUND7) {
-				if (
-					allAgentsResponded &&
-					noAgentsTyping &&
-					userMessageCount >= MAX_USER_MESSAGES_ROUND7 &&
-					aiMessageCount >= MAX_AI_MESSAGES_ROUND7
-				) {
-					playAudio(fanfareAudio);
-					openEndDialog = true;
-				}
-				return;
-			}
-
-			if (allAgentsResponded && noAgentsTyping && discussionRoundCount < DISCUSSION_ROUNDS_COUNT) {
-				discussionRoundCount++;
-				// If we've reached the configured number of discussion rounds, show save dialog
-				if (discussionRoundCount >= DISCUSSION_ROUNDS_COUNT) {
-					playAudio(fanfareAudio);
-					openEndDialog = true;
-				}
-			}
-		}
+		if (!chatRound || openEndDialog) return;
+		if (userPromptUsedCountRound7 < MAX_USER_MESSAGES_ROUND7) return;
+		if (typingAgents.size > 0 || userIsSending) return;
+		playAudio(fanfareAudio);
+		openEndDialog = true;
 	});
+
+	function getTopMidAgent(agents: AIAgent[]) {
+		return agents.find((agent) => agent.id === TOP_MID_AI_AGENT_ID) ?? agents[0] ?? null;
+	}
+
+	function normalizeRound7ActiveAgentIds(ids: string[], agents: AIAgent[]) {
+		const available = new Set(agents.map((agent) => agent.id));
+		const topMid = getTopMidAgent(agents);
+		if (!topMid) return [] as string[];
+
+		const merged = new Set<string>([topMid.id]);
+		for (const id of ids) {
+			if (available.has(id)) merged.add(id);
+		}
+
+		const ordered = [topMid.id, ...Array.from(merged).filter((id) => id !== topMid.id)];
+		return ordered.slice(0, 3);
+	}
 
 	async function handleSendMessage(message: string) {
 		try {
@@ -908,8 +913,6 @@
 			const userMessageCount = discussionMessages.filter(
 				(msg) => msg.senderType === 'human' && msg.round === currentRound
 			).length;
-			const aiMessageCount = aiMessages.filter((msg) => msg.round === currentRound).length;
-
 			// (Round 7 prompt quota is enforced above.)
 
 			// Optimistic UI: show immediately in timeline/history (even if the history dialog is open).
@@ -952,165 +955,227 @@
 					userLastSentMessage = savedMessage.content;
 					userDraft = '';
 					userIsSending = false;
+					round7TurnHint = Math.min(MAX_USER_MESSAGES_ROUND7, round7TurnHint + 1);
 				}
 
-					const logAiTiming = (event: string, payload: Record<string, unknown>) => {
-						console.info('[AI timing]', event, payload);
-					};
-					const waitForAiDelay = (ms: number) =>
-						SINGLE_AI_MODE_ROUND7
-							? Promise.resolve()
-							: new Promise((resolve) => setTimeout(resolve, ms));
+			const logAiTiming = (event: string, payload: Record<string, unknown>) => {
+				if (DEBUG_AI_TIMING) {
+					console.info('[AI timing]', event, payload);
+				}
+			};
+			const waitForAiDelay = (ms: number) =>
+				SINGLE_AI_MODE_ROUND7
+					? Promise.resolve()
+					: new Promise((resolve) => setTimeout(resolve, ms));
 
-				// Round 7: one batch request returning JSON for all agents; UI schedules avatar rendering.
-				if (
-					aiAgents.length > 0 &&
-					(!SINGLE_AI_MODE_ROUND7 || aiMessageCount < MAX_AI_MESSAGES_ROUND7)
-				) {
-					const upsertFallback = (agent: AIAgent) => {
-						const fallbackContent = generateFallbackMessage(agent, message).trim();
-						if (!fallbackContent) return;
-						discussionTimeline.upsert({
-							key: `temp:fallback:${agent.id}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`,
-							round: currentRound,
-							senderType: 'ai',
-							senderId: agent.id,
-							senderRole: agent.role,
-							senderName: agent.name,
-							content: fallbackContent,
-							createdAt: new Date().toISOString(),
-							status: 'sent'
+			// Round 7: one batch request returning JSON for all agents; UI schedules avatar rendering.
+			if (aiAgents.length > 0) {
+				// Stable idempotency key: retrying AI generation for the same human message should not double-insert.
+				const clientRequestId = `human:${savedMessage.id}`;
+				const agentsPayload = aiAgents.map((agent) => ({
+					id: agent.id,
+					name: agent.name,
+					role: agent.role
+				}));
+
+				// Show only one agent typing while the batch request is in flight (sequential coordination).
+				const preflightTopMid = getTopMidAgent(aiAgents);
+				typingAgents = preflightTopMid ? new Set([preflightTopMid.id]) : new Set();
+
+				type BatchResult = {
+					success: boolean;
+					requestId?: string;
+					scenePlan?: {
+						userTurn: number;
+						activeAgentIds: string[];
+						speakingOrder: string[];
+						revealAgentIds: string[];
+						handoffText?: string;
+						errorMode?: 'none' | 'hard_error';
+						routing?: {
+							selectedAgentId: string;
+							confidence: number;
+							matchedTerms: string[];
+							scoreByAgent: Record<string, number>;
+							reason: string;
+							routingSource?: 'rule' | 'llm_planner' | 'fallback';
+							plannerUsed?: boolean;
+							plannerReason?: string;
+						};
+					};
+					messages?: Array<{
+						agentId: string;
+						agentName: string;
+						agentRole: Role;
+						round: number;
+						content: string;
+						dbId: number;
+						createdAt: string;
+					}>;
+					errors?: Array<{ agentId: string; code: string; message: string }>;
+					error?: { code: string; message: string; requestId?: string };
+				};
+
+				let batch: BatchResult | null = null;
+				try {
+					const response = await fetch('/api/ai/messages/batch', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							gameId,
+							proposalId,
+							round: 7,
+							userId: data.userId,
+							locale: getLocale(),
+							latestUserMessage: message,
+							agents: agentsPayload,
+							activeAgentIds: ENABLE_ROUND7_SCENE_ORCHESTRATION
+								? round7VisibleAiAgentIds
+								: undefined,
+							userTurnHint: chatRound ? Math.max(1, round7TurnHint) : undefined,
+							clientRequestId
+						})
+					});
+					const result = (await response.json()) as BatchResult;
+					batch = result;
+					if (!response.ok) {
+						console.warn('Batch AI HTTP error:', {
+							status: response.status,
+							requestId: result?.requestId,
+							code: result?.error?.code,
+							message: result?.error?.message
 						});
-					};
-
-					// Stable idempotency key: retrying AI generation for the same human message should not double-insert.
-					const clientRequestId = `human:${savedMessage.id}`;
-					const agentsPayload = aiAgents.map((agent) => ({ id: agent.id, name: agent.name, role: agent.role }));
-
-					// Show only one agent typing while the batch request is in flight (sequential coordination).
-					typingAgents = aiAgents.length ? new Set([aiAgents[0].id]) : new Set();
-
-					type BatchResult = {
-						success: boolean;
-						requestId?: string;
-						messages?: Array<{
-							agentId: string;
-							agentName: string;
-							agentRole: Role;
-							round: number;
-							content: string;
-							dbId: number;
-							createdAt: string;
-						}>;
-						errors?: Array<{ agentId: string; code: string; message: string }>;
-						error?: { code: string; message: string; requestId?: string };
-					};
-
-					let batch: BatchResult | null = null;
-					try {
-						const response = await fetch('/api/ai/messages/batch', {
-							method: 'POST',
-							headers: { 'Content-Type': 'application/json' },
-							body: JSON.stringify({
-								gameId,
-								proposalId,
-								round: 7,
-								userId: data.userId,
-								locale: getLocale(),
-								latestUserMessage: message,
-								agents: agentsPayload,
-								clientRequestId
-							})
-						});
-						const result = (await response.json()) as BatchResult;
-						if (!response.ok || !result?.success) {
-							throw new Error(result?.error?.message ?? 'Batch AI request failed.');
-						}
-						batch = result;
-					} catch (batchError) {
-						console.error('Batch AI request failed:', batchError);
-						batch = null;
 					}
-
-					const messagesByAgentId = new Map<string, NonNullable<BatchResult['messages']>[number]>();
-					if (batch?.messages) {
-						for (const msg of batch.messages) {
-							if (msg?.agentId) messagesByAgentId.set(msg.agentId, msg);
-						}
-					}
+				} catch (batchError) {
+					console.error('Batch AI request failed:', batchError);
+					batch = null;
+				}
+				const isHardError =
+					batch?.scenePlan?.errorMode === 'hard_error' || (!batch?.success && Boolean(batch?.error));
+				if (!batch || isHardError) {
+					typingAgents = new Set();
 					if (batch?.errors?.length) {
-						console.warn('Batch AI returned errors:', batch.errors);
+						console.warn('Batch AI returned hard errors:', batch.errors);
 					}
+					return;
+				}
 
-					const perAgentDelay = () => 2000 + Math.random() * 2000;
-					const interMessageDelay = () => 700 + Math.random() * 900;
+				const messagesByAgentId = new Map<string, NonNullable<BatchResult['messages']>[number]>();
+				if (batch?.messages) {
+					for (const msg of batch.messages) {
+						if (msg?.agentId) messagesByAgentId.set(msg.agentId, msg);
+					}
+				}
+				if (batch?.errors?.length) {
+					const mode = batch.scenePlan?.errorMode ?? 'none';
+					if (mode === 'hard_error') {
+						console.warn('Batch AI returned hard errors:', batch.errors);
+					}
+				}
 
-					// Schedule avatar rendering sequentially for a more natural feel.
-					const batchStart = performance.now();
-					for (let index = 0; index < aiAgents.length; index += 1) {
-						const agent = aiAgents[index];
+				const perAgentDelay = () => 2000 + Math.random() * 2000;
+				const interMessageDelay = () => 700 + Math.random() * 900;
+				const topMidAgent = getTopMidAgent(aiAgents);
+				const fallbackSpeakingAgents = topMidAgent ? [topMidAgent] : aiAgents.slice(0, 1);
+				const scenePlan = ENABLE_ROUND7_SCENE_ORCHESTRATION ? batch?.scenePlan : undefined;
+				if (scenePlan) {
+					console.info('[AI round7]', {
+						requestId: batch?.requestId,
+						errorMode: scenePlan.errorMode,
+						selectedAgentId: scenePlan.routing?.selectedAgentId ?? null,
+						source: scenePlan.routing?.routingSource ?? 'rule',
+						reason: scenePlan.routing?.reason ?? null
+					});
+				}
+				if (DEBUG_AI_TIMING && scenePlan?.routing) {
+					console.info('[AI routing]', {
+						requestId: batch?.requestId,
+						selectedAgentId: scenePlan.routing.selectedAgentId,
+						source: scenePlan.routing.routingSource ?? 'rule',
+						reason: scenePlan.routing.reason,
+						plannerUsed: scenePlan.routing.plannerUsed ?? false
+					});
+				}
+				const speakingOrder = scenePlan?.speakingOrder?.length
+					? scenePlan.speakingOrder
+					: ENABLE_ROUND7_SCENE_ORCHESTRATION
+						? fallbackSpeakingAgents.map((agent) => agent.id)
+						: aiAgents.map((agent) => agent.id);
+				const speakingAgents = speakingOrder
+					.map((agentId) => aiAgents.find((agent) => agent.id === agentId))
+					.filter(Boolean) as AIAgent[];
+				const activeAgentIds = scenePlan?.activeAgentIds?.length
+					? scenePlan.activeAgentIds
+					: ENABLE_ROUND7_SCENE_ORCHESTRATION
+						? [topMidAgent?.id ?? TOP_MID_AI_AGENT_ID]
+						: aiAgents.map((agent) => agent.id);
+				round7VisibleAiAgentIds = normalizeRound7ActiveAgentIds(activeAgentIds, aiAgents);
 
-						typingAgents = new Set([agent.id]);
-						const typingStart = performance.now();
-						const typingDelay = perAgentDelay();
-						logAiTiming('typing:start', {
+				// Schedule avatar rendering sequentially for a more natural feel.
+				const batchStart = performance.now();
+				for (let index = 0; index < speakingAgents.length; index += 1) {
+					const agent = speakingAgents[index];
+
+					typingAgents = new Set([agent.id]);
+					const typingStart = performance.now();
+					const typingDelay = perAgentDelay();
+					logAiTiming('typing:start', {
+						agentId: agent.id,
+						agentName: agent.name,
+						delayMs: Math.round(typingDelay)
+					});
+					await waitForAiDelay(typingDelay);
+
+					const msg = messagesByAgentId.get(agent.id);
+					if (msg?.dbId && msg.content) {
+						logAiTiming('bubble:open', {
 							agentId: agent.id,
 							agentName: agent.name,
-							delayMs: Math.round(typingDelay)
+							elapsedMs: Math.round(performance.now() - typingStart)
 						});
-						await waitForAiDelay(typingDelay);
-
-						const msg = messagesByAgentId.get(agent.id);
-						if (msg?.dbId && msg.content) {
-							logAiTiming('bubble:open', {
-								agentId: agent.id,
-								agentName: agent.name,
-								elapsedMs: Math.round(performance.now() - typingStart)
-							});
-							discussionTimeline.upsert(
-								timelineMessagesFromDbMessage({
-									id: msg.dbId,
-									game_id: gameId,
-									proposal_id: proposalId,
-									round: msg.round ?? currentRound,
-									participant_type: 'ai_agent',
-									participant_id: null,
-									agent_role: msg.agentRole ?? agent.role,
-									content: msg.content,
-									created_at: msg.createdAt,
-									metadata: {
-										agent_id: msg.agentId,
-										client_request_id: clientRequestId,
-										server_request_id: batch?.requestId ?? null
-									}
-								})
-							);
+						discussionTimeline.upsert(
+							timelineMessagesFromDbMessage({
+								id: msg.dbId,
+								game_id: gameId,
+								proposal_id: proposalId,
+								round: msg.round ?? currentRound,
+								participant_type: 'ai_agent',
+								participant_id: null,
+								agent_role: msg.agentRole ?? agent.role,
+								content: msg.content,
+								created_at: msg.createdAt,
+								metadata: {
+									agent_id: msg.agentId,
+									client_request_id: clientRequestId,
+									server_request_id: batch?.requestId ?? null
+								}
+							})
+						);
 						} else {
-							logAiTiming('bubble:open:fallback', {
+							logAiTiming('bubble:open:missing', {
 								agentId: agent.id,
 								agentName: agent.name,
 								elapsedMs: Math.round(performance.now() - typingStart)
 							});
-							upsertFallback(agent);
 						}
-						if (index < aiAgents.length - 1) {
-							const gapDelay = interMessageDelay();
-							logAiTiming('inter-message:wait', {
-								nextAgentId: aiAgents[index + 1]?.id,
-								delayMs: Math.round(gapDelay)
-							});
-							await waitForAiDelay(gapDelay);
-						}
+						if (index < speakingAgents.length - 1) {
+						const gapDelay = interMessageDelay();
+						logAiTiming('inter-message:wait', {
+							nextAgentId: speakingAgents[index + 1]?.id,
+							delayMs: Math.round(gapDelay)
+						});
+						await waitForAiDelay(gapDelay);
 					}
-					logAiTiming('batch:complete', {
-						elapsedMs: Math.round(performance.now() - batchStart)
-					});
-
-					typingAgents = new Set();
 				}
-			} catch (error) {
-				console.error('Error sending message:', error);
-			} finally {
+				logAiTiming('batch:complete', {
+					elapsedMs: Math.round(performance.now() - batchStart)
+				});
+
+				typingAgents = new Set();
+			}
+		} catch (error) {
+			console.error('Error sending message:', error);
+		} finally {
 			if (chatRound) {
 				userIsSending = false;
 			}
@@ -1119,28 +1184,6 @@
 
 	function handleOpenHistory() {
 		openHistoryDialog = true;
-	}
-
-	// Generate fallback message when API rate limit is reached
-	function generateFallbackMessage(agent: AIAgent, userMessage: string): string {
-		// ZD-179: AI agents represent AVG non-humans (not human departments).
-		const messages = getAINonHumanFallbackMessages(agent.name, getLocale());
-		const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-
-		// Add context about the user's message if available
-		if (userMessage && userMessage.trim().length > 0) {
-			const topic = `${userMessage.substring(0, 50)}${userMessage.length > 50 ? '...' : ''}`;
-			const fallbackMsg =
-				getLocale() === 'pt'
-					? `${randomMessage} Sobre "${topic}", concordo que vale a pena discutir.`
-					: `${randomMessage} Regarding "${topic}", I agree it is worth discussing.`;
-			console.log(`Generated fallback message for ${agent.name} with user context:`, fallbackMsg);
-			return fallbackMsg;
-		}
-
-		const fallbackMsg = `${randomMessage}`;
-		console.log(`Generated fallback message for ${agent.name} without user context:`, fallbackMsg);
-		return fallbackMsg;
 	}
 
 	async function handleLeaveGame() {
@@ -1154,8 +1197,6 @@
 			goto('/');
 		}
 	}
-	$inspect(gameState.currentRound);
-	$inspect(playerState);
 </script>
 
 <div class="w-screen h-[100dvh] relative">
@@ -1191,7 +1232,10 @@
 				type="button"
 				class="tour-proposal-button w-full rounded-full border-2 border-sand bg-white px-4 py-3 text-center text-base font-semibold text-black shadow-lg transition-colors hover:bg-sand/20"
 				disabled={!tourCompleted}
-				onclick={() => (openProposalDialog = true)}
+				onclick={() => {
+					openHistoryDialog = false;
+					openProposalDialog = true;
+				}}
 			>
 				<FileText class="mr-2 inline-block h-4 w-4" />
 				{m.view_full_proposal()}
@@ -1219,7 +1263,7 @@
 	<StoryDialog bind:open={openStoryDialog} {gameState} proposalId={data.proposalId ?? null} />
 
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
-	{#if enableDiscussionChat && chatRound}
+	{#if enableDiscussionChat && chatRound && !openProposalDialog}
 		{#if gameState.mode === 'pedagogic'}
 			<div
 				class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[560px] z-50 pointer-events-auto"
@@ -1251,21 +1295,22 @@
 				historyDisabled={!tourCompleted}
 				documentsDisabled={!tourCompleted}
 				inputDisabled={!tourCompleted || debouncedAiIsThinking || userPromptRemainingRound7 <= 0}
-				lockedPlaceholder={
-					userPromptRemainingRound7 <= 0
-						? getLocale() === 'pt'
-							? 'Sem prompts restantes.'
-							: 'No prompts left.'
-						: debouncedAiIsThinking
-							? m.discussion_waiting_placeholder()
-							: null
-				}
+				lockedPlaceholder={userPromptRemainingRound7 <= 0
+					? getLocale() === 'pt'
+						? 'Sem prompts restantes.'
+						: 'No prompts left.'
+					: debouncedAiIsThinking
+						? m.discussion_waiting_placeholder()
+						: null}
 			/>
 			<button
 				type="button"
 				class="tour-proposal-button w-full rounded-full border-2 border-sand bg-white px-4 py-3 text-center text-base font-semibold text-black shadow-lg transition-colors hover:bg-sand/20"
 				disabled={!tourCompleted}
-				onclick={() => (openProposalDialog = true)}
+				onclick={() => {
+					openHistoryDialog = false;
+					openProposalDialog = true;
+				}}
 			>
 				<FileText class="mr-2 inline-block h-4 w-4" />
 				{m.view_full_proposal()}
@@ -1274,7 +1319,7 @@
 	{/if}
 
 	<!-- Discussion History Dialog -->
-	{#if enableDiscussionChat && chatRound}
+	{#if enableDiscussionChat && chatRound && !openProposalDialog && !openEndDialog}
 		<DiscussionHistoryDialog
 			bind:open={openHistoryDialog}
 			messages={discussionMessages}
@@ -1306,6 +1351,7 @@
 		{participants}
 		playersState={gameState.playersState}
 		aiMessages={chatRound ? aiMessages : []}
+		round7VisibleAiAgentIds={chatRound ? round7VisibleAiAgentIds : []}
 		currentRound={gameState.currentRound}
 		{tourCompleted}
 		{transitionState}

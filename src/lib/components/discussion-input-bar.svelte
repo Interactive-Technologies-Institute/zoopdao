@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { FileText, MessageSquare, Send, Plus } from 'lucide-svelte';
 	import { m } from '@src/paraglide/messages';
+	import { getLocale } from '@src/paraglide/runtime.js';
 	import { supabase } from '@/supabase';
 	import {
 		RAG_ALLOWED_EXTENSIONS,
@@ -345,6 +346,16 @@ inputDisabled = inputDisabled ?? disabled;
 			handleSend();
 		}
 	}
+
+	const buttonLabels = $derived.by(() => {
+		const locale = getLocale();
+		const isPt = locale.toLowerCase().startsWith('pt');
+		return {
+			history: isPt ? 'Conversa' : 'Chat',
+			files: isPt ? 'Ficheiros' : 'Files',
+			send: isPt ? 'Enviar' : 'Send'
+		};
+	});
 </script>
 
 <!-- Discussion Input Bar -->
@@ -403,19 +414,26 @@ inputDisabled = inputDisabled ?? disabled;
 			</div>
 		{/if}
 		<!-- Background bar with shadow -->
-		<div class="bg-surface rounded-full px-3 py-3 sm:px-4 sm:py-4 shadow-2xl border border-border/40">
-			<div class="flex items-center gap-1.5 sm:gap-2">
-				<div class="flex items-center gap-1 sm:gap-1.5">
-					<!-- History Button -->
-					<button
-						onclick={onOpenHistory}
-						disabled={historyDisabled}
-						class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-neutral-100 active:bg-yellow-300 transition-colors flex items-center justify-center border-2 border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
-						aria-label={m.open_message_history()}
-						title={m.open_message_history()}
-					>
-						<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-					</button>
+			<div class="bg-surface rounded-full px-3 py-3 sm:px-4 sm:py-4 shadow-2xl border border-border/40">
+				<div class="flex items-center gap-1.5 sm:gap-2">
+					<div class="flex items-center gap-1 sm:gap-1.5">
+						<!-- History Button -->
+						<div class="relative flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12">
+							<button
+								onclick={onOpenHistory}
+								disabled={historyDisabled}
+								class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-neutral-100 active:bg-yellow-300 transition-colors flex items-center justify-center border-2 border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+								aria-label={m.open_message_history()}
+							title={m.open_message_history()}
+						>
+								<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+							</button>
+							<span
+								class="absolute left-1/2 -translate-x-1/2 top-full mt-1 block max-w-[3.5rem] text-center text-[9px] sm:text-[10px] leading-none text-text-muted whitespace-nowrap overflow-hidden text-ellipsis"
+							>
+								{buttonLabels.history}
+							</span>
+						</div>
 
 					<!-- Add Documents Button -->
 					<input
@@ -427,21 +445,28 @@ inputDisabled = inputDisabled ?? disabled;
 						onchange={handleFileSelect}
 						disabled={documentsDisabled}
 					/>
-					<button
-						type="button"
-						onclick={() => fileInput?.click()}
-						disabled={
-							documentsDisabled ||
-							!proposalId ||
-							!userId ||
-							attachments.length >= RAG_MAX_FILES_PER_ROUND
-						}
-						class="images flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-neutral-100 active:bg-yellow-300 transition-colors flex items-center justify-center border-2 border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
-						aria-label={m.add_documents()}
-						title={m.add_documents()}
-					>
-						<Plus class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
-					</button>
+						<div class="relative flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12">
+							<button
+								type="button"
+								onclick={() => fileInput?.click()}
+							disabled={
+								documentsDisabled ||
+								!proposalId ||
+								!userId ||
+								attachments.length >= RAG_MAX_FILES_PER_ROUND
+							}
+							class="images flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-neutral-100 active:bg-yellow-300 transition-colors flex items-center justify-center border-2 border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed"
+							aria-label={m.add_documents()}
+							title={m.add_documents()}
+						>
+								<Plus class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
+							</button>
+							<span
+								class="absolute left-1/2 -translate-x-1/2 top-full mt-1 block max-w-[3.75rem] text-center text-[9px] sm:text-[10px] leading-none text-text-muted whitespace-nowrap overflow-hidden text-ellipsis"
+							>
+								{buttonLabels.files}
+							</span>
+						</div>
 				</div>
 
 				<!-- Divider -->
@@ -458,15 +483,22 @@ inputDisabled = inputDisabled ?? disabled;
 				/>
 
 				<!-- Send Button -->
-				<button
-					onclick={handleSend}
-					disabled={inputDisabled || !message.trim()}
-					class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary hover:bg-primary-hover active:bg-primary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-					aria-label={m.send_message()}
-					title={m.send_message()}
-				>
-					<Send class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-				</button>
+				<div class="relative flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14">
+					<button
+						onclick={handleSend}
+						disabled={inputDisabled || !message.trim()}
+						class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-primary hover:bg-primary-hover active:bg-primary-active transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+						aria-label={m.send_message()}
+						title={m.send_message()}
+					>
+						<Send class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+					</button>
+					<span
+						class="absolute left-1/2 -translate-x-1/2 top-full mt-1 block max-w-[3.5rem] text-center text-[9px] sm:text-[10px] leading-none text-text-muted whitespace-nowrap overflow-hidden text-ellipsis"
+					>
+						{buttonLabels.send}
+					</span>
+				</div>
 			</div>
 		</div>
 	</div>
