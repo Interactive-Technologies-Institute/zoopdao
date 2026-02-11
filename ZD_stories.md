@@ -3267,3 +3267,75 @@ As a user viewing a proposal preview, I want to open a list of all votes (who vo
 3. Voting from preview saves: `context='preview'`, `discussion_mode='no_discussion'`, `cargo` from onboarding role.
 4. Voting from end-of-discussion saves: `context='discussion'`, `discussion_mode` matches the chosen discussion mode, `cargo` from onboarding role.
 5. Existing constraint "one vote per user per proposal" remains enforced (no duplicate votes).
+
+---
+
+## ZD-183: Round 7 AI Pipeline V2 (simple, deterministic, auditable)
+
+**Overview:**
+Stabilize Round 7 by replacing the previous mixed orchestration path with a linear V2 pipeline that always talks to Aquari, performs exactly one provider call per user message, and exposes step-by-step logs with a single `requestId`.
+
+**User story:**
+As a participant in Round 7, I want AI replies to be reliable and contextual without hidden fallback behavior, so I can trust the discussion flow and quickly diagnose real provider failures.
+
+**Scope / Implementation notes:**
+
+- New Round 7 pipeline structure under `src/lib/server/ai-pipeline/round7/`:
+  - `executor.ts` orchestrates request flow end-to-end.
+  - `context.ts` loads proposal/chat/RAG context and resolves player, idempotency, and provider thread.
+  - `routing.ts` enforces `aquari_only` scene plan.
+  - `prompt.ts` builds the text system prompt from non-human prompt profile sections.
+  - `provider.ts` performs one call via `generateAIMessageIaedu`.
+  - `response.ts` normalizes HTTP success/error bodies.
+  - `logger.ts` provides structured step logs (`[round7:v2]`).
+- API route `src/routes/api/ai/messages/batch/+server.ts` now uses V2 as the active path for Round 7.
+- Provider thread persistence added:
+  - migration `supabase/migrations/20260211000000_add_ai_provider_threads.sql`.
+  - backend resolves/creates thread by `(game_id, round, user_id, provider)` and reuses it across prompts.
+- Failure semantics simplified:
+  - no synthetic AI text injected before provider call.
+  - provider failure can return hard error (`Model error; please try again`) instead of masking with generic fallback text.
+- Prompting simplification:
+  - speaker output path is text-only for stability (JSON payload compare branches disabled from active path).
+  - same-language rule is handled in prompt instructions.
+  - prompt now includes explicit user and assembly identity context in the active path:
+    - `currentUserProfile` (`name`, `role`, `description`) is resolved from `players` and sent to provider.
+    - `assemblyParticipants` block is sent in the final prompt text (not only stored in context).
+- UI adjustments shipped during this cycle:
+  - input bar minimal labels under actions (`conversa/ficheiros/enviar` and `chat/files/send`).
+  - text hint alignment in the input bar kept centered after labels.
+  - Round 7 safe-area/status pill overlap fixes refined without changing avatar anchor logic.
+
+**Database:**
+
+- Added table `public.ai_provider_threads` with RLS enabled and service-role grants.
+- Added unique scope index for thread reuse and lookup index by `thread_id`.
+
+**Acceptance criteria:**
+
+1. Round 7 sends one provider request per user prompt in normal operation.
+2. Round 7 responds only with Aquari (`speakingOrder` contains only `ai-agent-aquari`).
+3. If provider fails before a valid AI message is produced, backend returns hard error (no fake persisted AI reply).
+4. Provider thread is reused per `(game, round, user, provider)` and visible in logs by suffix.
+5. Logs show linear stages (`request_received` -> `context_built` -> `routing_selected` -> `provider_request` -> `response_sent`) with one `requestId`.
+6. Final prompt includes user identity (`name`, `role`, `description`) and `assemblyParticipants` explicitly in the provider input.
+
+**Completion criteria:**
+
+1. Manual Round 7 run confirms stable responses on provider success.
+2. Manual Round 7 run confirms explicit hard error response on provider failure.
+3. No compare/debug dual-call path is active in the production Round 7 flow.
+
+**Context section (initial intent, future direction, and simplification rationale):**
+
+- Initial intent before simplification:
+  - multi-agent orchestration (Aquari + specialists), planner-assisted routing, and fully structured JSON payload/output contract.
+  - richer scene control in one model pass (`routing + scenePlan + messages`).
+- Why this was simplified now:
+  - provider instability (`Unexpected processing error`) made advanced orchestration unreliable and hard to debug.
+  - multiple fallback and compare branches were masking root causes and increasing latency/noise.
+  - deterministic behavior was required first to restore confidence in Round 7.
+- Potential future direction (after provider stability is proven):
+  - reintroduce `rule`/`planner` routing behind flags.
+  - re-enable structured JSON model contract incrementally with strict validation gates.
+  - keep V2 linear logs and hard-error semantics as baseline observability guardrails.
