@@ -9,7 +9,8 @@
 	import { Clock, Users } from 'lucide-svelte';
 	import * as Dialog from '@/components/ui/dialog';
 	import {
-		PEDAGOGIC_FINAL_TIMER_MINUTES,
+		PEDAGOGIC_ROUND7_USER_PROMPTS_DEFAULT,
+		PEDAGOGIC_ROUND7_USER_PROMPTS_MAX,
 		PEDAGOGIC_ROUNDS_TIMER_MINUTES
 	} from '$lib/config/organization';
 
@@ -23,7 +24,7 @@
 	let isUpdating = $state(false);
 	let pedagogicTimerDialogOpen = $state(false);
 	let pedagogicRoundsMinutes = $state(PEDAGOGIC_ROUNDS_TIMER_MINUTES);
-	let pedagogicFinalMinutes = $state(PEDAGOGIC_FINAL_TIMER_MINUTES);
+	let pedagogicRound7UserPrompts = $state(PEDAGOGIC_ROUND7_USER_PROMPTS_DEFAULT);
 
 	function openPedagogicTimerDialog() {
 		// Pre-fill with DB values if they exist (otherwise organization defaults).
@@ -32,16 +33,20 @@
 			typeof game.pedagogic_rounds_timer_minutes === 'number'
 				? game.pedagogic_rounds_timer_minutes
 				: PEDAGOGIC_ROUNDS_TIMER_MINUTES;
-		pedagogicFinalMinutes =
-			typeof game.pedagogic_final_timer_minutes === 'number'
-				? game.pedagogic_final_timer_minutes
-				: PEDAGOGIC_FINAL_TIMER_MINUTES;
+		pedagogicRound7UserPrompts =
+			typeof game.pedagogic_round7_user_prompts === 'number'
+				? game.pedagogic_round7_user_prompts
+				: PEDAGOGIC_ROUND7_USER_PROMPTS_DEFAULT;
+		pedagogicRound7UserPrompts = Math.max(
+			1,
+			Math.min(PEDAGOGIC_ROUND7_USER_PROMPTS_MAX, Math.floor(pedagogicRound7UserPrompts))
+		);
 		pedagogicTimerDialogOpen = true;
 	}
 
 	async function selectMode(
 		mode: 'pedagogic' | 'decision_making',
-		timerConfig?: { roundsMinutes: number; finalMinutes: number }
+		timerConfig?: { roundsMinutes: number; round7UserPrompts: number }
 	) {
 		if (isUpdating) return;
 
@@ -52,7 +57,10 @@
 			const updatePayload: Record<string, unknown> = { mode };
 			if (mode === 'pedagogic' && timerConfig) {
 				updatePayload.pedagogic_rounds_timer_minutes = timerConfig.roundsMinutes;
-				updatePayload.pedagogic_final_timer_minutes = timerConfig.finalMinutes;
+				updatePayload.pedagogic_round7_user_prompts = Math.max(
+					1,
+					Math.min(PEDAGOGIC_ROUND7_USER_PROMPTS_MAX, Math.floor(timerConfig.round7UserPrompts))
+				);
 			}
 
 			const { error } = await supabase
@@ -153,11 +161,12 @@
 					<input
 						type="number"
 						min="1"
-						max="120"
+						max={PEDAGOGIC_ROUND7_USER_PROMPTS_MAX}
 						inputmode="numeric"
 						class="border border-deep-teal/30 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-deep-teal/30"
-						value={pedagogicFinalMinutes}
-						oninput={(e) => (pedagogicFinalMinutes = Number((e.target as HTMLInputElement).value))}
+						value={pedagogicRound7UserPrompts}
+						oninput={(e) =>
+							(pedagogicRound7UserPrompts = Number((e.target as HTMLInputElement).value))}
 					/>
 				</label>
 			</div>
@@ -176,13 +185,14 @@
 					class="px-4 py-2 rounded-md bg-deep-teal text-white text-sm font-semibold hover:bg-deep-teal/90 disabled:opacity-50 disabled:cursor-not-allowed"
 					disabled={isUpdating ||
 						!Number.isFinite(pedagogicRoundsMinutes) ||
-						!Number.isFinite(pedagogicFinalMinutes) ||
+						!Number.isFinite(pedagogicRound7UserPrompts) ||
 						pedagogicRoundsMinutes <= 0 ||
-						pedagogicFinalMinutes <= 0}
+						pedagogicRound7UserPrompts <= 0 ||
+						pedagogicRound7UserPrompts > PEDAGOGIC_ROUND7_USER_PROMPTS_MAX}
 					onclick={() =>
 						selectMode('pedagogic', {
 							roundsMinutes: pedagogicRoundsMinutes,
-							finalMinutes: pedagogicFinalMinutes
+							round7UserPrompts: pedagogicRound7UserPrompts
 						})}
 				>
 					{m.save_and_continue()}

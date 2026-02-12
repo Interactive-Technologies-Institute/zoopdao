@@ -184,7 +184,7 @@
 	"how_to_play_step_1_1": "No início da discussão, escolhes o teu cargo e lês o contexto da proposta ",
 	"how_to_play_step_1_2": ". Depois, fazes a tua primeira intervenção como participante.",
 	"how_to_play_step_2": "Cada ronda corresponde a um ponto da proposta. Depois de submeteres a tua resposta, a ronda avança quando todos os participantes concluírem.",
-	"how_to_play_step_3": "No modo pedagógico há temporizador para manter a discussão dinâmica ({pedagogic_rounds_minutes} min nas rondas 1-6 e {pedagogic_final_minutes} min na ronda 7). No modo tomada de decisão não há temporizador.",
+	"how_to_play_step_3": "No modo pedagógico há temporizador para manter a discussão dinâmica ({pedagogic_rounds_minutes} min nas rondas 1-6) e um limite de prompts na ronda final ({pedagogic_final_minutes} prompts na ronda 7). No modo tomada de decisão não há temporizador.",
 	"how_to_play_step_4": "A discussão termina após 7 rondas. Na ronda final, partilha os teus pensamentos finais e vota na proposta.",
 	"how_to_play_step_5": "Quando a participação terminar, podes rever a tua discussão final e partilhá-la com outros na secção de discussões guardadas, atribuindo-lhe um título e o teu nome de participante. Podes optar por não partilhar a tua discussão.",
 	"confirm_leave_discussion": "Tens a certeza de que queres sair da discussão?",
@@ -354,8 +354,8 @@
 	"decision_making_mode": "Tomada de Decisão",
 	"decision_making_mode_description": "Sem temporizador",
 	"configure_pedagogic_timer_title": "Definir temporizador",
-	"configure_pedagogic_timer_subtitle": "Escolhe a duração (em minutos) para as rondas 1-6 e para a ronda final.",
+	"configure_pedagogic_timer_subtitle": "Escolhe a duração (em minutos) para as rondas 1-6 e o limite de prompts para a ronda final.",
 	"configure_pedagogic_timer_rounds_label": "Rondas 1-6 (minutos)",
-	"configure_pedagogic_timer_final_label": "Ronda 7 (minutos)",
+	"configure_pedagogic_timer_final_label": "Ronda 7 (prompts)",
 	"save_and_continue": "Guardar e continuar"
 }

@@ -119,6 +119,8 @@
 			// Start timer only when dialog is actually open
 			// Use setTimeout to ensure dialog is fully rendered before starting timer
 			setTimeout(() => {
+				// Round 7 is prompt-limited (no timer).
+				if (currentRound === 7) return;
 				const currentGameRound = gameState.gameRounds.find((r) => r.round === currentRound);
 				if (currentGameRound && !currentGameRound.timer_duration) {
 					gameState.startRoundTimer();
@@ -523,7 +525,10 @@
 								{/if}
 							{/if}
 							<div class="flex items-center justify-between gap-3 bg-white">
-								{#if open && playerState === 'writing' && gameState.mode === 'pedagogic'}
+								{#if open &&
+									playerState === 'writing' &&
+									gameState.mode === 'pedagogic' &&
+									gameState.getTimerDurationForRound(currentRound) > 0}
 									<Timer
 										onTimeUp={handleTimeUp}
 										duration={gameState.getTimerDurationForRound(currentRound)}

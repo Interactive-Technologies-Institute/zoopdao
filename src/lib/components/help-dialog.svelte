@@ -5,7 +5,7 @@
 	import { Flag } from 'lucide-svelte';
 	import {
 		ORGANIZATION_NAME,
-		PEDAGOGIC_FINAL_TIMER_MINUTES,
+		PEDAGOGIC_ROUND7_USER_PROMPTS_DEFAULT,
 		PEDAGOGIC_ROUNDS_TIMER_MINUTES
 	} from '$lib/config/organization';
 
@@ -60,7 +60,7 @@
 				<p>
 					{m.how_to_play_step_3({
 						pedagogic_rounds_minutes: PEDAGOGIC_ROUNDS_TIMER_MINUTES,
-						pedagogic_final_minutes: PEDAGOGIC_FINAL_TIMER_MINUTES
+						pedagogic_final_minutes: PEDAGOGIC_ROUND7_USER_PROMPTS_DEFAULT
 					})}
 				</p>
 							</div>

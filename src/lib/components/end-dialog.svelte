@@ -26,6 +26,7 @@
 	interface EndDialogProps {
 		open: boolean;
 		gameState: GameState;
+		autoSaveOnOpen?: boolean;
 		discussionMessages?: Array<{
 			id: string;
 			content: string;
@@ -40,6 +41,7 @@
 	let {
 		open = $bindable(false),
 		gameState,
+		autoSaveOnOpen = false,
 		discussionMessages = [],
 		proposalId = null
 	}: EndDialogProps = $props();
@@ -53,6 +55,9 @@
 		choice: 'yes' | 'no' | 'abstain';
 		context: 'preview' | 'discussion';
 	} | null>(null);
+	let isSubmitting = $state(false);
+	let round7MessagesLoaded = $state(false);
+	let autoSaveDone = $state(false);
 	const voteOptions = [
 		{ key: 'yes' as const, label: () => m.vote_yes(), color: 'bg-green-200 border-green-500' },
 		{ key: 'no' as const, label: () => m.vote_no(), color: 'bg-rose-200 border-rose-500' },
@@ -107,6 +112,7 @@
 	$effect(() => {
 		if (open && gameState) {
 			const loadRound7Messages = async () => {
+				round7MessagesLoaded = false;
 				try {
 					const localRound7Messages = discussionMessages.filter((msg) => msg.round === 7);
 					if (localRound7Messages.length > 0) {
@@ -134,9 +140,13 @@
 					}
 				} catch (error) {
 					console.error('Error loading round 7 discussion messages:', error);
+				} finally {
+					round7MessagesLoaded = true;
 				}
 			};
 			loadRound7Messages();
+		} else {
+			round7MessagesLoaded = false;
 		}
 	});
 
@@ -446,9 +456,16 @@
 		}
 	});
 
-	async function handleGameEnd() {
-		playAudio(audio);
-		if (voteRequired && !vote) return;
+	async function handleGameEnd(options?: { allowMissingVote?: boolean; playSound?: boolean }) {
+		if (isSubmitting) return;
+		const allowMissingVote = options?.allowMissingVote === true;
+		const playSound = options?.playSound !== false;
+
+		if (playSound) {
+			playAudio(audio);
+		}
+		if (voteRequired && !vote && !allowMissingVote) return;
+		isSubmitting = true;
 		// Logic to save the story
 		const discussionText = formatRound7Discussion();
 		const id = await gameState.saveStory(
@@ -460,6 +477,7 @@
 		);
 		if (!id || id === false) {
 			console.error('Failed to save discussion; no id returned.');
+			isSubmitting = false;
 			return;
 		}
 
@@ -503,7 +521,21 @@
 		playerName = '';
 		storyTitle = '';
 		vote = null;
+		isSubmitting = false;
 	}
+
+	// ZD-184: Pedagogic mode auto-save when Round 7 prompt quota is exhausted.
+	$effect(() => {
+		if (!open) return;
+		if (!autoSaveOnOpen) return;
+		if (autoSaveDone) return;
+		if (!gameState || gameState.mode !== 'pedagogic') return;
+		if (!round7MessagesLoaded) return;
+		if (!playerName.trim() || !storyTitle.trim()) return;
+
+		autoSaveDone = true;
+		handleGameEnd({ allowMissingVote: true, playSound: false });
+	});
 
 	let editMode = $state(false);
 	let editingAnswerId = $state<string | null>(null);
@@ -597,7 +629,7 @@
 					class="p-2 flex disabled:bg-gray-300 disabled:text-gray-600 disabled:hover:bg-gray-300"
 					size="lg"
 					onclick={handleGameEnd}
-					disabled={!isFormValid}
+					disabled={!isFormValid || isSubmitting}
 				>
 					{voteRequired ? m.submit_discussion_and_vote() : m.submit_discussion()}
 				</Button>

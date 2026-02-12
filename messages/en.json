@@ -184,7 +184,7 @@
 	"how_to_play_step_1_1": "At the start of the discussion, choose your role and review the proposal context ",
 	"how_to_play_step_1_2": ". Then make your first contribution as a participant.",
 	"how_to_play_step_2": "Each round corresponds to a point of the proposal. After you submit your response, the round advances when all participants finish.",
-	"how_to_play_step_3": "In Pedagogic mode there is a timer to keep the discussion moving ({pedagogic_rounds_minutes} min for rounds 1-6 and {pedagogic_final_minutes} min for round 7). In decision-making mode there is no timer.",
+	"how_to_play_step_3": "In Pedagogic mode there is a timer to keep the discussion moving ({pedagogic_rounds_minutes} min for rounds 1-6) and a prompt limit for the final round ({pedagogic_final_minutes} prompts for round 7). In decision-making mode there is no timer.",
 	"how_to_play_step_4": "The discussion ends after 7 rounds. In the final round, share your concluding thoughts and vote on the proposal.",
 	"how_to_play_step_5": "Once the participation is over, you can review your final discussion and share it with others in the saved discussions section, by giving it a title and your participant name. You can opt-out from sharing your discussion.",
 	"confirm_leave_discussion": "Are you sure you want to leave the discussion?",
@@ -354,8 +354,8 @@
 	"decision_making_mode": "Decision-making",
 	"decision_making_mode_description": "Without timer",
 	"configure_pedagogic_timer_title": "Set timer",
-	"configure_pedagogic_timer_subtitle": "Choose the duration (in minutes) for rounds 1-6 and for the final round.",
+	"configure_pedagogic_timer_subtitle": "Choose the duration (in minutes) for rounds 1-6 and the prompt limit for the final round.",
 	"configure_pedagogic_timer_rounds_label": "Rounds 1-6 (minutes)",
-	"configure_pedagogic_timer_final_label": "Round 7 (minutes)",
+	"configure_pedagogic_timer_final_label": "Round 7 (prompts)",
 	"save_and_continue": "Save and continue"
 }

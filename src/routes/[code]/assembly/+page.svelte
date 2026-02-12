@@ -23,7 +23,6 @@
 	import { goto } from '$app/navigation';
 	import StatusPill from '@/components/status-pill.svelte';
 	import ProposalDialog from '@/components/proposal-dialog.svelte';
-	import Timer from '@/components/timer.svelte';
 	import {
 		calculateAIAgentsCount,
 		generateAIAgents,
@@ -141,7 +140,9 @@
 	const ENABLE_DISCUSSION_RELOAD = true;
 	const chatRound = $derived.by(() => gameState.currentRound === 7);
 	const SINGLE_AI_MODE_ROUND7 = false;
-	const MAX_USER_MESSAGES_ROUND7 = 5;
+	const round7PromptLimit = $derived.by(() =>
+		gameState.mode === 'pedagogic' ? gameState.getPedagogicRound7UserPrompts() : 5
+	);
 	const TOP_MID_AI_AGENT_ID = 'ai-agent-aquari';
 	const DEBUG_AI_TIMING = false;
 	const SINGLE_AI_AGENT: AIAgent = {
@@ -229,7 +230,8 @@
 		if (gameState.mode !== 'pedagogic') {
 			return;
 		}
-		if (gameState.currentRound < 1 || gameState.currentRound > 7) {
+		// Round 7 is prompt-limited (no timer).
+		if (gameState.currentRound < 1 || gameState.currentRound > 6) {
 			return;
 		}
 
@@ -544,8 +546,8 @@
 	});
 
 	const userPromptRemainingRound7 = $derived.by(() => {
-		if (!enableDiscussionChat || !chatRound) return MAX_USER_MESSAGES_ROUND7;
-		return Math.max(0, MAX_USER_MESSAGES_ROUND7 - userPromptUsedCountRound7);
+		if (!enableDiscussionChat || !chatRound) return round7PromptLimit;
+		return Math.max(0, round7PromptLimit - userPromptUsedCountRound7);
 	});
 
 	const round7PromptStatusMessage = $derived.by(() => {
@@ -555,12 +557,12 @@
 		const remaining = userPromptRemainingRound7;
 		if (userPromptUsedCountRound7 <= 0) {
 			return isPt
-				? `Tens ${MAX_USER_MESSAGES_ROUND7} prompts`
-				: `You have ${MAX_USER_MESSAGES_ROUND7} prompts.`;
+				? `Tens ${round7PromptLimit} prompts`
+				: `You have ${round7PromptLimit} prompts.`;
 		}
 		return isPt
-			? `Prompts restantes: ${remaining}/${MAX_USER_MESSAGES_ROUND7}.`
-			: `Prompts left: ${remaining}/${MAX_USER_MESSAGES_ROUND7}.`;
+			? `Prompts restantes: ${remaining}/${round7PromptLimit}.`
+			: `Prompts left: ${remaining}/${round7PromptLimit}.`;
 	});
 
 	const aiIsThinking = $derived.by(() => typingAgents.size > 0);
@@ -866,7 +868,7 @@
 	// Round 7 closes after the configured user prompt quota is exhausted and AI typing ends.
 	$effect(() => {
 		if (!chatRound || openEndDialog) return;
-		if (userPromptUsedCountRound7 < MAX_USER_MESSAGES_ROUND7) return;
+		if (userPromptUsedCountRound7 < round7PromptLimit) return;
 		if (typingAgents.size > 0 || userIsSending) return;
 		playAudio(fanfareAudio);
 		openEndDialog = true;
@@ -893,10 +895,7 @@
 	async function handleSendMessage(message: string) {
 		try {
 			if (chatRound) {
-				const userMessageCount = discussionMessages.filter(
-					(msg) => msg.senderType === 'human' && msg.round === 7
-				).length;
-				if (userMessageCount >= MAX_USER_MESSAGES_ROUND7) {
+				if (userPromptUsedCountRound7 >= round7PromptLimit) {
 					alert(m.message_limit_reached());
 					return;
 				}
@@ -955,7 +954,7 @@
 					userLastSentMessage = savedMessage.content;
 					userDraft = '';
 					userIsSending = false;
-					round7TurnHint = Math.min(MAX_USER_MESSAGES_ROUND7, round7TurnHint + 1);
+					round7TurnHint = Math.min(round7PromptLimit, round7TurnHint + 1);
 				}
 
 			const logAiTiming = (event: string, payload: Record<string, unknown>) => {
@@ -1264,20 +1263,6 @@
 
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
 	{#if enableDiscussionChat && chatRound && !openProposalDialog}
-		{#if gameState.mode === 'pedagogic'}
-			<div
-				class="fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[560px] z-50 pointer-events-auto"
-			>
-				<div
-					class="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg border border-black/5"
-				>
-					<Timer
-						onTimeUp={() => {}}
-						duration={gameState.getTimerDurationForRound(gameState.currentRound)}
-					/>
-				</div>
-			</div>
-		{/if}
 		<div
 			class="discussion-controls fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] sm:w-[calc(100%-2rem)] max-w-[760px] z-50 pointer-events-auto flex flex-col gap-3"
 		>
@@ -1377,6 +1362,7 @@
 	<EndDialog
 		bind:open={openEndDialog}
 		{gameState}
+		autoSaveOnOpen={gameState.mode === 'pedagogic'}
 		{discussionMessages}
 		proposalId={data.proposalId ?? null}
 	/>

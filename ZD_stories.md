@@ -3338,4 +3338,37 @@ As a participant in Round 7, I want AI replies to be reliable and contextual wit
 - Potential future direction (after provider stability is proven):
   - reintroduce `rule`/`planner` routing behind flags.
   - re-enable structured JSON model contract incrementally with strict validation gates.
-  - keep V2 linear logs and hard-error semantics as baseline observability guardrails.
+
+---
+
+## ZD-184: Pedagogic Mode (Round 7) — Prompt-limited discussion (max 10, default 5) + auto-save + no ticking timer
+
+**Overview:**
+Update Pedagogic mode Round 7 to end based on a configurable user-prompt quota (instead of a timer), cap it at 10 prompts, default it to 5 prompts, and remove any ticking timer sound from the Round 7 flow.
+
+**User story:**
+As a facilitator running Pedagogic mode, I want Round 7 to be paced by a prompt quota (not a countdown), so the final discussion stays focused and ends predictably after a fixed number of user turns.
+
+**Scope / Implementation notes:**
+
+- Lobby (mode selection) updates:
+  - Replace the Pedagogic-mode Round 7 timer input with a Round 7 prompt quota input (min 1, max 10, default 5).
+  - Persist the setting on the game row.
+- Round 7 runtime updates (Pedagogic only):
+  - Use the per-game Round 7 prompt quota to enforce the Round 7 send limit.
+  - When the user exhausts all prompts and AI replies finish, auto-save the discussion and redirect to the saved discussion page.
+  - Do not render a Round 7 timer UI and do not play any ticking sounds for Round 7.
+- Rounds 1–6 remain timer-based in Pedagogic mode.
+
+**Database:**
+
+- Add `public.games.pedagogic_round7_user_prompts INT NOT NULL DEFAULT 5`.
+
+**Acceptance criteria:**
+
+1. In `/{code}/mode`, Pedagogic mode configuration shows:
+   - Rounds 1–6: minutes input (unchanged).
+   - Round 7: prompts input (default 5, max 10).
+2. In Round 7 (Pedagogic mode), the user can send at most the configured number of prompts (up to 10).
+3. When the user reaches the configured prompt limit in Round 7 (Pedagogic mode), the flow auto-saves the discussion and navigates to the saved discussion page.
+4. No ticking timer sound plays in Round 7 (Pedagogic mode).

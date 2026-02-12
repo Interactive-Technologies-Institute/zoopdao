@@ -1,7 +1,8 @@
 import { goto } from '$app/navigation';
 import { supabase } from '@/supabase';
 import {
-	PEDAGOGIC_FINAL_TIMER_MINUTES,
+	PEDAGOGIC_ROUND7_USER_PROMPTS_DEFAULT,
+	PEDAGOGIC_ROUND7_USER_PROMPTS_MAX,
 	PEDAGOGIC_ROUNDS_TIMER_MINUTES
 } from '$lib/config/organization';
 import { getCharacterCategory } from '../types';
@@ -43,10 +44,20 @@ export class GameState {
 	roundTimerDuration: number = $state(0);
 	mode: 'pedagogic' | 'decision_making' = $state('pedagogic');
 	pedagogicRoundsTimerMinutes: number = $state(PEDAGOGIC_ROUNDS_TIMER_MINUTES);
-	pedagogicFinalTimerMinutes: number = $state(PEDAGOGIC_FINAL_TIMER_MINUTES);
+	pedagogicRound7UserPrompts: number = $state(PEDAGOGIC_ROUND7_USER_PROMPTS_DEFAULT);
 	private activityInterval: ReturnType<typeof setInterval> | null = null;
 	private beforeUnloadHandler: (() => void) | null = null;
 	private unloadTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	private clampRound7UserPrompts(value: unknown): number {
+		const num = typeof value === 'number' ? value : Number(value);
+		if (!Number.isFinite(num)) return PEDAGOGIC_ROUND7_USER_PROMPTS_DEFAULT;
+		return Math.max(1, Math.min(PEDAGOGIC_ROUND7_USER_PROMPTS_MAX, Math.floor(num)));
+	}
+
+	getPedagogicRound7UserPrompts(): number {
+		return this.clampRound7UserPrompts(this.pedagogicRound7UserPrompts);
+	}
 
 	private getOnboardingProfile(): {
 		roleType: string | null;
@@ -116,15 +127,13 @@ export class GameState {
 		this.code = game.code;
 		this.state = game.state as GameStateEnum;
 		this.mode = mode;
-		// Use per-game timer config when present (falls back to organization defaults).
+		// Use per-game pedagogic config when present (falls back to organization defaults).
 		const roundsMinutes: unknown = (game as any).pedagogic_rounds_timer_minutes;
-		const finalMinutes: unknown = (game as any).pedagogic_final_timer_minutes;
+		const round7UserPrompts: unknown = (game as any).pedagogic_round7_user_prompts;
 		if (typeof roundsMinutes === 'number' && Number.isFinite(roundsMinutes)) {
 			this.pedagogicRoundsTimerMinutes = roundsMinutes;
 		}
-		if (typeof finalMinutes === 'number' && Number.isFinite(finalMinutes)) {
-			this.pedagogicFinalTimerMinutes = finalMinutes;
-		}
+		this.pedagogicRound7UserPrompts = this.clampRound7UserPrompts(round7UserPrompts);
 		this.gameRounds = gameRounds;
 		this.playerId = playerId;
 		this.players = players;
@@ -604,12 +613,15 @@ export class GameState {
 			return false;
 		}
 
+		// Round 7 is prompt-limited (no timer).
+		if (this.currentRound === 7) {
+			this.roundTimerDuration = 0;
+			return false;
+		}
+
 		// Determine duration based on round:
-		// Rounds 1-6 and round 7 durations are configurable.
-		const durationMinutes =
-			this.currentRound === 7
-				? this.pedagogicFinalTimerMinutes
-				: this.pedagogicRoundsTimerMinutes;
+		// Rounds 1-6 share the same timer duration.
+		const durationMinutes = this.pedagogicRoundsTimerMinutes;
 		const durationSeconds = durationMinutes * 60;
 
 		const currentGameRound = this.gameRounds.find((r) => r.round === this.currentRound);
@@ -638,9 +650,9 @@ export class GameState {
 		if (this.mode !== 'pedagogic') {
 			return 0;
 		}
-		const durationMinutes =
-			round === 7 ? this.pedagogicFinalTimerMinutes : this.pedagogicRoundsTimerMinutes;
-		return durationMinutes * 60;
+		// Round 7 is prompt-limited (no timer).
+		if (round === 7) return 0;
+		return this.pedagogicRoundsTimerMinutes * 60;
 	}
 
 	async subscribeRoundTimer() {
