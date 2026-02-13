@@ -271,8 +271,20 @@
 	let openStoryDialog = $state(false);
 	let openHelpDialog = $state(false);
 	let openEndDialog = $state(false);
+	let pendingEndDialogTimer: number | null = null;
 	let openProposalDialog = $state(false);
 	let openHistoryDialog = $state(false);
+
+	$effect(() => {
+		// Debug: log when history dialog open state changes to help trace automatic opens
+		openHistoryDialog;
+		try {
+			console.debug('openHistoryDialog state changed', { openHistoryDialog });
+			console.debug(new Error('openHistoryDialog stack').stack);
+		} catch (e) {
+			/* ignore */
+		}
+	});
 	let keepStoryDialogOpen = $state(false);
 	let showLayoutDebug = $state(false);
 	let safeAreaObserver: ResizeObserver | null = null;
@@ -317,7 +329,7 @@
 			: Math.max(statusBottom, roundBottom) + topPadding;
 		const bottomPx = bottomEl
 			? window.innerHeight - bottomEl.getBoundingClientRect().top + bottomPadding
-			: 0;
+			: aquariumLayout.safeBottomPx || 0;
 
 		aquariumLayout.setSafeArea(topPx, bottomPx);
 
@@ -866,12 +878,29 @@
 	// });
 
 	// Round 7 closes after the configured user prompt quota is exhausted and AI typing ends.
+	// Wait 2s after conditions settle so the user can see the last AI message.
 	$effect(() => {
 		if (!chatRound || openEndDialog) return;
 		if (userPromptUsedCountRound7 < round7PromptLimit) return;
 		if (typingAgents.size > 0 || userIsSending) return;
-		playAudio(fanfareAudio);
-		openEndDialog = true;
+
+		if (pendingEndDialogTimer) clearTimeout(pendingEndDialogTimer);
+		pendingEndDialogTimer = setTimeout(() => {
+			// Re-check conditions before opening
+			if (!chatRound || openEndDialog) return;
+			if (userPromptUsedCountRound7 < round7PromptLimit) return;
+			if (typingAgents.size > 0 || userIsSending) return;
+			playAudio(fanfareAudio);
+			openEndDialog = true;
+			pendingEndDialogTimer = null;
+		}, 2000) as unknown as number;
+
+		return () => {
+			if (pendingEndDialogTimer) {
+				clearTimeout(pendingEndDialogTimer);
+				pendingEndDialogTimer = null;
+			}
+		};
 	});
 
 	function getTopMidAgent(agents: AIAgent[]) {
@@ -1072,7 +1101,7 @@
 					}
 				}
 
-				const perAgentDelay = () => 2000 + Math.random() * 2000;
+				const perAgentDelay = () => 1000 + Math.random() * 1000;
 				const interMessageDelay = () => 700 + Math.random() * 900;
 				const topMidAgent = getTopMidAgent(aiAgents);
 				const fallbackSpeakingAgents = topMidAgent ? [topMidAgent] : aiAgents.slice(0, 1);
@@ -1259,7 +1288,7 @@
 		style={`top:${aquariumLayout.safeTopPx}px; bottom:${aquariumLayout.safeBottomPx}px;`}
 		aria-hidden="true"
 	></div>
-	<StoryDialog bind:open={openStoryDialog} {gameState} proposalId={data.proposalId ?? null} />
+	<StoryDialog bind:open={openStoryDialog} {gameState} proposalId={data.proposalId ?? null} historyOpen={openHistoryDialog} />
 
 	<!-- Discussion Input: Button for rounds 1-6, Input Bar for round 7 -->
 	{#if enableDiscussionChat && chatRound && !openProposalDialog}
@@ -1362,7 +1391,7 @@
 	<EndDialog
 		bind:open={openEndDialog}
 		{gameState}
-		autoSaveOnOpen={gameState.mode === 'pedagogic'}
+		autoSaveOnOpen={false}
 		{discussionMessages}
 		proposalId={data.proposalId ?? null}
 	/>
