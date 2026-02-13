@@ -25,6 +25,7 @@ export class GameState {
 	rounds: Round[];
 	code: string = $state('');
 	state: GameStateEnum = $state('starting');
+	gameId: number = $state(-1);
 	gameRounds: GameRound[] = $state([]);
 	currentRound: number = $derived.by(() => {
 		if (this.gameRounds.length === 0) return 0;
@@ -102,13 +103,14 @@ export class GameState {
 	}
 
 	getGameId(): number {
-		// Find a player's game_id (they all share the same game_id)
-		const gameId = this.players?.[0]?.game_id;
-		if (!gameId) {
+		// Prefer the stable game id provided on construction. Fall back to players array if missing.
+		if (typeof this.gameId === 'number' && this.gameId > 0) return this.gameId;
+		const fallback = this.players?.[0]?.game_id;
+		if (!fallback) {
 			console.error('Could not find game ID for filtering subscriptions');
-			return -1; // Return a value that won't match any real game ID
+			return -1;
 		}
-		return gameId;
+		return fallback;
 	}
 
 	constructor(
@@ -125,6 +127,7 @@ export class GameState {
 		this.cards = cards;
 		this.rounds = rounds;
 		this.code = game.code;
+		this.gameId = (game as any).id ?? -1;
 		this.state = game.state as GameStateEnum;
 		this.mode = mode;
 		// Use per-game pedagogic config when present (falls back to organization defaults).
@@ -456,6 +459,18 @@ export class GameState {
 	}
 
 	async submitAnswer(answer: string) {
+		try {
+			console.debug('gameState.submitAnswer called', {
+				answerLength: answer?.length ?? 0,
+				currentRound: this.currentRound,
+				mode: this.mode,
+				playerId: this.playerId
+			});
+			console.debug(new Error('gameState.submitAnswer stack').stack);
+		} catch (e) {
+			/* ignore */
+		}
+
 		const { error } = await supabase.rpc('player_answer', {
 			game_code: this.code,
 			game_round: this.currentRound,

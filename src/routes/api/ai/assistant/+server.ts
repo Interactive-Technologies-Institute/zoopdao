@@ -106,13 +106,35 @@ export const GET: RequestHandler = async ({ url }) => {
 			userId: url.searchParams.get('userId') ?? ''
 		});
 
+		console.debug('[AI assistant] GET request', { requestId, payload });
+
 		const supabaseAdmin = getSupabaseAdmin();
 		const authorized = await userIsActivePlayer({
 			supabaseAdmin,
 			gameId: payload.gameId,
 			userId: payload.userId
 		});
+
+		console.debug('[AI assistant] userIsActivePlayer ->', { requestId, gameId: payload.gameId, userId: payload.userId, authorized });
 		if (!authorized) {
+			// Debug: fetch and log matching players rows to diagnose mismatches between DB and admin client
+			try {
+				const { data: dbgPlayers, error: dbgError } = await supabaseAdmin
+					.from('players')
+					.select('*')
+					.eq('game_id', payload.gameId)
+					.eq('user_id', payload.userId);
+				console.debug('[AI assistant][DEBUG] players rows for authorization failure', {
+					requestId,
+					gameId: payload.gameId,
+					userId: payload.userId,
+					rows: dbgPlayers ?? null,
+					error: dbgError ?? null
+				});
+			} catch (dbgErr) {
+				console.error('[AI assistant][DEBUG] players lookup failed', { requestId, error: dbgErr });
+			}
+
 			return json(
 				{ success: false, error: { code: 'unauthorized', message: 'Not a participant.', requestId } },
 				{ status: 403 }
@@ -166,6 +188,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 		const body = await request.json();
 		const payload = requestSchema.parse(body);
+
+		console.debug('[AI assistant] POST request', { requestId, payload });
 		const supabaseAdmin = getSupabaseAdmin();
 
 		const authorized = await userIsActivePlayer({
@@ -173,7 +197,27 @@ export const POST: RequestHandler = async ({ request }) => {
 			gameId: payload.gameId,
 			userId: payload.userId
 		});
+
+		console.debug('[AI assistant] userIsActivePlayer ->', { requestId, gameId: payload.gameId, userId: payload.userId, authorized });
 		if (!authorized) {
+			// Debug: fetch and log matching players rows to diagnose mismatches between DB and admin client
+			try {
+				const { data: dbgPlayers, error: dbgError } = await supabaseAdmin
+					.from('players')
+					.select('*')
+					.eq('game_id', payload.gameId)
+					.eq('user_id', payload.userId);
+				console.debug('[AI assistant][DEBUG] players rows for authorization failure (POST)', {
+					requestId,
+					gameId: payload.gameId,
+					userId: payload.userId,
+					rows: dbgPlayers ?? null,
+					error: dbgError ?? null
+				});
+			} catch (dbgErr) {
+				console.error('[AI assistant][DEBUG] players lookup failed (POST)', { requestId, error: dbgErr });
+			}
+
 			return json(
 				{ success: false, error: { code: 'unauthorized', message: 'Not a participant.', requestId } },
 				{ status: 403 }
