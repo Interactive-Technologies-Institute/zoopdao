@@ -428,11 +428,7 @@ inputDisabled = inputDisabled ?? disabled;
 						>
 								<MessageSquare class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
 							</button>
-							<span
-								class="absolute left-1/2 -translate-x-1/2 top-full mt-1 block max-w-[3.5rem] text-center text-[9px] sm:text-[10px] leading-none text-text-muted whitespace-nowrap overflow-hidden text-ellipsis"
-							>
-								{buttonLabels.history}
-							</span>
+		
 						</div>
 
 					<!-- Add Documents Button -->
@@ -461,11 +457,7 @@ inputDisabled = inputDisabled ?? disabled;
 						>
 								<Plus class="w-5 h-5 sm:w-6 sm:h-6 text-black" />
 							</button>
-							<span
-								class="absolute left-1/2 -translate-x-1/2 top-full mt-1 block max-w-[3.75rem] text-center text-[9px] sm:text-[10px] leading-none text-text-muted whitespace-nowrap overflow-hidden text-ellipsis"
-							>
-								{buttonLabels.files}
-							</span>
+			
 						</div>
 				</div>
 
@@ -493,11 +485,7 @@ inputDisabled = inputDisabled ?? disabled;
 					>
 						<Send class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
 					</button>
-					<span
-						class="absolute left-1/2 -translate-x-1/2 top-full mt-1 block max-w-[3.5rem] text-center text-[9px] sm:text-[10px] leading-none text-text-muted whitespace-nowrap overflow-hidden text-ellipsis"
-					>
-						{buttonLabels.send}
-					</span>
+	// label removida
 				</div>
 			</div>
 		</div>
