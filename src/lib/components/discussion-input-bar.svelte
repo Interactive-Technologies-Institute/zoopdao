@@ -485,7 +485,6 @@ inputDisabled = inputDisabled ?? disabled;
 					>
 						<Send class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
 					</button>
-	// label removida
 				</div>
 			</div>
 		</div>
