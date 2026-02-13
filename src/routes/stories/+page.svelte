@@ -165,9 +165,9 @@
 				}}
 				items={characterOptions}
 			>
-				<Select.Trigger
-					class="h-10 w-full rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex select-none items-center border px-3 text-sm transition-colors"
-					aria-label="Select a character"
+				   <Select.Trigger
+					   class="h-10 w-full max-w-xs md:max-w-[180px] rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex select-none items-center border px-3 md:px-2 text-sm md:text-xs transition-colors"
+					   aria-label="Select a character"
 				>
 					<span class={`flex-1 truncate ${value ? 'text-black' : 'text-gray-400'}`}>
 						{selectedLabel}
@@ -175,9 +175,9 @@
 					<ChevronsUpDown class="text-gray-300 ml-auto size-6" />
 				</Select.Trigger>
 				<Select.Portal>
-					<Select.Content
-						class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 max-h-[var(--bits-select-content-available-height)] w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-2 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
-						sideOffset={10}
+					   <Select.Content
+						   class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-2 md:py-1 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
+						   sideOffset={10}
 					>
 						<Select.ScrollUpButton class="flex w-full items-center justify-center">
 							<ChevronUp class="size-3" />
@@ -185,7 +185,7 @@
 						<Select.Viewport class="p-1">
 							{#each characterOptions as option, i (i + option.value)}
 								<Select.Item
-									class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 text-sm outline-none transition-colors  data-[highlighted]:bg-gray-100 data-[selected]:bg-deep-teal data-[selected]:text-white"
+									   class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 md:px-2 text-sm md:text-xs outline-none transition-colors  data-[highlighted]:bg-gray-100 data-[selected]:bg-deep-teal data-[selected]:text-white"
 									value={option.value}
 									label={option.label}
 								>
@@ -211,7 +211,7 @@
 			<p class="self-start text-deep-teal text-sm font-medium">
 				{getLocale() === 'pt' ? 'Filtrar por modo' : 'Filter by mode'}
 			</p>
-			<Select.Root
+			   <Select.Root
 				type="single"
 				value={selectedMode}
 				onValueChange={(v) => {
@@ -220,9 +220,9 @@
 				}}
 				items={modeOptions}
 			>
-				<Select.Trigger
-					class="h-10 w-full rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex select-none items-center border px-3 text-sm transition-colors"
-					aria-label="Select a mode"
+				   <Select.Trigger
+					   class="h-10 w-full max-w-xs md:max-w-[180px] rounded-md border-gray-300 bg-white focus:ring-deep-teal focus:border-deep-teal focus:ring-1 outline-none inline-flex select-none items-center border px-3 md:px-2 text-sm md:text-xs transition-colors"
+					   aria-label="Select a mode"
 				>
 					<span class={`flex-1 truncate ${selectedMode ? 'text-black' : 'text-gray-400'}`}>
 						{selectedModeLabel}
@@ -230,9 +230,9 @@
 					<ChevronsUpDown class="text-gray-300 ml-auto size-6" />
 				</Select.Trigger>
 				<Select.Portal>
-					<Select.Content
-						class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 max-h-[var(--bits-select-content-available-height)] w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-2 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
-						sideOffset={10}
+					   <Select.Content
+						   class="focus-override border-deep-teal bg-white data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 outline-hidden z-50 max-h-60 md:max-h-40 w-[var(--bits-select-anchor-width)] min-w-[var(--bits-select-anchor-width)] select-none rounded-xl border px-1 py-2 md:py-1 data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1"
+						   sideOffset={10}
 					>
 						<Select.ScrollUpButton class="flex w-full items-center justify-center">
 							<ChevronUp class="size-3" />
@@ -240,7 +240,7 @@
 						<Select.Viewport class="p-1">
 							{#each modeOptions as option (option.value)}
 								<Select.Item
-									class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 text-sm outline-none transition-colors  data-[highlighted]:bg-gray-100 data-[selected]:bg-deep-teal data-[selected]:text-white"
+									   class="flex h-10 w-full cursor-pointer select-none items-center rounded-md px-3 md:px-2 text-sm md:text-xs outline-none transition-colors  data-[highlighted]:bg-gray-100 data-[selected]:bg-deep-teal data-[selected]:text-white"
 									value={option.value}
 									label={option.label}
 								>
