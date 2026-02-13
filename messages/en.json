@@ -354,8 +354,8 @@
 	"decision_making_mode": "Decision-making",
 	"decision_making_mode_description": "Without timer",
 	"configure_pedagogic_timer_title": "Set timer",
-	"configure_pedagogic_timer_subtitle": "Choose the duration (in minutes) for rounds 1-6 and the prompt limit for the final round.",
-	"configure_pedagogic_timer_rounds_label": "Rounds 1-6 (minutes)",
-	"configure_pedagogic_timer_final_label": "Round 7 (prompts)",
+	"configure_pedagogic_timer_subtitle": "Choose the duration (in minutes) for the proposal review rounds and the prompt limit for the final round with the AI.",
+	"configure_pedagogic_timer_rounds_label": "Review rounds (minutes)",
+	"configure_pedagogic_timer_final_label": "Discussion with AI (prompts)",
 	"save_and_continue": "Save and continue"
 }

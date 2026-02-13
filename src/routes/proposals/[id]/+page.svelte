@@ -46,7 +46,7 @@
 
 	function handleBack() {
 		playAudio(click_sound);
-		goto(localizeUrl('/').toString());
+		goto(localizeUrl(`/proposals/${proposal.id}/preview`).toString());
 	}
 </script>
 

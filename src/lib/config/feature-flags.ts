@@ -1,7 +1,7 @@
 // Feature flags (client + server)
 //
 // Flip this single boolean to enable/disable the AI question assistant UI + API.
-export const ENABLE_AI_QUESTION_ASSISTANT = true;
+export const ENABLE_AI_QUESTION_ASSISTANT = false; //needs moe testing and refinement before enabling by default
 
 // Round 7 orchestration policy (Aquari first + specialist reveals).
 // Keep enabled in dev to stabilize avatar scene behavior.
